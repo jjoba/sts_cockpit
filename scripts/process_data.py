@@ -50,7 +50,7 @@ def combine_and_clean(d, s):
   # d = destination
   # s = split
   # Lazy programming... putting this here instead of figuring out how to actually pass properly  
-  data_dir = 'C:/Users/jjoba/sts/data'
+  data_dir = os.getcwd() + '/data'
   temp_dir = f'{data_dir}/training_data/{d}/{s}'
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
 
@@ -60,9 +60,13 @@ def combine_and_clean(d, s):
     output_file = f'{temp_dir}/{s}.csv'
 
     if Path(output_file).exists():      
-      temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
+      # temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
+      temp_file.to_parquet(output_file, index = False, header = False, compression = 'snappy', engine = 'fastparquet', append = True)
+
     else:
-      temp_file.to_csv(output_file, index = False, mode = 'w')
+      # temp_file.to_csv(output_file, index = False, mode = 'w')
+      temp_file.to_parquet(output_file, index = False, header = False, compression = 'snappy', engine = 'fastparquet')
+
     
     os.remove(file_name)
 
@@ -70,7 +74,7 @@ def combine_and_clean(d, s):
 
 def process_runs(jf):
   # Lazy programming... putting this here instead of figuring out how to actually pass properly  
-  data_dir = 'C:/Users/jjoba/sts/data'
+  data_dir = os.getcwd() + '/data'
 
   # processes runs from some json file
   # f = path
@@ -126,7 +130,7 @@ def process_runs(jf):
     # Some runs do not have a character chosen
     # Seems to be from older data
     if 'character_chosen' not in current_run['event'].keys():
-      with open(f'C:/Users/jjoba/sts/data/processing_failures/character_chosen_failure.json', 'w') as fout:
+      with open(f'{os.getcwd()}/data/processing_failures/character_chosen_failure.json', 'w') as fout:
         json.dump(current_run, fout)
       current_run['event']['character_chosen'] = 'unknown'
       destination = 'pre_training_alpha'
@@ -224,25 +228,25 @@ def process_runs(jf):
     if temp_data.shape[0] > 1:
       train, test = train_test_split(temp_data, test_size=0.2)
 
-      # train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-      # test.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
+      train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
+      test.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
 
-      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
-      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      # train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      # test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
     # If there's only one row in a file write it to train
     else:
-      # train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
+      # temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
 
   # Ends function, nothing needed from this value
   return jf
 
 if __name__ == '__main__':
   
-  num_cores = 14
+  num_cores = multiprocessing.cpu_count() - 1
   
   # Directory where all data is stored in raw, compressed format
-  data_dir = 'C:/Users/jjoba/sts/data'
+  data_dir = os.getcwd() + '/data'
 
   output = []
 
