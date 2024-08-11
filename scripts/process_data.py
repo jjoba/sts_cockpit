@@ -250,7 +250,7 @@ if __name__ == '__main__':
   data_dir = os.getcwd() + '/data'
 
   # Clean up any files in the directories hanging from a prior failed run
-  '''
+  
   print('cleaning up files')
   destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
   splits = ['train', 'test']
@@ -260,7 +260,6 @@ if __name__ == '__main__':
   pool_obj = multiprocessing.Pool(num_cores)
   run_progress = pool_obj.starmap(combine_and_clean, items)
   pool_obj.close()
-  '''
   
   output = []
 
@@ -275,6 +274,7 @@ if __name__ == '__main__':
   # Extract ip archive and dump to temp folder - note: extraction takes some time, would be wise to skip if possible
   for file in file_list:
     print(str(k / len(file_list)) + ' percent complete')
+    print(file)
     # Unzips file
     extract_to_raw_temp(file, data_dir)
 
