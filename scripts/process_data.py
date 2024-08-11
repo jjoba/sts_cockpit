@@ -46,7 +46,7 @@ def extract_to_raw_temp(f, p):
   with zipfile.ZipFile(f, 'r') as zip_ref:
     zip_ref.extractall(p + '/raw_temp')
 
-def combine_and_clean(d, s):
+def combine_and_clean(d, s, combine = True):
   # d = destination
   # s = split
   # Lazy programming... putting this here instead of figuring out how to actually pass properly  
@@ -57,17 +57,18 @@ def combine_and_clean(d, s):
   for file_name in file_list:
     temp_file = pd.read_parquet(file_name, engine = 'fastparquet')
 
-    output_file = f'{temp_dir}/{s}.parquet'
+    if combine is True:
 
-    if Path(output_file).exists():      
-      # temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
-      temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet', append = True)
+      output_file = f'{temp_dir}/{s}.parquet'
 
-    else:
-      # temp_file.to_csv(output_file, index = False, mode = 'w')
-      temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet')
+      if Path(output_file).exists():      
+        # temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
+        temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet', append = True)
 
-    
+      else:
+        # temp_file.to_csv(output_file, index = False, mode = 'w')
+        temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet')
+
     os.remove(file_name)
 
   return 0
@@ -229,7 +230,7 @@ def process_runs(jf):
       train, test = train_test_split(temp_data, test_size=0.2)
 
       train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-      test.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
+      test.to_parquet(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
 
       # train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
       # test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
@@ -248,6 +249,19 @@ if __name__ == '__main__':
   # Directory where all data is stored in raw, compressed format
   data_dir = os.getcwd() + '/data'
 
+  # Clean up any files in the directories hanging from a prior failed run
+  '''
+  print('cleaning up files')
+  destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
+  splits = ['train', 'test']
+
+  items = list(itertools.product(destinations, splits, [False]))
+
+  pool_obj = multiprocessing.Pool(num_cores)
+  run_progress = pool_obj.starmap(combine_and_clean, items)
+  pool_obj.close()
+  '''
+  
   output = []
 
   # Hack to get the list of all unique card names
