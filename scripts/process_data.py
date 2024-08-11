@@ -55,17 +55,17 @@ def combine_and_clean(d, s):
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
 
   for file_name in file_list:
-    temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
+    temp_file = pd.read_parquet(file_name, engine = 'fastparquet')
 
-    output_file = f'{temp_dir}/{s}.csv'
+    output_file = f'{temp_dir}/{s}.parquet'
 
     if Path(output_file).exists():      
       # temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
-      temp_file.to_parquet(output_file, index = False, header = False, compression = 'snappy', engine = 'fastparquet', append = True)
+      temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet', append = True)
 
     else:
       # temp_file.to_csv(output_file, index = False, mode = 'w')
-      temp_file.to_parquet(output_file, index = False, header = False, compression = 'snappy', engine = 'fastparquet')
+      temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet')
 
     
     os.remove(file_name)
