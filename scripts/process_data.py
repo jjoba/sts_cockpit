@@ -291,14 +291,6 @@ if __name__ == '__main__':
     pool_obj = multiprocessing.Pool(num_cores)
     run_progress = pool_obj.map(process_runs, json_files)
     pool_obj.close()
-
-    
-    '''
-    for i in temp_output:
-      card_list += [k for k in i.keys()]
-    
-    card_list = [k for k in set(card_list)]
-    '''    
     
     # Clean up the files created
     for jf in json_files:
