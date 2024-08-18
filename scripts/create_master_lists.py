@@ -77,6 +77,12 @@ if __name__ == '__main__':
         # Gets list of gzipped json files
         json_files = [jf for jf in res.keys()]
 
+        # There are some files in the directory that are not gzipped jsons of runs. We don't need those
+        for jf in json_files:
+            if 'gz' not in jf:
+                print(jf)
+                del res[jf]
+
         # Get all cards, relics, etc. from each json run
         pool_obj = multiprocessing.Pool(num_cores)
         # Each index of output is a run, sub indexed in oder by values returned from get list
