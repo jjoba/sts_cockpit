@@ -4,6 +4,7 @@
         
 '''
 import torch
+import os
 
 import pandas as pd
 import numpy as np
@@ -128,7 +129,7 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 100 == 0:
+        if batch % 250 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -154,7 +155,7 @@ def test(dataloader, model, loss_fn):
 
 if __name__ == '__main__':
     
-    model_version = 'fnn_v11'
+    model_version = 'fnn_v13'
     
     # Run time variables
     # increase chunksize to speed training at the expense of memory usage
@@ -164,16 +165,21 @@ if __name__ == '__main__':
 
     # true batch size is chunk_size * batch_size
 
-    project_dir = f'C:/Users/jjoba/sts'
+    project_dir = os.getcwd()
 
     # How many epochs for each data set and in which order
     training_dict = [
-        {'destination': 'pre_training_alpha', 'epochs': 10},
-        {'destination': 'pre_training_beta', 'epochs': 10},
+        {'destination': 'pre_training_alpha', 'epochs': 15},
+        {'destination': 'pre_training_beta', 'epochs': 20},
         {'destination': 'finetuning', 'epochs': 20}
     ]
 
-    # Where is training to take place?   
+    # set fallback option to CPU as some functions aren't implemented for MPS yet
+    # Set the below command using export in terminal before running script
+    # os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+    print(os.environ['PYTORCH_ENABLE_MPS_FALLBACK'])
+
+    # Where is training to take place?
     device = (
         "cuda"
         if torch.cuda.is_available()
@@ -182,8 +188,14 @@ if __name__ == '__main__':
         else "cpu"
     )
 
+    print(f'Using device: {device}')
+
     # Instantiate Model
     model = NeuralNetwork().to(device)
+
+    # Loads best model before training failure
+    # model_path = f'{project_dir}/model_objects/dev/{model_version}/pre_training_alpha_epoch_{14}.pth'
+    # model = torch.jit.load(model_path).to(device)
 
     # Setup optimization
     loss_fn = nn.BCELoss()
@@ -214,3 +226,9 @@ if __name__ == '__main__':
 
         index_min = np.argmin(loss_tracker)
         print(f'Best Model Was Epoch: {index_min + 1} with a loss of {loss_tracker[index_min]}')
+        print(loss_tracker)
+
+        # model_path = f'{project_dir}/model_objects/dev/{model_version}/{regimen['destination']}_epoch_{index_min}.pth'        
+        
+        # Loads the best model into memory for use in the next training step
+        # model = torch.jit.load(model_path).to(device)
