@@ -36,6 +36,7 @@ import pandas as pd
 from collections import Counter
 from pathlib import Path
 from sklearn.model_selection import train_test_split
+from time import time
 
 import pdb
 
@@ -55,19 +56,22 @@ def combine_and_clean(d, s, combine = True):
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
 
   for file_name in file_list:
-    temp_file = pd.read_parquet(file_name, engine = 'fastparquet')
+    # temp_file = pd.read_parquet(file_name, engine = 'fastparquet')
 
     if combine is True:
+      temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
 
-      output_file = f'{temp_dir}/{s}.parquet'
+      # Checks to ensure the file has the correct number of columns
+      if temp_file.shape[1] == 742:
 
-      if Path(output_file).exists():      
-        # temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
-        temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet', append = True)
+        output_file = f'{temp_dir}/{s}.csv'
+        # output_file = f'{temp_dir}/{s}.parquet'
 
-      else:
-        # temp_file.to_csv(output_file, index = False, mode = 'w')
-        temp_file.to_parquet(output_file, index = False, compression = 'snappy', engine = 'fastparquet')
+        if Path(output_file).exists():      
+          temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
+
+        else:
+          temp_file.to_csv(output_file, index = False, mode = 'w')
 
     os.remove(file_name)
 
@@ -100,7 +104,6 @@ def process_runs(jf):
 
     # First regex didn't catch all searing blows. Forcing them to all become the same
     # Keys off the fact that it's the only card with a number in it
-    # master_deck = ['searing_blow_u' if 'searing_blow_u' in card_name else card_name for card_name in master_deck]
     master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
 
     # QTY of each card in the final deck
@@ -131,7 +134,7 @@ def process_runs(jf):
     # Some runs do not have a character chosen
     # Seems to be from older data
     if 'character_chosen' not in current_run['event'].keys():
-      with open(f'{os.getcwd()}/data/processing_failures/character_chosen_failure.json', 'w') as fout:
+      with open(f'{os.getcwd()}/data/processing_failures/character_chosen_failure_{int(time())}.json', 'w') as fout:
         json.dump(current_run, fout)
       current_run['event']['character_chosen'] = 'unknown'
       destination = 'pre_training_alpha'
@@ -212,6 +215,14 @@ def process_runs(jf):
     'steam_power_u':'steam_barrier_u'
   })
 
+  # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
+  # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
+  # Root cause is NOT incorrect character names or victory column issues
+  # Until then issue is handled by writing out file as a processing error and NOT write out
+  if model_data_storage.shape[1] != 742:
+    failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
+    model_data_storage.to_csv(failure_path, index = False, )
+  
   # Write out files
   # goes destination, then train/test split for pytorch
   
@@ -229,15 +240,11 @@ def process_runs(jf):
     if temp_data.shape[0] > 1:
       train, test = train_test_split(temp_data, test_size=0.2)
 
-      train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-      test.to_parquet(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-
-      # train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
-      # test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
     # If there's only one row in a file write it to train
     else:
-      train.to_parquet(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.parquet', engine = 'fastparquet', index = False, compression = 'snappy')
-      # temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
 
   # Ends function, nothing needed from this value
   return jf
