@@ -80,7 +80,7 @@ if __name__ == '__main__':
         # There are some files in the directory that are not gzipped jsons of runs. We don't need those
         for jf in json_files:
             if 'gz' not in jf:
-                print(jf)
+                print(f'non gzip file found: {jf}')
                 del res[jf]
 
         # Get all cards, relics, etc. from each json run
@@ -114,8 +114,8 @@ if __name__ == '__main__':
     # Write out files
     with open(os.getcwd() + '/data/master_lists/master_card_list.txt', 'w') as out_file:
         for line in master_card_list:
-            out_file.write(f'{line}/n')
+            out_file.write(f'{line}\n')
 
     with open(os.getcwd() + '/data/master_lists/master_relic_list.txt', 'w') as out_file:
         for line in master_relic_list:
-            out_file.write(f'{line}/n')
+            out_file.write(f'{line}\n')
