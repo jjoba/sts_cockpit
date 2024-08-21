@@ -24,7 +24,6 @@
 '''
 
 import os
-import zipfile
 import gzip
 import json
 import re
@@ -32,20 +31,15 @@ import multiprocessing
 import itertools
 
 import pandas as pd
+import numpy as np
 
 from collections import Counter
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from time import time
+from zipfile import ZipFile
 
 import pdb
-
-def extract_to_raw_temp(f, p):
-  # extracts zip file to raw temp
-  # f = path to file for extraction
-  # p = path to have raw_temp added
-  with zipfile.ZipFile(f, 'r') as zip_ref:
-    zip_ref.extractall(p + '/raw_temp')
 
 def combine_and_clean(d, s, combine = True):
   # d = destination
@@ -56,7 +50,6 @@ def combine_and_clean(d, s, combine = True):
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
 
   for file_name in file_list:
-    # temp_file = pd.read_parquet(file_name, engine = 'fastparquet')
 
     if combine is True:
       temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
@@ -77,24 +70,15 @@ def combine_and_clean(d, s, combine = True):
 
   return 0
 
-def process_runs(jf):
-  # Lazy programming... putting this here instead of figuring out how to actually pass properly  
-  data_dir = os.getcwd() + '/data'
+def process_runs(gzip_file, data_dir, master_card_list):
 
-  # processes runs from some json file
-  # f = path
-  
-  # Reads in all runs in the file as bytes
-  with gzip.open(jf, 'rb') as f:
-    runs_bytes = f.read()
-  
-  # Converts to json object to it's easier to work with
-  runs_json = json.loads(runs_bytes.decode('utf-8'))
+  # gzip_file = gzipped binary string of a gzipped json file
+  runs = json.loads(gzip.decompress(gzip_file))
 
   # Holds all extracted runs from a given json file
   model_data_storage = []
 
-  for current_run in runs_json:
+  for current_run in runs:
     # Conform card names to remove '+1' from upgrade, also treats all searing blows the same
     # Force to lowercase
     master_deck = current_run['event']['master_deck']
@@ -158,13 +142,8 @@ def process_runs(jf):
     modeling_data['id'] = id
 
     model_data_storage.append(modeling_data)
-
-  # Pull in the master card list to ensure each file has the same schema
-  f = open(f'{data_dir}/master_card_list.txt', 'r')
-  card_list = f.readlines()
-  f.close()
   
-  dummy_row = {re.sub('\n', '', card):1 for card in card_list}
+  dummy_row = {re.sub('\n', '', card):1 for card in master_card_list}
   dummy_row['id'] = 'dummy_row'
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
   dummy_row['victory'] = True
@@ -219,9 +198,11 @@ def process_runs(jf):
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
   # Root cause is NOT incorrect character names or victory column issues
   # Until then issue is handled by writing out file as a processing error and NOT write out
+  '''
   if model_data_storage.shape[1] != 742:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
+  '''
   
   # Write out files
   # goes destination, then train/test split for pytorch
@@ -237,17 +218,19 @@ def process_runs(jf):
     temp_data = temp_data.drop('destination', axis = 1)
     temp_data = temp_data.astype('int8')
 
+    time_stamp = int(time() + np.random.randint(0, 10000000000, 1))
+
     if temp_data.shape[0] > 1:
       train, test = train_test_split(temp_data, test_size=0.2)
 
-      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
-      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
+      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.csv', index = False)
     # If there's only one row in a file write it to train
     else:
-      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{re.sub('\\..+|.+STS Data.{1}|Monthly.{9}', '', jf)}.csv', index = False)
+      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
 
   # Ends function, nothing needed from this value
-  return jf
+  return 'success'
 
 if __name__ == '__main__':
   
@@ -256,22 +239,20 @@ if __name__ == '__main__':
   # Directory where all data is stored in raw, compressed format
   data_dir = os.getcwd() + '/data'
 
-  # Clean up any files in the directories hanging from a prior failed run
-  
-  print('cleaning up files')
+  # Pull in the master card list to ensure each file has the same schema
+  f = open(f'{data_dir}/master_lists/master_card_list.txt', 'r')
+  master_card_list = f.readlines()
+  f.close()
+
   destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
   splits = ['train', 'test']
 
-  items = list(itertools.product(destinations, splits, [False]))
-
+  # Removes any files already in directories
+  print('Cleaning Up Old Files')
   pool_obj = multiprocessing.Pool(num_cores)
-  run_progress = pool_obj.starmap(combine_and_clean, items)
+  items = list(itertools.product(destinations, splits, [False]))
+  output = pool_obj.starmap(combine_and_clean, items)
   pool_obj.close()
-  
-  output = []
-
-  # Hack to get the list of all unique card names
-  card_list = []
 
   # Pull list of all files to iterate through
   file_list = [data_dir + '/raw/' + f for f in os.listdir(data_dir + '/raw/')]
@@ -280,21 +261,25 @@ if __name__ == '__main__':
 
   # Extract ip archive and dump to temp folder - note: extraction takes some time, would be wise to skip if possible
   for file in file_list:
-    print(str(k / len(file_list)) + ' percent complete')
-    print(file)
-    # Unzips file
-    extract_to_raw_temp(file, data_dir)
-
-    # Recursively pulls all compressed json files
-    json_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(data_dir + '/raw_temp')) for f in fn if 'json.gz' in f]
-
-    pool_obj = multiprocessing.Pool(num_cores)
-    run_progress = pool_obj.map(process_runs, json_files)
-    pool_obj.close()
+    print(f'{(100 * (k / len(file_list))):>0.1f}% Complete')
     
-    # Clean up the files created
+    # Extracts file to memory
+    input_zip = ZipFile(file)
+    res = {name: input_zip.read(name) for name in input_zip.namelist()}
+
+    # Gets list of gzipped json files
+    json_files = [jf for jf in res.keys()]
+
+    # There are some files in the directory that are not gzipped jsons of runs. We don't need those
     for jf in json_files:
-      os.remove(jf)
+        if 'gz' not in jf:
+            print(f'non gzip file found: {jf}')
+            del res[jf]
+    
+    pool_obj = multiprocessing.Pool(num_cores)
+    items = list(itertools.product(res.values(), [data_dir], [master_card_list]))
+    run_progress = pool_obj.starmap(process_runs, items)
+    pool_obj.close()
     
     k += 1    
   
