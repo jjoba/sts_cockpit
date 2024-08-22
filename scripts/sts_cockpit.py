@@ -8,6 +8,8 @@
 '''
 
 import torch
+import os
+import re
 
 import pandas as pd
 import numpy as np
@@ -37,7 +39,7 @@ class Cockpit:
         )
 
         print('What would you like to do?')
-        self.user_choice = input('1. Start a new run \n2. Train from scratch\n')
+        self.user_choice = input('1. Start a new run \n2. Train Model\n3. Build Data')
 
         if self.user_choice == '1':
             self.run_setup()
@@ -47,6 +49,9 @@ class Cockpit:
         elif self.user_choice == '2':
             print('Not implemented yet')
             self.internal_state = 'train_model'
+        elif self.user_choice == '3':
+            print('Not implemented yet')
+            self.internal_state = 'build_data'
         else:
             print('Invalid option')
 
@@ -69,7 +74,7 @@ class Cockpit:
         self.model.eval()
 
         # Sets up starting deck and character
-        self.deck = pd.read_csv('C:/Users/jjoba/sts/data/simulations/starting_decks_fnn_v5.csv')
+        self.deck = pd.read_csv(os.getcwd() + '/starting_decks.csv')
         self.deck.fillna(0, inplace = True)
 
         valid_input = False
@@ -98,8 +103,16 @@ class Cockpit:
                 print('unknown character')
 
     def run_game_loop(self):
+
+        # Game item variables to maintain internally for filtering
         self.non_removable = ['ironclad', 'the_silent', 'defect', 'watcher', 'unknown', 'ascendersbane']
         self.curses = ['doubt', 'regret']
+
+        # Loads in the master relic list
+        f = open(f'{os.getcwd()}/data/master_lists/master_relic_list.txt', 'r')
+        master_relic_list = f.readlines()
+        f.close()
+        self.relic_list = [re.sub('\n', '', relic) for relic in master_relic_list]
 
         # Main menu loop for the game
         self.continue_run = True
@@ -172,7 +185,7 @@ class Cockpit:
                         for card in self.deck.columns:
                             
                             # Make sure we're not simming a character card or ascenders bane
-                            if card in self.non_removable:
+                            if card in self.non_removable + self.relic_list:
                                 pass
                             
                             # Add a row for any card currently present in the deck. subtract 1 from qty                            
@@ -195,7 +208,7 @@ class Cockpit:
 
                         for card in self.deck.columns:
                             # Make sure we're not simming a character card or ascenders bane
-                            if card in self.non_removable + self.curses:
+                            if card in self.non_removable + self.curses + self.relic_list:
                                 pass
                             
                             # No multi-upgrades
@@ -228,7 +241,7 @@ class Cockpit:
 
                         for card in self.deck.columns:
                             # Make sure we're not simming a character card or ascenders bane
-                            if card in self.non_removable + self.curses:
+                            if card in self.non_removable + self.curses + self.relic_list:
                                 pass
                             
                             else:
@@ -295,7 +308,9 @@ class Cockpit:
                             card = input('Which card would you like to remove? 9 to go back\n')
                             
                             if card in self.deck.columns:
-                                if self.deck[card].all() > 0:
+                                if card in self.non_removable + self.curses + self.relic_list:
+                                    print(f'Cannot remove item {card}')
+                                elif self.deck[card].all() > 0:
                                     self.deck[card] -= 1
                                     valid_card = True
                                 else:
@@ -328,6 +343,8 @@ class Cockpit:
                                 # Check for upgraded card being passed
                                 if '_u' in card:
                                     print('Please supply unupgraded card name (i.e. with xxx_u)')
+                                elif card in self.non_removable + self.curses + self.relic_list:
+                                    print('This item cannot be upgraded')
                                 elif self.deck[card].all() == 0:
                                     print(f'You do not have any copies of {card} to upgrade')                               
                                 else:
