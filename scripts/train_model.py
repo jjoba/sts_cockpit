@@ -170,8 +170,8 @@ if __name__ == '__main__':
 
     # How many epochs for each data set and in which order
     training_dict = [
-        # {'destination': 'pre_training_alpha', 'epochs': 15},
-        # {'destination': 'pre_training_beta', 'epochs': 20},
+        {'destination': 'pre_training_alpha', 'epochs': 15},
+        {'destination': 'pre_training_beta', 'epochs': 20},
         {'destination': 'finetuning', 'epochs': 20}
     ]
 
