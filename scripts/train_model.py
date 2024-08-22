@@ -5,6 +5,7 @@
 '''
 import torch
 import os
+import shutil
 
 import pandas as pd
 import numpy as np
@@ -95,16 +96,16 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
             # More layers seems to work worse
-            nn.Linear(741, 741),
+            nn.Linear(863, 863),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(741, 741),
+            nn.Linear(863, 863),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(741, 741),
+            nn.Linear(863, 863),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(741, 1),
+            nn.Linear(863, 1),
             nn.Sigmoid()
         )
 
@@ -155,7 +156,7 @@ def test(dataloader, model, loss_fn):
 
 if __name__ == '__main__':
     
-    model_version = 'fnn_v13'
+    model_version = 'fnn_v14'
     
     # Run time variables
     # increase chunksize to speed training at the expense of memory usage
@@ -169,15 +170,15 @@ if __name__ == '__main__':
 
     # How many epochs for each data set and in which order
     training_dict = [
-        {'destination': 'pre_training_alpha', 'epochs': 15},
-        {'destination': 'pre_training_beta', 'epochs': 20},
+        # {'destination': 'pre_training_alpha', 'epochs': 15},
+        # {'destination': 'pre_training_beta', 'epochs': 20},
         {'destination': 'finetuning', 'epochs': 20}
     ]
 
     # set fallback option to CPU as some functions aren't implemented for MPS yet
     # Set the below command using export in terminal before running script
     # os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-    print(os.environ['PYTORCH_ENABLE_MPS_FALLBACK'])
+    # print(os.environ['PYTORCH_ENABLE_MPS_FALLBACK'])
 
     # Where is training to take place?
     device = (
@@ -192,10 +193,6 @@ if __name__ == '__main__':
 
     # Instantiate Model
     model = NeuralNetwork().to(device)
-
-    # Loads best model before training failure
-    # model_path = f'{project_dir}/model_objects/dev/{model_version}/pre_training_alpha_epoch_{14}.pth'
-    # model = torch.jit.load(model_path).to(device)
 
     # Setup optimization
     loss_fn = nn.BCELoss()
@@ -228,7 +225,15 @@ if __name__ == '__main__':
         print(f'Best Model Was Epoch: {index_min + 1} with a loss of {loss_tracker[index_min]}')
         print(loss_tracker)
 
-        # model_path = f'{project_dir}/model_objects/dev/{model_version}/{regimen['destination']}_epoch_{index_min}.pth'        
-        
         # Loads the best model into memory for use in the next training step
+        # NOTE: this causes issue using MPS backed and requires fallback to CPU which is slow
+        ## Disabling using the best model and instead uses the last epoch from pre-training which is probably close enough 
+        # model_path = f'{project_dir}/model_objects/dev/{model_version}/{regimen['destination']}_epoch_{index_min}.pth'        
         # model = torch.jit.load(model_path).to(device)
+
+    # Move the top performing finetuned model to production
+    shutil.copy(
+        f'{project_dir}/model_objects/dev/{model_version}/finetuning_epoch_{index_min}.pth',
+        f'{project_dir}/model_objects/production/{model_version}/finetuning_epoch_{index_min}.pth' )
+
+        
