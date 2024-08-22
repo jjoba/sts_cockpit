@@ -56,7 +56,7 @@ def combine_and_clean(d, s, combine = True):
 
       # Checks to ensure the file has the correct number of columns
       # Update to correct number of columns in future
-      if temp_file.shape[1] > 0:
+      if temp_file.shape[1] == 864:
 
         output_file = f'{temp_dir}/{s}.csv'
         # output_file = f'{temp_dir}/{s}.parquet'
@@ -66,6 +66,9 @@ def combine_and_clean(d, s, combine = True):
 
         else:
           temp_file.to_csv(output_file, index = False, mode = 'w')
+
+      else:
+        temp_file.to_csv(f'{os.getcwd()}/data/processing_failures/incorrect_columns_{d}_{int(time())}.csv', index = False)
 
     os.remove(file_name)
 
@@ -238,7 +241,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
 
     time_stamp = int(time() + np.random.randint(0, 10000000000, 1))
 
-    if temp_data.shape[0] == 864:
+    if temp_data.shape[0] > 1:
       train, test = train_test_split(temp_data, test_size=0.2)
 
       train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
