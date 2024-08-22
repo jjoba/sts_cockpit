@@ -71,3 +71,14 @@ In no particular order, below are some development ideas
 - Add shop simulation which includes gold amounts to provide best choice
 - Clean up the CLI to make it more user friendly (who knows... maybe even make a GUI one day)
 - Add data processing and model building functionality directly to sts_cockpit script to streamline experience
+- Properly handle searing blow (currently all quantity of upgrades are treated as a single upgrade, overvaluing the card)
+- Create full list of curses
+- Standardize naming (some items have space with underscores, some don't)
+- Identify the names of the last few missing cards
+
+## Model Performance
+Test Set (finenuning, model has only seen finetuning full training to come later)
+- Accuracy: 96%
+    - this actually is bad because underlying win rate is 4%
+    - Every model and epoch has shown this number, so I think it's a bug in the code, not a model problem
+- Binomial Cross Entropy Loss: 0.0481
