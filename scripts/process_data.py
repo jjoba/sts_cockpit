@@ -55,7 +55,8 @@ def combine_and_clean(d, s, combine = True):
       temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
 
       # Checks to ensure the file has the correct number of columns
-      if temp_file.shape[1] == 742:
+      # Update to correct number of columns in future
+      if temp_file.shape[1] > 0:
 
         output_file = f'{temp_dir}/{s}.csv'
         # output_file = f'{temp_dir}/{s}.parquet'
@@ -70,7 +71,7 @@ def combine_and_clean(d, s, combine = True):
 
   return 0
 
-def process_runs(gzip_file, data_dir, master_card_list):
+def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
 
   # gzip_file = gzipped binary string of a gzipped json file
   runs = json.loads(gzip.decompress(gzip_file))
@@ -90,8 +91,15 @@ def process_runs(gzip_file, data_dir, master_card_list):
     # Keys off the fact that it's the only card with a number in it
     master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
 
+    # Gets the list of relics for a given run
+    relics = current_run['event']['relics']
+    relics = [re.sub(' ', '_', r).lower() for r in relics]
+
+    # list and QTY of all items picked up in a run
+    run_items = master_deck + relics
+
     # QTY of each card in the final deck
-    card_counts = dict(Counter(master_deck))
+    item_counts = dict(Counter(run_items))
 
     # Logic field determining which dataset this should go to
     destination = 'finetuning'
@@ -131,7 +139,7 @@ def process_runs(gzip_file, data_dir, master_card_list):
             destination = 'pre_training_beta'
 
     # Append on character name and victory to create modeling data
-    modeling_data = card_counts
+    modeling_data = item_counts
     modeling_data['character'] = current_run['event']['character_chosen'].lower()
     modeling_data['victory'] = current_run['event']['victory']
     modeling_data['destination'] = destination
@@ -143,7 +151,14 @@ def process_runs(gzip_file, data_dir, master_card_list):
 
     model_data_storage.append(modeling_data)
   
-  dummy_row = {re.sub('\n', '', card):1 for card in master_card_list}
+  # Process lists into dictionaries with value 1 to ensure all items are captured
+  card_dict = {re.sub('\n', '', card):1 for card in master_card_list}
+  relic_dict = {re.sub('\n', '', relic):1 for relic in master_relic_list}
+
+  # Merge both dictionaries together
+  dummy_row = {**card_dict, **relic_dict}
+
+  # Add on remaining needed columns
   dummy_row['id'] = 'dummy_row'
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
   dummy_row['victory'] = True
@@ -191,18 +206,21 @@ def process_runs(gzip_file, data_dir, master_card_list):
     'undo':'equilibrium',
     'undo_u':'equilibrium_u',
     'steam_power': 'steam_barrier',
-    'steam_power_u':'steam_barrier_u'
+    'steam_power_u':'steam_barrier_u',
+    'molten_egg_2': 'molten_egg',
+    'toxic_egg_2': 'toxic_egg',
+    'frozen_egg_2': 'frozen_egg'
   })
 
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
   # Root cause is NOT incorrect character names or victory column issues
   # Until then issue is handled by writing out file as a processing error and NOT write out
-  '''
-  if model_data_storage.shape[1] != 742:
+  
+  if model_data_storage.shape[1] != 864:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
-  '''
+  
   
   # Write out files
   # goes destination, then train/test split for pytorch
@@ -220,7 +238,7 @@ def process_runs(gzip_file, data_dir, master_card_list):
 
     time_stamp = int(time() + np.random.randint(0, 10000000000, 1))
 
-    if temp_data.shape[0] > 1:
+    if temp_data.shape[0] == 864:
       train, test = train_test_split(temp_data, test_size=0.2)
 
       train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
@@ -233,7 +251,8 @@ def process_runs(gzip_file, data_dir, master_card_list):
   return 'success'
 
 if __name__ == '__main__':
-  
+  # NOTE: 864 = number of cols when accounting for cards, relics, character, and victory cols
+
   num_cores = multiprocessing.cpu_count() - 1
   
   # Directory where all data is stored in raw, compressed format
@@ -242,6 +261,11 @@ if __name__ == '__main__':
   # Pull in the master card list to ensure each file has the same schema
   f = open(f'{data_dir}/master_lists/master_card_list.txt', 'r')
   master_card_list = f.readlines()
+  f.close()
+
+  # Pull in the master card list to ensure each file has the same schema
+  f = open(f'{data_dir}/master_lists/master_relic_list.txt', 'r')
+  master_relic_list = f.readlines()
   f.close()
 
   destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
@@ -275,9 +299,12 @@ if __name__ == '__main__':
         if 'gz' not in jf:
             print(f'non gzip file found: {jf}')
             del res[jf]
+
+    #for v in res.values():
+    #  process_runs(v, data_dir, master_card_list, master_relic_list)
     
     pool_obj = multiprocessing.Pool(num_cores)
-    items = list(itertools.product(res.values(), [data_dir], [master_card_list]))
+    items = list(itertools.product(res.values(), [data_dir], [master_card_list], [master_relic_list]))
     run_progress = pool_obj.starmap(process_runs, items)
     pool_obj.close()
     
@@ -295,3 +322,4 @@ if __name__ == '__main__':
   pool_obj = multiprocessing.Pool(num_cores)
   run_progress = pool_obj.starmap(combine_and_clean, items)
   pool_obj.close()
+  
