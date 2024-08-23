@@ -26,8 +26,8 @@ class Cockpit:
 
     @torch.no_grad()
     def __init__(self):
-        root = tk.Tk()
-        root.withdraw()
+        # root = tk.Tk()
+        # root.withdraw()
 
         # Determines whether to have pytorch use CPU or GPU
         self.device = (
@@ -120,12 +120,12 @@ class Cockpit:
         while self.continue_run == True:
             self.user_choice = input('\nWhat Would you like to do?\n1. Simulate\n2. Update Deck & Relics\n3. View Current Deck & Win Rate\n0. Exit\n')
 
-            # Simulate Options
+            # Simulate
             if self.user_choice == '1':
                 valid_choice = False
 
                 while valid_choice == False:
-                    choice = input('1. Which card should I add?\n2. Which card should I remove\n3. Which card should I upgrade?\n4. Simulate shop\n5. Next best card to add\n9. Go back\n')
+                    choice = input('1. Which card should I add?\n2. Which card should I remove\n3. Which card should I upgrade?\n4. Simulate shop\n5. Next best card to add\n6. Which relic should I add?\n9. Go back\n')
 
                     # Set up temporary copy of the current deck for the simulation
                     sim_deck = self.deck.copy()
@@ -240,7 +240,7 @@ class Cockpit:
                         next_best_card = ['current_deck']
 
                         for card in self.deck.columns:
-                            # Make sure we're not simming a character card or ascenders bane
+                            # Make sure we're not simming a character card or ascenders bane or adding a relic
                             if card in self.non_removable + self.curses + self.relic_list:
                                 pass
                             
@@ -258,6 +258,53 @@ class Cockpit:
 
                         valid_choice = True
 
+                    # Which relic should I add?
+                    elif choice == '6':
+                        valid_sim_choice = False
+
+                        # Buffer to append simulated cards onto
+                        relics_added = ['current_deck']
+
+                        while valid_sim_choice is False:
+                            sim_choice  = input('1. Add relic to simulation\n2. Run simulation\n9. Go back\n')
+
+                            # Add card(s) to sim
+                            if sim_choice == '1':
+
+                                valid_relic = False
+                                while valid_relic is False:
+                                    
+                                    relic = input('Enter relic name or type 9 to go back: ')
+
+                                    # Add card to sim
+                                    if relic in self.relic_list:
+                                        temp_sim_deck = self.deck.copy()
+
+                                        temp_sim_deck[relic] += 1
+
+                                        # Joins results onto the simulated decks
+                                        sim_deck = pd.concat([sim_deck, temp_sim_deck])
+                                        relics_added.append(relic)
+
+                                        print(f'added {relic}')
+                                        valid_relic = True
+                                    
+                                    # Go back to sim choices menu
+                                    elif relic == '9':
+                                        valid_relic = True
+                                    else:
+                                        print('Unknown Relic Name')
+                        
+                            # Run simulation
+                            if sim_choice == '2':
+                                self.get_win_rate(sim_deck)
+                                print(relics_added)
+                                valid_sim_choice = True
+
+                            # Go back: leave sim menu
+                            if sim_choice == '9':
+                                valid_sim_choice = True
+                    
                     # Go back to main menu
                     elif choice == '9':
                         valid_choice = True
