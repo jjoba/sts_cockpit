@@ -243,7 +243,9 @@ class Cockpit:
                             # Make sure we're not simming a character card or ascenders bane or adding a relic
                             if card in self.non_removable + self.curses + self.relic_list:
                                 pass
-                            
+                            elif card == 'searing_blow_u':
+                                print('searing_blow_u not eligible for consideration due to model issues')
+                                pass
                             else:
                                 temp_sim_deck = self.deck.copy()
                                 temp_sim_deck[card] += 1
@@ -253,7 +255,7 @@ class Cockpit:
 
                         # Get expected impact of each card upgraded
                         pred = self.get_win_rate(sim_deck, print_results=False)
-                        index_max = np.argmax(pred)
+                        index_max = np.argmax(pred.cpu())
                         print(f'Next best card to add is {next_best_card[index_max]} with a win rate of {pred[index_max]}')
 
                         valid_choice = True
