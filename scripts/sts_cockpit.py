@@ -39,7 +39,7 @@ class Cockpit:
         )
 
         print('What would you like to do?')
-        self.user_choice = input('1. Start a new run \n2. Train Model\n3. Build Data')
+        self.user_choice = input('1. Start a new run \n2. Train Model\n3. Build Data\n')
 
         if self.user_choice == '1':
             self.run_setup()
@@ -118,7 +118,7 @@ class Cockpit:
         self.continue_run = True
         
         while self.continue_run == True:
-            self.user_choice = input('\nWhat Would you like to do?\n1. Simulate\n2. Update Deck\n3. View Current Deck & Win Rate\n0. Exit\n')
+            self.user_choice = input('\nWhat Would you like to do?\n1. Simulate\n2. Update Deck & Relics\n3. View Current Deck & Win Rate\n0. Exit\n')
 
             # Simulate Options
             if self.user_choice == '1':
@@ -271,7 +271,7 @@ class Cockpit:
                 valid_choice = False
 
                 while valid_choice == False:
-                    self.user_choice = input('\nWhat Would you like to do?\n1. Add a card\n2. Remove a card\n3. Upgrade a Card\n9. Go back\n')
+                    self.user_choice = input('\nWhat Would you like to do?\n1. Add a card\n2. Remove a card\n3. Upgrade a card\n4. Add a relic\n5. Remove a relic\n9. Go back\n')
                     
                     # Add
                     if self.user_choice == '1':
@@ -309,7 +309,7 @@ class Cockpit:
                             
                             if card in self.deck.columns:
                                 if card in self.non_removable + self.curses + self.relic_list:
-                                    print(f'Cannot remove item {card}')
+                                    print(f'Cannot remove card {card}')
                                 elif self.deck[card].all() > 0:
                                     self.deck[card] -= 1
                                     valid_card = True
@@ -363,6 +363,65 @@ class Cockpit:
                         
                         if card != '9':
                             print(f'After upgrading {card} the new win rate is')
+                            self.get_win_rate(self.deck)
+                        
+                        # Break Choice Loop
+                        valid_choice = True
+
+                    # Add relic
+                    elif self.user_choice == '4':
+                        valid_relic = False
+
+                        while valid_relic is False:
+                            relic = input('Which relic would you like to add? 9 to go back\n')
+                            
+                            if relic in self.relic_list:
+                                self.deck[relic] += 1
+                                valid_relic = True
+                            
+                            # Go Back
+                            elif relic == '9':
+                                valid_relic = True
+                            
+                            # Try for new card
+                            else:
+                                print(f'I do not recognize relic: {relic}')
+                        
+                        if relic != '9':
+                            print(f'After adding {relic} the new win rate is')
+                            self.get_win_rate(self.deck)
+                        
+                        # Break Choice Loop
+                        valid_choice = True
+
+                    # Remove relic
+                    elif self.user_choice == '5':
+                        valid_relic = False
+
+                        while valid_relic is False:
+                            relic_qty_g0 = True
+                            relic = input('Which card would you like to remove? 9 to go back\n')
+                            
+                            if relic in self.deck.columns:
+                                if relic not in self.relic_list:
+                                    print(f'Cannot remove item {relic}')
+                                elif self.deck[relic].all() > 0:
+                                    self.deck[relic] -= 1
+                                    valid_relic = True
+                                else:
+                                    print(f'You do not have {relic}')
+                                    relic_qty_g0 = False
+                            
+                            # Go Back
+                            elif relic == '9':
+                                valid_relic = True
+                            
+                            # Try for new card
+                            else:
+                                print(f'I do not recognize relic: {relic}')
+                        
+                        if relic != '9' and relic_qty_g0 == True:
+                            print(f'After removing {relic} the new win rate is')
                             self.get_win_rate(self.deck)
                         
                         # Break Choice Loop
