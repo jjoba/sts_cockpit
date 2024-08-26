@@ -75,10 +75,10 @@ In no particular order, below are some development ideas
 - Create full list of curses
 - Standardize naming (some items have space with underscores, some don't)
 - Identify the names of the last few missing cards
+- Fuzzy matching to support typos in UI
 
-## Model Performance
-Test Set (finenuning, model has only seen finetuning full training to come later)
-- Accuracy: 96%
-    - this actually is bad because underlying win rate is 4%
-    - Every model and epoch has shown this number, so I think it's a bug in the code, not a model problem
-- Binomial Cross Entropy Loss: 0.0481
+## Test Set Model Performance
+Model Version: FNN 14
+- Accuracy: 98.01%
+    - Test set win rate: 4% (i.e. anything about 96% shows predictive lift)
+- Binomial Cross Entropy Loss: 0.0438
