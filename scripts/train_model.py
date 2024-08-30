@@ -105,6 +105,9 @@ class NeuralNetwork(nn.Module):
             nn.Linear(863, 863),
             nn.ReLU(),
             nn.Dropout(0.5),
+            nn.Linear(863, 863),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(863, 1),
             nn.Sigmoid()
         )
@@ -130,7 +133,7 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 250 == 0:
+        if batch % 500 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
 
     project_dir = os.getcwd()
 
-    model_version = 'fnn_v15'
+    model_version = 'fnn_v15_large'
 
     # Makes directory for model training if it doesn't exist already
     if not os.path.exists(f'{project_dir}/model_objects/dev/{model_version}'):
@@ -175,7 +178,7 @@ if __name__ == '__main__':
 
     # How many epochs for each data set and in which order
     training_dict = [
-        {'destination': 'pre_training_alpha', 'epochs': 5},
+        {'destination': 'pre_training_alpha', 'epochs': 8},
         {'destination': 'pre_training_beta', 'epochs': 20},
         {'destination': 'finetuning', 'epochs': 20}
     ]
