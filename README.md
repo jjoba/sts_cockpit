@@ -13,7 +13,54 @@ Supporting the calculations is a four layer Feed Foward Neural Network with drop
 All data comes from [this data dump](https://www.reddit.com/r/slaythespire/comments/jt5y1w/77_million_runs_an_sts_metrics_dump/)
 For more detailed information on the fields and data structure see data_dump.md in the main git directory.
 
-## Hardware Requirements
+## How to Setup & Run
+1. Install supporting programs
+    - [Python](https://www.python.org/downloads/)
+        - Tested on version 3.12.5, any 3.12.X version should work
+        - Check the box to add Python to PATH
+    - [Git](https://git-scm.com/downloads)
+    - Restart computer after this step
+2. Clone git hub repo
+    - Navitgage to folder where you want this to be installed
+    - Open a terminal (optionally open git bash or git gui, in Windows 11 this can be found by right-click -> show more options)
+    - Clone repository using either steps one or two
+        1. Typing in the terminal type `git clone https://github.com/jjoba/sts_cockpit.git`
+        2. Using git gui choose clone existing repository and give it the url above
+    - Note: it is possible to skip the above steps and just download the repo as a zip archive (do this by clicking the <> code button on this page and choosing download as zip), but without the git configuration it's not as straightforward to download new versions, thus is not the recommended option
+3. Run the program
+    - Windows: double click the run_sts_cockpit_windows.bat file
+    - Mac: two options
+        1. Open terminal and navigate to sts_cockpit directory, then enter  `sh run_sts_cockpit_mac`
+        2. Set run_sts_cockpit_mac.sh as an executable file then double click to run
+
+<b>Additional setup notes:</b>
+- The batch and shell scripts automatically manage virtual environment creation, module installation, and booting the CLI in the backround
+- For windows and linux, there is an option for pytorch to run on a discrete GPU using Cuda, the version of Pytorch installed with the "run..." scripts is CPU only. This is because 1. Managing various gpu and cuda configurations is quite complex and 2. The cockpit program uses pre-trained models in inference mode which is not meaningfully slower on a CPU. If you're interested in training the models from scratch and you have an Nvidia GPU I'd recommend modifying requirements.txt to match you cuda configuration. This program has been tested on cuda 12.4, but does not work well on cuda 12.6.
+
+## Interacting With STS Cockpit
+- On menu screens or prompts with numbered options, the program expects the number followed by enter. For example, if you saw "1. Start a new run" you'd input "1" followed by enter to select this choice
+- All card and relic names should be in lowercase with underscores as spaces (e.g. infinite_blades). If that doesn't work try again without the underscores as naming conventions in the data are inconsistent (e.g. justlucky). Watcher tends to have everything smushed into a single word. Eventually, I'll conform all items to follow this format.
+- Upgraded cards have an "_u" at the end (e.g. infinite_blades_u)
+    - Note: Searing Blow is not handled as it is in the game. Currently, all number of upgrades are grouped into "searing_blow_u" (e.g. an 8 upgrade searing blow is equivalent to a 20 times upgraded one as far as the model is concerned). As a result, searing_blow_u is overvalued and in game upgrades to the card cannot be reflected in STS Cockpit. This will be fixed in a future release, but for now, use this card with caution.
+- If you've double checked the spelling and are still getting issues with unknown cards you'll just have to ignore that card for simulations and cannot add it to the deck. This is a known issue as the dataset contains old card names and all have not been fixed yet. If this happens please create an Issue in the github repo including both what you typed in and the card you expected to appear.
+- After selecting to start a new run you'll be asked to pick a model
+    - A pop up window will appear to select a file. On windows it's often hidden and you'll have to alt-tab into it (look for the feather icon).
+    - Navigate to sts_cockpit/model_objects/production. Any of the models here can be used and perform comparably with fnn_v15_small having the slightest edge (see /analyses for more info on model performance)
+- Expected character names are ironclad, the_silent, defect, watcher
+- Key menu concepts:
+    - Simulate: this allows the user to ask "what if" questions w/out modifying their deck in order to make a choice. For example, "which card should I add to my deck?"
+    - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add a_thousand_cuts) it can simply be reversed with no harm done (select remove and pull out a_thousand_cuts). You can manually use this tool to simulate custom deck combinations.
+- Understanding the outut:
+    - The underlying model is trained to predict the probability of beating the heart on A20 given a certain deck and relic combo.
+    - The numbers shown reflect this probability in decimal format (0 = 0% chance of victory, 1 = 100% chance of victory)
+    - At the start these numbers will be tiny because the likelihood of beating the heart with only the starting deck and relic is extremely low
+    - In simulations it will show a column of numbers followed by a list of cards (working to clean this up in a future update).
+        - The first entry will be the current deck and should be considered a baseline (for example if deciding whether to add a card to the deck, but all probabilities are lower than current deck, the model's recommendation would be to skip)
+        - The list of win probabilities follow the order of cards shown above. The highest numerical value is the option recommended by the model
+        - The model is decent at identifying winning deck/relic combos, but tends to evaluate options at a near 0% chance of winning then suddenly jumping to near 100% when a key card or two is added. As a result, sometimes it struggles to provide guidance on how to build towards a winning combo vs. just telling you when you have one. Very much lean into simulated results as suggestions and use your own expertise for final selections. Plannning to address this shortcoming in future model iterations
+
+
+## Hardware Requirements To Build
 ### Must Have
 - Storage: at least 233 GB of free space. This accomodates the compressed raw data, uncompressed training data, and pytorch model objects
 - RAM: at least 16 GB. Technically it will still run with slightly less, but will trigger paging and slow down dramatically
@@ -25,6 +72,8 @@ For more detailed information on the fields and data structure see data_dump.md 
 - SSD: there's quite a bit of file IO that takes place (52K files to read in and ~75K written out before reading back in again and appending to the final csvs used for training). Consequently, an HDD will slow down data processing immensly. No meaningful impact seen to model training time.
 
 ## Building STS Cockpit
+Note: building from scratch is only needed if interested in training or tweaking the underlying models. Otherwise, use the trained models and CLI.
+
 1. Clone git repo to local drive
 2. Create the following file structure inside of sts_cockpit
 - data
@@ -78,7 +127,9 @@ In no particular order, below are some development ideas
 - Fuzzy matching to support typos in UI
 
 ## Test Set Model Performance
-Model Version: FNN 14
-- Accuracy: 98.01%
+Model Version: FNN 15 Small
+- Accuracy: 97.99%
     - Test set win rate: 4% (i.e. anything about 96% shows predictive lift)
-- Binomial Cross Entropy Loss: 0.0438
+- Binary Cross Entropy Loss: 0.0437
+- Brier Score: 0.0139
+- Recall: 68%
