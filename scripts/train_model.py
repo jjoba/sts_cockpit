@@ -105,6 +105,9 @@ class NeuralNetwork(nn.Module):
             nn.Linear(863, 863),
             nn.ReLU(),
             nn.Dropout(0.5),
+            nn.Linear(863, 863),
+            nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(863, 1),
             nn.Sigmoid()
         )
@@ -130,7 +133,7 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 250 == 0:
+        if batch % 500 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -144,8 +147,9 @@ def test(dataloader, model, loss_fn):
             X, y = X.flatten(0,1), y.flatten()
             X, y = X.to(device), y.to(device)
             pred = model(X.float())
+
             test_loss += loss_fn(pred, y.unsqueeze(1).float()).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            correct += sum(np.int32(np.int32((pred.flatten() > 0.5).cpu()) == y.cpu().numpy()))
     test_loss /= num_batches
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
@@ -155,8 +159,14 @@ def test(dataloader, model, loss_fn):
 ############### RUN ##############
 
 if __name__ == '__main__':
-    
-    model_version = 'fnn_v14'
+
+    project_dir = os.getcwd()
+
+    model_version = 'fnn_v15_large'
+
+    # Makes directory for model training if it doesn't exist already
+    if not os.path.exists(f'{project_dir}/model_objects/dev/{model_version}'):
+        os.makedirs(f'{project_dir}/model_objects/dev/{model_version}')
     
     # Run time variables
     # increase chunksize to speed training at the expense of memory usage
@@ -166,19 +176,12 @@ if __name__ == '__main__':
 
     # true batch size is chunk_size * batch_size
 
-    project_dir = os.getcwd()
-
     # How many epochs for each data set and in which order
     training_dict = [
-        {'destination': 'pre_training_alpha', 'epochs': 15},
+        {'destination': 'pre_training_alpha', 'epochs': 8},
         {'destination': 'pre_training_beta', 'epochs': 20},
         {'destination': 'finetuning', 'epochs': 20}
     ]
-
-    # set fallback option to CPU as some functions aren't implemented for MPS yet
-    # Set the below command using export in terminal before running script
-    # os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-    # print(os.environ['PYTORCH_ENABLE_MPS_FALLBACK'])
 
     # Where is training to take place?
     device = (
@@ -222,7 +225,7 @@ if __name__ == '__main__':
             print(f"Saved PyTorch Model State to {model_path}")
 
         index_min = np.argmin(loss_tracker)
-        print(f'Best Model Was Epoch: {index_min + 1} with a loss of {loss_tracker[index_min]}')
+        print(f'Best Model Was Epoch: {index_min} with a loss of {loss_tracker[index_min]}')
         print(loss_tracker)
 
         # Loads the best model into memory for use in the next training step
@@ -234,6 +237,6 @@ if __name__ == '__main__':
     # Move the top performing finetuned model to production
     shutil.copy(
         f'{project_dir}/model_objects/dev/{model_version}/finetuning_epoch_{index_min}.pth',
-        f'{project_dir}/model_objects/production/{model_version}/finetuning_epoch_{index_min}.pth' )
+        f'{project_dir}/model_objects/production/{model_version}.pth')
 
         

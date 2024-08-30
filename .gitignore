@@ -1,3 +1,5 @@
-/data
+/data/*
+!/data/master_lists
 /model_objects/dev
 **/.DS_Store
+/sts_cockpit_venv/
