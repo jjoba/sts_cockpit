@@ -28,13 +28,15 @@ def get_list(gzip_file):
         master_deck = temp_run['master_deck']
 
         # Cleans up card names
-        # Handles starter cards with _X at the end
-        master_deck = [re.sub(r'_.{1}', '', card_name).lower() for card_name in master_deck]    
-        master_deck = [re.sub(r'\+.*$', '_u', card_name) for card_name in master_deck]
+        # Handles starter cards with _X at the end and combines Fasting with Fasting2
+        master_deck = [re.sub(r'_.{1}|[0-9]', '', card_name).lower() for card_name in master_deck]
 
-        # First regex didn't catch all searing blows. Forcing them to all become the same
-        # Keys off the fact that it's the only card with a number in it
-        master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
+        # Convert spaces and underscores to nothing
+        # Easier handling for the fact that some cards have spaces and others do not
+        master_deck = [re.sub(r' |_|\'', '', card_name) for card_name in master_deck]
+
+        # Converts all upgrades to _u, clobbers all searing blow upgrades into 1 
+        master_deck = [re.sub(r'\+.*$', '_u', card_name) for card_name in master_deck]
 
         # update the card list
         card_list += [c for c in set(master_deck)]
@@ -42,7 +44,8 @@ def get_list(gzip_file):
         # Process relics
         relics = temp_run['relics']
 
-        relic_list += [re.sub(' ', '_', r).lower() for r in set(relics)]
+        # Mashes relic names into one word, removes numbers (relevant to egges which end in space 2), and apostrophes
+        relic_list += [re.sub(r' |[0-9]|\'', '', r).lower() for r in set(relics)]
 
     # Sort lists and get unique values before returning
     card_list = [c for c in set(card_list)]
