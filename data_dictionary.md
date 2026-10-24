@@ -12,7 +12,8 @@ Passed to production database.
     - stored as list of <u>individual</u> cards. QTY can be determined by counting instances
     - example file has '_R' as the end of strikes and defends. Unsure about meaning of this
 - **character_chosen** *(str)*: name in caps of the character being used in this run
-- **victory** *(bool)*: whether or not the player won. This was only looked at with an example that beat the heart, so unsure if this applies to only beating act 3. This is what the model is attempting to predict. 'true' means the player won.
+- **victory** *(bool)*: whether or not the player won. True also for beating the act 3 boss without keys, so the modeling label is `victory and floor_reached >= 55` (Heart kill). Runs missing `floor_reached` keep the raw flag.
+    - original note: whether or not the player won. This was only looked at with an example that beat the heart, so unsure if this applies to only beating act 3. This is what the model is attempting to predict. 'true' means the player won.
 - **play_id** *(str)*: run ID; used as ID field when joining data together
 
 **Modeling Data Format Example**

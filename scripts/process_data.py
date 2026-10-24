@@ -41,6 +41,9 @@ from zipfile import ZipFile
 
 from name_utils import clean_cards, clean_relics, RENAMES
 
+# Heart kill is recorded at floor 56 (see winning_run_example.json), act 3 boss kill is ~51. Verify against the dump
+HEART_MIN_FLOOR = 55
+
 import pdb
 
 def combine_and_clean(d, s, combine = True):
@@ -137,7 +140,13 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
     # Append on character name and victory to create modeling data
     modeling_data = item_counts
     modeling_data['character'] = current_run['event']['character_chosen'].lower()
-    modeling_data['victory'] = current_run['event']['victory']
+    # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
+    # Older runs without floor_reached fall back to the raw flag (these go to pre training alpha)
+    floor_reached = current_run['event'].get('floor_reached')
+    if floor_reached is None:
+      modeling_data['victory'] = current_run['event']['victory']
+    else:
+      modeling_data['victory'] = current_run['event']['victory'] and floor_reached >= HEART_MIN_FLOOR
     modeling_data['destination'] = destination
     
     # add onto the model data storage
