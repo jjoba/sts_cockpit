@@ -16,6 +16,14 @@ Passed to production database.
     - original note: whether or not the player won. This was only looked at with an example that beat the heart, so unsure if this applies to only beating act 3. This is what the model is attempting to predict. 'true' means the player won.
 - **play_id** *(str)*: run ID; used as ID field when joining data together
 
+**Per floor rows**
+Each run produces up to n rows (n per destination set by `FLOORS_PER_RUN` in process_data.py), one for each of n randomly sampled floors between 1 and `floor_reached`. A row holds the deck and relics on arriving at that floor, rebuilt by `scripts/run_replay.py` from `card_choices`, `items_purchased`/`item_purchase_floors`, `items_purged`/`items_purged_floors`, `campfire_choices` (SMITH), `event_choices` (`cards_obtained`, `cards_removed`, `cards_transformed`, `cards_upgraded`, `relics_obtained`), `relics_obtained`, and `boss_relics`. The rows of a run share its `victory` label and `floor` is a feature.
+- The replayed end state is compared to `master_deck`. Runs that differ by more than `MAX_REPLAY_RESIDUAL` cards are dropped
+- Untracked deck changes (Neow transforms, Dolly's Mirror, Astrolabe, etc.) show up as residual
+- Boss relic picks have no floor in the data, so they are placed at floors 17, 34, 51
+- The `cards_removed`, `cards_transformed`, `cards_upgraded` event keys are not in the example run, so they are unverified
+- Train / test split is by run
+
 **Modeling Data Format Example**
 Each row is a separate run.
 Assume this extends for all cards (aka very wide).

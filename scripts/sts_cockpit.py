@@ -77,6 +77,9 @@ class Cockpit:
         self.deck = pd.read_csv(os.getcwd() + '/starting_decks.csv')
         self.deck.fillna(0, inplace = True)
 
+        # Model was trained on rows from floor 1 onwards, floor is updated from the main menu
+        self.deck['floor'] = 1
+
         valid_input = False
 
         while valid_input == False:
@@ -105,7 +108,7 @@ class Cockpit:
     def run_game_loop(self):
 
         # Game item variables to maintain internally for filtering
-        self.non_removable = ['ironclad', 'the_silent', 'defect', 'watcher', 'unknown', 'ascendersbane']
+        self.non_removable = ['ironclad', 'the_silent', 'defect', 'watcher', 'unknown', 'ascendersbane', 'floor']
         self.curses = ['doubt', 'regret']
 
         # Loads in the master relic list
@@ -118,7 +121,7 @@ class Cockpit:
         self.continue_run = True
         
         while self.continue_run == True:
-            self.user_choice = input('\nWhat Would you like to do?\n1. Simulate\n2. Update Deck & Relics\n3. View Current Deck & Win Rate\n0. Exit\n')
+            self.user_choice = input('\nWhat Would you like to do?\n1. Simulate\n2. Update Deck & Relics\n3. View Current Deck & Win Rate\n4. Set Current Floor\n0. Exit\n')
 
             # Simulate
             if self.user_choice == '1':
@@ -150,7 +153,7 @@ class Cockpit:
                                     card = input('Enter card name or type 9 to go back: ')
 
                                     # Add card to sim
-                                    if card in self.deck.columns:
+                                    if card in self.deck.columns and card != 'floor':
                                         temp_sim_deck = self.deck.copy()
 
                                         temp_sim_deck[card] += 1
@@ -243,8 +246,8 @@ class Cockpit:
                             # Make sure we're not simming a character card or ascenders bane or adding a relic
                             if card in self.non_removable + self.curses + self.relic_list:
                                 pass
-                            elif card == 'searing_blow_u':
-                                print('searing_blow_u not eligible for consideration due to model issues')
+                            elif card == 'searingblow_u':
+                                print('searingblow_u not eligible for consideration due to model issues')
                                 pass
                             else:
                                 temp_sim_deck = self.deck.copy()
@@ -329,7 +332,7 @@ class Cockpit:
                         while valid_card is False:
                             card = input('Which card would you like to add? 9 to go back\n')
                             
-                            if card in self.deck.columns:
+                            if card in self.deck.columns and card != 'floor':
                                 self.deck[card] += 1
                                 valid_card = True
                             
@@ -490,6 +493,17 @@ class Cockpit:
                 print({k:int(v[0]) for (k, v) in self.deck.to_dict('list').items() if v[0] > 0})
                 print('Win Rate')
                 self.get_win_rate(self.deck)
+
+            # Set current floor
+            elif self.user_choice == '4':
+                floor = input('Which floor are you on? (1-57)\n')
+
+                if floor.isdigit() and 1 <= int(floor) <= 57:
+                    self.deck['floor'] = int(floor)
+                    print(f'Floor set to {floor}. The new win rate is')
+                    self.get_win_rate(self.deck)
+                else:
+                    print(f'{floor} is not a valid floor')
 
             # Exit
             elif self.user_choice == '0':

@@ -15,6 +15,9 @@ from torch.utils.data import Dataset, DataLoader
 
 import pdb
 
+# Cards + relics + characters + floor, must match process_data.py and starting_decks.csv
+N_FEATURES = 864
+
 class CSVDataset(Dataset):
     def __init__(self, file_path, chunk_size = 1000):
 
@@ -91,9 +94,22 @@ class CSVDataset(Dataset):
     
 class InMemoryDataset(Dataset):
     # Loads the whole file as int8 so DataLoader shuffling actually shuffles rows
-    # CSVDataset below ignores idx, so rows arrive in file order (blocks from the same source file)
-    def __init__(self, file_path):
-        self.data = torch.from_numpy(pd.read_csv(file_path, dtype = 'int8', header = 0).to_numpy())
+    # CSVDataset below ignores idx, so rows arrive in file order (blocks from the same source file, a run's floors are adjacent)
+    def __init__(self, file_path, n_rows, read_rows = 500000):
+        data = None
+        start = 0
+
+        # Fills a preallocated array chunk by chunk so peak memory stays near the size of the data itself
+        for chunk in pd.read_csv(file_path, dtype = 'int8', header = 0, chunksize = read_rows):
+            chunk = chunk.to_numpy()
+
+            if data is None:
+                data = np.empty((n_rows, chunk.shape[1]), dtype = np.int8)
+
+            data[start:start + chunk.shape[0]] = chunk
+            start += chunk.shape[0]
+
+        self.data = torch.from_numpy(data)
 
     def __len__(self):
         return self.data.shape[0]
@@ -102,11 +118,22 @@ class InMemoryDataset(Dataset):
         row = self.data[idx:idx + 1]
         return row[:, :-1], row[:, -1:]
 
-def load_dataset(file_path, chunk_size, max_in_memory_gb = 8):
-    # Files small enough to hold in RAM get true shuffling, larger ones (pre training) stream in file order
-    if os.path.getsize(file_path) / 1e9 <= max_in_memory_gb:
-        return InMemoryDataset(file_path)
-    return CSVDataset(file_path, chunk_size)
+def load_dataset(file_path, chunk_size, max_in_memory_gb = 6):
+    # Files that fit in RAM get true shuffling, larger ones (pre training) stream in file order
+    # A csv value takes at least 2 bytes of text vs 1 byte in memory, so skip the row count for obviously large files
+    if os.path.getsize(file_path) > 2 * max_in_memory_gb * 1e9:
+        print(f'{file_path} is too large to hold in memory, streaming without shuffling')
+        return CSVDataset(file_path, chunk_size)
+
+    with open(file_path) as f:
+        n_cols = len(f.readline().split(','))
+        n_rows = sum(1 for _ in f)
+
+    if n_rows * n_cols > max_in_memory_gb * 1e9:
+        print(f'{file_path} is too large to hold in memory, streaming without shuffling')
+        return CSVDataset(file_path, chunk_size)
+
+    return InMemoryDataset(file_path, n_rows)
 
 # Define model
 class NeuralNetwork(nn.Module):
@@ -115,19 +142,19 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
             # More layers seems to work worse
-            nn.Linear(863, 863),
+            nn.Linear(N_FEATURES, N_FEATURES),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(863, 863),
+            nn.Linear(N_FEATURES, N_FEATURES),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(863, 863),
+            nn.Linear(N_FEATURES, N_FEATURES),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(863, 863),
+            nn.Linear(N_FEATURES, N_FEATURES),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(863, 1),
+            nn.Linear(N_FEATURES, 1),
             nn.Sigmoid()
         )
 

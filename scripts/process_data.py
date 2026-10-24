@@ -29,6 +29,7 @@ import json
 import re
 import multiprocessing
 import itertools
+import random
 
 import pandas as pd
 import numpy as np
@@ -39,12 +40,22 @@ from sklearn.model_selection import train_test_split
 from time import time
 from zipfile import ZipFile
 
-from name_utils import clean_cards, clean_relics, RENAMES
+from name_utils import RENAMES
+from run_replay import replay_run
 
 # Heart kill is recorded at floor 56 (see winning_run_example.json), act 3 boss kill is ~51. Verify against the dump
 HEART_MIN_FLOOR = 55
 
-import pdb
+# Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
+# because training data is rows x ~865 bytes: finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 2, 'pre_training_alpha': 1}
+
+# Runs whose replayed final deck differs from the logged final deck by more than this many cards are dropped
+# replay_stats.csv has the residual distribution to help tune this
+MAX_REPLAY_RESIDUAL = 0
+
+# Columns written to the training csvs: cards + relics (859), characters (4), floor, victory
+N_TRAIN_COLS = 865
 
 def combine_and_clean(d, s, combine = True):
   # d = destination
@@ -61,7 +72,7 @@ def combine_and_clean(d, s, combine = True):
 
       # Checks to ensure the file has the correct number of columns
       # Update to correct number of columns in future
-      if temp_file.shape[1] == 864:
+      if temp_file.shape[1] == N_TRAIN_COLS:
 
         output_file = f'{temp_dir}/{s}.csv'
         # output_file = f'{temp_dir}/{s}.parquet'
@@ -84,22 +95,17 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # gzip_file = gzipped binary string of a gzipped json file
   runs = json.loads(gzip.decompress(gzip_file))
 
-  # Holds all extracted runs from a given json file
+  # Names allowed as columns, anything else in a run is ignored rather than breaking the schema for the whole file
+  card_set = {re.sub('\n', '', card) for card in master_card_list}
+  relic_set = {re.sub('\n', '', relic) for relic in master_relic_list}
+
+  # Counts of what happened to runs in this file, summed across files in main
+  stats = Counter()
+
+  # Holds all extracted rows from a given json file
   model_data_storage = []
 
   for current_run in runs:
-    # Conform card names (see name_utils.py), must match create_master_lists.py
-    master_deck = clean_cards(current_run['event']['master_deck'])
-
-    # Gets the list of relics for a given run
-    relics = clean_relics(current_run['event']['relics'])
-
-    # list and QTY of all items picked up in a run
-    run_items = master_deck + relics
-
-    # QTY of each card in the final deck
-    item_counts = dict(Counter(run_items))
-
     # Logic field determining which dataset this should go to
     destination = 'finetuning'
     if current_run['event']['is_trial'] is True:
@@ -137,25 +143,42 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
         if current_run['event']['ascension_level'] < 20:
             destination = 'pre_training_beta'
 
-    # Append on character name and victory to create modeling data
-    modeling_data = item_counts
-    modeling_data['character'] = current_run['event']['character_chosen'].lower()
-    # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
-    # Older runs without floor_reached fall back to the raw flag (these go to pre training alpha)
-    floor_reached = current_run['event'].get('floor_reached')
-    if floor_reached is None:
-      modeling_data['victory'] = current_run['event']['victory']
-    else:
-      modeling_data['victory'] = current_run['event']['victory'] and floor_reached >= HEART_MIN_FLOOR
-    modeling_data['destination'] = destination
-    
-    # add onto the model data storage
-    id = current_run['event']['play_id']
-    #model_data_storage[id] = modeling_data
-    modeling_data['id'] = id
+    stats[f'{destination}_runs'] += 1
 
-    model_data_storage.append(modeling_data)
-  
+    # Rebuild deck & relics at sampled floors
+    rng = random.Random(current_run['event']['play_id'])
+    replay = replay_run(current_run['event'], card_set, relic_set, FLOORS_PER_RUN[destination], rng)
+
+    if replay is None:
+      stats[f'{destination}_dropped_not_replayable'] += 1
+      continue
+
+    rows, residual = replay
+
+    # Residual distribution is across all replayable runs so MAX_REPLAY_RESIDUAL can be tuned
+    stats['residual_' + ('0' if residual == 0 else '1' if residual == 1 else '2-3' if residual < 4 else '4-6' if residual < 7 else '7+')] += 1
+
+    if residual > MAX_REPLAY_RESIDUAL:
+      stats[f'{destination}_dropped_residual'] += 1
+      continue
+
+    # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
+    victory = current_run['event']['victory'] and current_run['event']['floor_reached'] >= HEART_MIN_FLOOR
+
+    stats[f'{destination}_runs_kept'] += 1
+    stats[f'{destination}_rows'] += len(rows)
+
+    for floor, deck, relics in rows:
+      modeling_data = dict(deck)
+      modeling_data.update(Counter(relics))
+      modeling_data['floor'] = floor
+      modeling_data['character'] = current_run['event']['character_chosen'].lower()
+      modeling_data['victory'] = victory
+      modeling_data['destination'] = destination
+      modeling_data['id'] = current_run['event']['play_id']
+
+      model_data_storage.append(modeling_data)
+
   # Process lists into dictionaries with value 1 to ensure all items are captured
   card_dict = {re.sub('\n', '', card):1 for card in master_card_list}
   relic_dict = {re.sub('\n', '', relic):1 for relic in master_relic_list}
@@ -167,6 +190,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   dummy_row['id'] = 'dummy_row'
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
   dummy_row['victory'] = True
+  dummy_row['floor'] = 0
 
   # model_data_storage_save = model_data_storage.copy()
 
@@ -191,9 +215,8 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Setting unknown as the reference
   model_data_storage = model_data_storage.drop('unknown', axis = 1)
   
-  # Remove dummy row and drop id column
+  # Remove dummy rows, id is kept until after the train / test split so a run's rows never land on both sides
   model_data_storage = model_data_storage[model_data_storage['id'] != 'dummy_row']
-  model_data_storage = model_data_storage.drop('id', axis = 1)
 
   # Moving victory to the end -- standard practice for modeling
   model_data_storage = model_data_storage[[c for c in model_data_storage if c not in ['victory']] + ['victory']]
@@ -201,13 +224,23 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Changing card titles to reflect current naming
   model_data_storage = model_data_storage.rename(columns = RENAMES)
 
+  # Files that happen to have no runs for a character would otherwise be missing that one hot column
+  character_cols = ['defect', 'ironclad', 'the_silent', 'watcher']
+  for character_col in character_cols:
+    if character_col not in model_data_storage.columns:
+      model_data_storage[character_col] = 0
+
+  # Explicit column order so every file matches starting_decks.csv and the model input
+  item_cols = [RENAMES.get(c, c) for c in list(card_dict) + list(relic_dict)]
+  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + ['id', 'destination', 'victory']]
+
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
   # Root cause is NOT incorrect character names or victory column issues
   # Until then issue is handled by writing out file as a processing error and NOT write out
   
-  # destination is still attached at this point, so expect 864 + 1
-  if model_data_storage.shape[1] != 865:
+  # destination and id are still attached at this point
+  if model_data_storage.shape[1] != N_TRAIN_COLS + 2:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
   
@@ -221,27 +254,31 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Loop through each of unique destinations (finetuning, etc.)
   for u_d in unique_destinations:
 
-    # Remove destination column and reduce data footprint
+    # Remove destination column
     temp_data = model_data_storage[model_data_storage['destination'] == u_d]
     temp_data = temp_data.drop('destination', axis = 1)
-    temp_data = temp_data.astype('int8')
 
     time_stamp = int(time() + np.random.randint(0, 10000000000, 1))
 
-    if temp_data.shape[0] > 1:
-      train, test = train_test_split(temp_data, test_size=0.2)
+    # Split on runs (not rows) since a run can have several rows
+    run_ids = temp_data['id'].unique()
+
+    if len(run_ids) > 1:
+      train_ids, test_ids = train_test_split(run_ids, test_size=0.2)
+
+      train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
+      test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
 
       train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
       test.to_csv(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.csv', index = False)
-    # If there's only one row in a file write it to train
+    # If there's only one run in a file write it to train
     else:
-      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
+      temp_data.drop('id', axis = 1).astype('int8').to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
 
-  # Ends function, nothing needed from this value
-  return 'success'
+  return stats
 
 if __name__ == '__main__':
-  # NOTE: 864 = number of cols when accounting for cards, relics, character, and victory cols
+  # NOTE: N_TRAIN_COLS = number of cols when accounting for cards, relics, character, floor, and victory cols
 
   num_cores = multiprocessing.cpu_count() - 1
   
@@ -272,6 +309,7 @@ if __name__ == '__main__':
   file_list = [data_dir + '/raw/' + f for f in os.listdir(data_dir + '/raw/')]
 
   k = 0
+  total_stats = Counter()
 
   # Extract ip archive and dump to temp folder - note: extraction takes some time, would be wise to skip if possible
   for file in file_list:
@@ -297,7 +335,12 @@ if __name__ == '__main__':
     items = list(itertools.product(res.values(), [data_dir], [master_card_list], [master_relic_list]))
     run_progress = pool_obj.starmap(process_runs, items)
     pool_obj.close()
-    
+
+    for file_stats in run_progress:
+      total_stats.update(file_stats)
+
+    print(dict(total_stats))
+
     k += 1    
   
   # Appends all of the individual files together into one, single file then cleans up the temp files
@@ -313,3 +356,5 @@ if __name__ == '__main__':
   run_progress = pool_obj.starmap(combine_and_clean, items)
   pool_obj.close()
   
+
+  pd.Series(total_stats).sort_index().to_csv(f'{data_dir}/processing_failures/replay_stats.csv', header = ['count'])

@@ -8,6 +8,8 @@ Create a data and AI/ML tool as a companion to support players during runs. Ther
 ## How It Works
 STS Cockpit provides a Command Line Interface (CLI) to manage adding/removing/upgrading cards from the deck as well as simulating potential choices (e.g. which of these three cards, if any, should I add to my deck?). When a given action or simulation is taken by the user STS Cockpit provides expected win rates for each choice (this is the number output to the terminal. 1 = 100% chance of victory). This is always compared to a baseline of doing nothing where a higher win rate than the baseline would suggest an adventageous choice.
 
+Training rows are snapshots of a run's deck and relics on arrival at a randomly sampled floor (replayed from the card choice, shop, event, and campfire logs), labeled with whether the run went on to beat the Heart. Floor is a model input. Runs whose replayed final deck does not match the logged final deck are dropped (see `data/processing_failures/replay_stats.csv` after processing).
+
 Supporting the calculations is a four layer Feed Foward Neural Network with drop out regularization (~2.2M Parameters) trained to predict whether or not a given run will win. The model has "seen" a total of 77M runs, but only 1.5M runs were used for finetuning. These runs are all at A20 difficulty after watcher was released and do not contain daily runs, beta test, or endless mode.
 
 All data comes from [this data dump](https://www.reddit.com/r/slaythespire/comments/jt5y1w/77_million_runs_an_sts_metrics_dump/)
@@ -47,6 +49,7 @@ For more detailed information on the fields and data structure see data_dump.md 
     - A pop up window will appear to select a file. On windows it's often hidden and you'll have to alt-tab into it (look for the feather icon).
     - Navigate to sts_cockpit/model_objects/production. Any of the models here can be used and perform comparably with fnn_v15_small having the slightest edge (see /analyses for more info on model performance)
 - Expected character names are ironclad, the_silent, defect, watcher
+- Set your current floor from the main menu (option 4). The model takes floor as an input, so win rates change with it. It starts at floor 1.
 - Key menu concepts:
     - Simulate: this allows the user to ask "what if" questions w/out modifying their deck in order to make a choice. For example, "which card should I add to my deck?"
     - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add athousandcuts) it can simply be reversed with no harm done (select remove and pull out athousandcuts). You can manually use this tool to simulate custom deck combinations.
@@ -126,6 +129,8 @@ In no particular order, below are some development ideas
 - Fuzzy matching to support typos in UI
 
 ## Test Set Model Performance
+Note: these numbers are for the previous version of the model (end of run decks, victory = any win) and are not comparable to models trained on per floor rows.
+
 Model Version: FNN 15 Small
 - Accuracy: 97.99%
     - Test set win rate: 4% (i.e. anything about 96% shows predictive lift)
