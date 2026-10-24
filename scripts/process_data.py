@@ -39,6 +39,8 @@ from sklearn.model_selection import train_test_split
 from time import time
 from zipfile import ZipFile
 
+from name_utils import clean_cards, clean_relics, RENAMES
+
 import pdb
 
 def combine_and_clean(d, s, combine = True):
@@ -83,20 +85,11 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   model_data_storage = []
 
   for current_run in runs:
-    # Conform card names to remove '+1' from upgrade, also treats all searing blows the same
-    # Force to lowercase
-    master_deck = current_run['event']['master_deck']
-    # Handles starter cards with _X at the end
-    master_deck = [re.sub(r'_.{1}', '', card_name).lower() for card_name in master_deck]    
-    master_deck = [re.sub(r'\+.*$', '_u', card_name) for card_name in master_deck]
-
-    # First regex didn't catch all searing blows. Forcing them to all become the same
-    # Keys off the fact that it's the only card with a number in it
-    master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
+    # Conform card names (see name_utils.py), must match create_master_lists.py
+    master_deck = clean_cards(current_run['event']['master_deck'])
 
     # Gets the list of relics for a given run
-    relics = current_run['event']['relics']
-    relics = [re.sub(' ', '_', r).lower() for r in relics]
+    relics = clean_relics(current_run['event']['relics'])
 
     # list and QTY of all items picked up in a run
     run_items = master_deck + relics
@@ -197,23 +190,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   model_data_storage = model_data_storage[[c for c in model_data_storage if c not in ['victory']] + ['victory']]
 
   # Changing card titles to reflect current naming
-  model_data_storage = model_data_storage.rename(columns={
-    'underhanded_strike':'sneaky_strike', 
-    'underhanded_strike_u':'sneaky_strike_u',
-    'wireheading':'foresight', 
-    'wireheading_u':'foresight_u', 
-    'conserve_battery':'charge_battery',
-    'conserve_battery':'charge_battery_u', 
-    'lockon':'bullseye',
-    'lockon_u':'bullseye_u',
-    'undo':'equilibrium',
-    'undo_u':'equilibrium_u',
-    'steam_power': 'steam_barrier',
-    'steam_power_u':'steam_barrier_u',
-    'molten_egg_2': 'molten_egg',
-    'toxic_egg_2': 'toxic_egg',
-    'frozen_egg_2': 'frozen_egg'
-  })
+  model_data_storage = model_data_storage.rename(columns = RENAMES)
 
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files

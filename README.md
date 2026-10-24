@@ -39,9 +39,9 @@ For more detailed information on the fields and data structure see data_dump.md 
 
 ## Interacting With STS Cockpit
 - On menu screens or prompts with numbered options, the program expects the number followed by enter. For example, if you saw "1. Start a new run" you'd input "1" followed by enter to select this choice
-- All card and relic names should be in lowercase with underscores as spaces (e.g. infinite_blades). If that doesn't work try again without the underscores as naming conventions in the data are inconsistent (e.g. justlucky). Watcher tends to have everything smushed into a single word. Eventually, I'll conform all items to follow this format.
-- Upgraded cards have an "_u" at the end (e.g. infinite_blades_u)
-    - Note: Searing Blow is not handled as it is in the game. Currently, all number of upgrades are grouped into "searing_blow_u" (e.g. an 8 upgrade searing blow is equivalent to a 20 times upgraded one as far as the model is concerned). As a result, searing_blow_u is overvalued and in game upgrades to the card cannot be reflected in STS Cockpit. This will be fixed in a future release, but for now, use this card with caution.
+- All card and relic names should be lowercase, one word, with no spaces, underscores, apostrophes, or numbers (e.g. infiniteblades, pandorasbox). Hyphens and periods are kept (e.g. multi-cast, j.a.x.).
+- Upgraded cards have an "_u" at the end (e.g. infiniteblades_u)
+    - Note: Searing Blow is not handled as it is in the game. Currently, all number of upgrades are grouped into "searingblow_u" (e.g. an 8 upgrade searing blow is equivalent to a 20 times upgraded one as far as the model is concerned). As a result, searingblow_u is overvalued and in game upgrades to the card cannot be reflected in STS Cockpit. This will be fixed in a future release, but for now, use this card with caution.
 - If you've double checked the spelling and are still getting issues with unknown cards you'll just have to ignore that card for simulations and cannot add it to the deck. This is a known issue as the dataset contains old card names and all have not been fixed yet. If this happens please create an Issue in the github repo including both what you typed in and the card you expected to appear.
 - After selecting to start a new run you'll be asked to pick a model
     - A pop up window will appear to select a file. On windows it's often hidden and you'll have to alt-tab into it (look for the feather icon).
@@ -49,7 +49,7 @@ For more detailed information on the fields and data structure see data_dump.md 
 - Expected character names are ironclad, the_silent, defect, watcher
 - Key menu concepts:
     - Simulate: this allows the user to ask "what if" questions w/out modifying their deck in order to make a choice. For example, "which card should I add to my deck?"
-    - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add a_thousand_cuts) it can simply be reversed with no harm done (select remove and pull out a_thousand_cuts). You can manually use this tool to simulate custom deck combinations.
+    - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add athousandcuts) it can simply be reversed with no harm done (select remove and pull out athousandcuts). You can manually use this tool to simulate custom deck combinations.
 - Understanding the outut:
     - The underlying model is trained to predict the probability of beating the heart on A20 given a certain deck and relic combo.
     - The numbers shown reflect this probability in decimal format (0 = 0% chance of victory, 1 = 100% chance of victory)
@@ -122,7 +122,6 @@ In no particular order, below are some development ideas
 - Add data processing and model building functionality directly to sts_cockpit script to streamline experience
 - Properly handle searing blow (currently all quantity of upgrades are treated as a single upgrade, overvaluing the card)
 - Create full list of curses
-- Standardize naming (some items have space with underscores, some don't)
 - Identify the names of the last few missing cards
 - Fuzzy matching to support typos in UI
 
