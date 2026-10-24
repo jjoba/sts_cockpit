@@ -89,6 +89,25 @@ class CSVDataset(Dataset):
 
         return X, y
     
+class InMemoryDataset(Dataset):
+    # Loads the whole file as int8 so DataLoader shuffling actually shuffles rows
+    # CSVDataset below ignores idx, so rows arrive in file order (blocks from the same source file)
+    def __init__(self, file_path):
+        self.data = torch.from_numpy(pd.read_csv(file_path, dtype = 'int8', header = 0).to_numpy())
+
+    def __len__(self):
+        return self.data.shape[0]
+
+    def __getitem__(self, idx):
+        row = self.data[idx:idx + 1]
+        return row[:, :-1], row[:, -1:]
+
+def load_dataset(file_path, chunk_size, max_in_memory_gb = 8):
+    # Files small enough to hold in RAM get true shuffling, larger ones (pre training) stream in file order
+    if os.path.getsize(file_path) / 1e9 <= max_in_memory_gb:
+        return InMemoryDataset(file_path)
+    return CSVDataset(file_path, chunk_size)
+
 # Define model
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -204,10 +223,10 @@ if __name__ == '__main__':
     for regimen in training_dict:
         print(f'Training on destination: {regimen['destination']}')
         # Setup reading data for training and testing
-        training_data = CSVDataset(f'{project_dir}/data/training_data/{regimen['destination']}/train/train.csv', chunk_size)
+        training_data = load_dataset(f'{project_dir}/data/training_data/{regimen['destination']}/train/train.csv', chunk_size)
         training_loader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
 
-        testing_data = CSVDataset(f'{project_dir}/data/training_data/{regimen['destination']}/test/test.csv', chunk_size)
+        testing_data = load_dataset(f'{project_dir}/data/training_data/{regimen['destination']}/test/test.csv', chunk_size)
         testing_loader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
 
         loss_tracker = []

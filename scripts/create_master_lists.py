@@ -90,11 +90,11 @@ if __name__ == '__main__':
         pool_obj.close()
 
         # Unpack, set, and sort
-        file_card_list = [c[0] for c in output][0]
+        file_card_list = [c for c_list in output for c in c_list[0]]
         file_card_list = [c for c in set(file_card_list)]
         file_card_list.sort()
 
-        file_relic_list = [r[1] for r in output][0]
+        file_relic_list = [r for r_list in output for r in r_list[1]]
         file_relic_list = [r for r in set(file_relic_list)]
         file_relic_list.sort()
 

@@ -220,7 +220,8 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Root cause is NOT incorrect character names or victory column issues
   # Until then issue is handled by writing out file as a processing error and NOT write out
   
-  if model_data_storage.shape[1] != 864:
+  # destination is still attached at this point, so expect 864 + 1
+  if model_data_storage.shape[1] != 865:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
   
