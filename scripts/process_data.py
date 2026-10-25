@@ -47,15 +47,15 @@ from run_replay import replay_run
 HEART_MIN_FLOOR = 55
 
 # Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
-# because training data is rows x ~865 bytes: finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+# because training data is rows x ~921 bytes: finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
 FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 2, 'pre_training_alpha': 1}
 
 # Runs whose replayed final deck differs from the logged final deck by more than this many cards are dropped
 # replay_stats.csv has the residual distribution to help tune this
 MAX_REPLAY_RESIDUAL = 0
 
-# Columns written to the training csvs: cards + relics (859), characters (4), floor, victory
-N_TRAIN_COLS = 865
+# Columns written to the training csvs: cards + relics (915), characters (4), floor, victory
+N_TRAIN_COLS = 921
 
 def combine_and_clean(d, s, combine = True):
   # d = destination

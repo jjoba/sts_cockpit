@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 import pdb
 
 # Cards + relics + characters + floor, must match process_data.py and starting_decks.csv
-N_FEATURES = 864
+N_FEATURES = 920
 
 class CSVDataset(Dataset):
     def __init__(self, file_path, chunk_size = 1000):
@@ -208,7 +208,7 @@ if __name__ == '__main__':
 
     project_dir = os.getcwd()
 
-    model_version = 'fnn_v15_large'
+    model_version = 'fnn_v17'
 
     # Makes directory for model training if it doesn't exist already
     if not os.path.exists(f'{project_dir}/model_objects/dev/{model_version}'):
