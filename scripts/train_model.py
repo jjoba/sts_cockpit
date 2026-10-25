@@ -1,233 +1,362 @@
 '''
     Trains model to predict how likely a given deck is to win
-    TODO:
-        
+
+    Everything needed to compare model / architecture choices is written to model_objects/dev/<model_version>/:
+      config.json       settings, data stats, git commit, parameter count
+      baselines.json    what simple models score on the same finetuning test rows (is the network moving the needle?)
+      metrics.csv       one row per epoch: train vs test gap, ranking (AUC, average precision, lift), calibration, grad / weight norms
+      segments.csv      per epoch finetuning test metrics by character and floor range
+      calibration.csv   per epoch predicted vs actual win rate by prediction decile
+      summary.json      best epochs and final numbers
+      learning_curves.png
+    and one line per run is appended to model_objects/experiments.csv so runs can be compared side by side.
+
+    Usage (from the project root):
+      python scripts/train_model.py
+      python scripts/train_model.py --set model_version=fnn_v17_wide hidden_width=1400 dropout=0.3
+      python scripts/train_model.py --set model_version=fnn_v17_no_pretrain stages=finetuning
+    Any key in DEFAULT_CONFIG can be overridden with --set key=value (values are read as json where possible).
 '''
 import torch
 import os
+import sys
+import json
 import shutil
+import subprocess
 
-import pandas as pd
+from time import time
+
 import numpy as np
+import pandas as pd
 
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
-import pdb
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score, average_precision_score, precision_recall_curve
 
 # Cards + relics + characters + floor, must match process_data.py and starting_decks.csv
 N_FEATURES = 920
 
-class CSVDataset(Dataset):
-    def __init__(self, file_path, chunk_size = 1000):
+# Last columns of a row are floor, then the one hot characters, then victory (see process_data.py)
+FLOOR_COL = N_FEATURES - 5
+CHARACTERS = ['defect', 'ironclad', 'the_silent', 'watcher']
+CHARACTER_COLS = list(range(N_FEATURES - 4, N_FEATURES))
 
-        # Storing info passed
-        self.file_path = file_path # path to file
-        self.chunk_size = chunk_size # number of rows to read into memory at once from file
+# Floor ranges metrics are broken out by
+FLOOR_BUCKETS = [('floor_01_10', 1, 10), ('floor_11_25', 11, 25), ('floor_26_40', 26, 40), ('floor_41_plus', 41, 127)]
 
-        # Setting up the reader as an iterator to enable get_chunk functionality
-        self.reader = pd.read_csv(self.file_path, dtype = 'int8', header = 0, iterator = True)
+DEFAULT_CONFIG = {
+    'model_version': 'fnn_v17',
+    'seed': 0,
 
-        # Computing here on init for efficiency since __len__ gets called multiple times
-        series = pd.read_csv(self.file_path, usecols = [0], dtype = 'int8', header = 0)
-        self.LENGTH = series.shape[0]
+    # Architecture: n_hidden layers of hidden_width units (ReLU, dropout) then a sigmoid output
+    'n_hidden': 4,
+    'hidden_width': N_FEATURES,
+    'dropout': 0.5,
 
-        # Trackers for data file refreshes
-        self.total_row_requests = 0 # total number of rows that have been requests. Governs reseting the reader
-        self.chunk_row_requests = 0 # total number of rows requested from a chunk. Governs fetching new rows
+    # Regularization: l2 is the optimizer weight decay, l1 is a penalty on the absolute value of the weights added to the loss
+    'l1': 0.0,
+    'l2': 0.0,
 
-        # Pre load the first chunk
-        self.chunk = self.reader.get_chunk(chunk_size)
-        self.chunk_rows = self.chunk.shape[0] # calculting dynamically in case the rows available are less than chunk size
+    # Optimization
+    'optimizer': 'sgd', # sgd or adam
+    'lr': 1e-2,
+    'momentum': 0.0, # sgd only
+    'batch_size': 64,
 
-    def __len__(self):
+    # Which data sets to train on in order, and for how many epochs each. Set stages=finetuning to see if pre training helps
+    'stages': ['pre_training_alpha', 'pre_training_beta', 'finetuning'],
+    'epochs': {'pre_training_alpha': 8, 'pre_training_beta': 20, 'finetuning': 20},
 
-        return self.LENGTH
-    
-    def __getitem__(self, idx):
-        # Send the X and y values for one row
-        # NOTE: idx a.k.a. shuffling from data loader does nothing right now
+    # Finetuning epoch that goes to production is the best one on this finetuning test metric
+    'select_metric': 'log_loss', # log_loss, brier, ece (lower is better) or auc, avg_precision, lift_top_decile (higher is better)
 
-        # Send single row
-        if self.chunk_row_requests < self.chunk_rows:
-            
-            row = self.chunk.iloc[[self.chunk_row_requests], :]
-            self.chunk_row_requests += 1
-            self.total_row_requests += 1
-        
-        else:
-            
-            # Load new chunk only
-            if self.total_row_requests < self.LENGTH:                
-                
-                # Load a new chunk
-                self.chunk = self.reader.get_chunk(self.chunk_size)
-                self.chunk_rows = self.chunk.shape[0]
-                self.chunk_row_requests = 0
+    # Rows used for evaluation each epoch (fixed random subsets of the test and train files)
+    'eval_rows': 500000,
+    'ft_eval_rows': 2000000,
+    'train_eval_rows': 200000,
 
-                # Send row and update counter
-                row = self.chunk.iloc[[self.chunk_row_requests], :]
-                self.chunk_row_requests += 1
-                self.total_row_requests += 1
+    # Caps the rows seen per epoch (a fresh random subset each epoch), for quick architecture trials. null = the whole file
+    'max_train_rows': None,
 
-            # Resets reader for new epoch
-            else:
-                # Reset reader to start again at top of file
-                self.reader = pd.read_csv(self.file_path, dtype = 'int8', header = 0, iterator = True)                
-                self.total_row_requests = 0
+    'baselines': True,
+    'save_production': True,
+}
 
-                # Load a new chunk
-                self.chunk = self.reader.get_chunk(self.chunk_size)
-                self.chunk_rows = self.chunk.shape[0]
-                self.chunk_row_requests = 0
+LOWER_IS_BETTER = {'log_loss', 'brier', 'ece'}
 
-                # Send row and update counter
-                row = self.chunk.iloc[[self.chunk_row_requests], :]
-                self.chunk_row_requests += 1
-                self.total_row_requests += 1
-
-        # Extract necessary rows, convert to tensor, and ship to data loader
-        X = torch.from_numpy(row.iloc[:, :-1].to_numpy().astype(np.int8))
-        y = torch.from_numpy(row.iloc[:, -1:].to_numpy().astype(np.int8))
-
-        return X, y
-    
-class InMemoryDataset(Dataset):
-    # Loads the whole file as int8 so DataLoader shuffling actually shuffles rows
-    # CSVDataset below ignores idx, so rows arrive in file order (blocks from the same source file, a run's floors are adjacent)
-    def __init__(self, file_path, n_rows, read_rows = 500000):
-        data = None
-        start = 0
-
-        # Fills a preallocated array chunk by chunk so peak memory stays near the size of the data itself
-        for chunk in pd.read_csv(file_path, dtype = 'int8', header = 0, chunksize = read_rows):
-            chunk = chunk.to_numpy()
-
-            if data is None:
-                data = np.empty((n_rows, chunk.shape[1]), dtype = np.int8)
-
-            data[start:start + chunk.shape[0]] = chunk
-            start += chunk.shape[0]
-
-        self.data = torch.from_numpy(data)
+class BinDataset(Dataset):
+    # Rows are fixed width int8 (features then victory) written by process_data.py, no header, so the file is memory mapped
+    # The OS pages rows in as they are asked for, so shuffling works on files far larger than RAM
+    def __init__(self, file_path):
+        self.data = np.memmap(file_path, dtype = np.int8, mode = 'r').reshape(-1, N_FEATURES + 1)
 
     def __len__(self):
         return self.data.shape[0]
 
-    def __getitem__(self, idx):
-        row = self.data[idx:idx + 1]
-        return row[:, :-1], row[:, -1:]
+    def take(self, idx):
+        # idx should be sorted, which keeps the reads close to sequential
+        rows = torch.from_numpy(np.asarray(self.data[idx]))
+        return rows[:, :-1], rows[:, -1]
 
-def load_dataset(file_path, chunk_size, max_in_memory_gb = 6):
-    # Files that fit in RAM get true shuffling, larger ones (pre training) stream in file order
-    # A csv value takes at least 2 bytes of text vs 1 byte in memory, so skip the row count for obviously large files
-    if os.path.getsize(file_path) > 2 * max_in_memory_gb * 1e9:
-        print(f'{file_path} is too large to hold in memory, streaming without shuffling')
-        return CSVDataset(file_path, chunk_size)
+class EvalSet:
+    # A fixed random subset of a data set, labels and segment columns are read once and the features are read at eval time
+    def __init__(self, dataset, max_rows, seed):
+        rng = np.random.default_rng(seed)
+        n = len(dataset)
+        self.dataset = dataset
+        self.idx = np.sort(rng.choice(n, min(n, max_rows), replace = False))
 
-    with open(file_path) as f:
-        n_cols = len(f.readline().split(','))
-        n_rows = sum(1 for _ in f)
-
-    if n_rows * n_cols > max_in_memory_gb * 1e9:
-        print(f'{file_path} is too large to hold in memory, streaming without shuffling')
-        return CSVDataset(file_path, chunk_size)
-
-    return InMemoryDataset(file_path, n_rows)
+        meta = np.asarray(dataset.data[self.idx][:, [FLOOR_COL] + CHARACTER_COLS + [N_FEATURES]])
+        self.floor = meta[:, 0].astype(np.int16)
+        self.character = meta[:, 1:5].argmax(axis = 1)
+        self.y = meta[:, 5].astype(np.int8)
 
 # Define model
 class NeuralNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, n_hidden = 4, hidden_width = N_FEATURES, dropout = 0.5):
         super().__init__()
         self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            # More layers seems to work worse
-            nn.Linear(N_FEATURES, N_FEATURES),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(N_FEATURES, N_FEATURES),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(N_FEATURES, N_FEATURES),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(N_FEATURES, N_FEATURES),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(N_FEATURES, 1),
-            nn.Sigmoid()
-        )
+
+        layers = []
+        width_in = N_FEATURES
+        for _ in range(n_hidden):
+            layers += [nn.Linear(width_in, hidden_width), nn.ReLU(), nn.Dropout(dropout)]
+            width_in = hidden_width
+
+        layers += [nn.Linear(width_in, 1), nn.Sigmoid()]
+        self.linear_relu_stack = nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
-    
-def train(dataloader, model, loss_fn, optimizer):
-    size = len(dataloader.dataset)
+
+############### METRICS ##############
+
+def calibration_bins(y, p, n_bins = 10):
+    # Equal frequency bins of predictions: mean predicted vs actual win rate
+    order = np.argsort(p)
+    rows = []
+    for b, chunk in enumerate(np.array_split(order, n_bins)):
+        rows.append({'bin': b, 'n': len(chunk), 'mean_pred': p[chunk].mean(), 'actual': y[chunk].mean()})
+    return rows
+
+def compute_metrics(y, p, base_rate = None):
+    # base_rate = win rate of the training data, gives the log loss of always predicting the base rate to measure skill against
+    p = np.clip(p.astype(np.float64), 1e-7, 1 - 1e-7)
+    out = {'n': len(y), 'win_rate': y.mean(), 'mean_pred': p.mean(), 'pred_std': p.std()}
+
+    out['log_loss'] = float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))
+    out['brier'] = float(np.mean((p - y) ** 2))
+
+    bins = calibration_bins(y, p)
+    out['ece'] = float(sum(b['n'] * abs(b['mean_pred'] - b['actual']) for b in bins) / len(y))
+
+    if base_rate is not None:
+        const_loss = -(y.mean() * np.log(base_rate) + (1 - y.mean()) * np.log(1 - base_rate))
+        out['log_loss_skill'] = float(1 - out['log_loss'] / const_loss)
+
+    out['acc_at_0.5'] = float(((p > 0.5) == y).mean())
+
+    if 0 < y.sum() < len(y):
+        out['auc'] = float(roc_auc_score(y, p))
+        out['avg_precision'] = float(average_precision_score(y, p))
+
+        precision, recall, thresholds = precision_recall_curve(y, p)
+        f1 = 2 * precision[:-1] * recall[:-1] / np.maximum(precision[:-1] + recall[:-1], 1e-12)
+        out['best_f1'] = float(f1.max())
+        out['best_f1_threshold'] = float(thresholds[f1.argmax()])
+
+        # Share of all wins found in the top 10% of predictions, 1 = random, 10 = perfect for a 10% win rate
+        top = np.argsort(-p)[:max(1, len(p) // 10)]
+        out['lift_top_decile'] = float(y[top].sum() / y.sum() / 0.1)
+    else:
+        for k in ['auc', 'avg_precision', 'best_f1', 'best_f1_threshold', 'lift_top_decile']:
+            out[k] = np.nan
+
+    return out, bins
+
+@torch.no_grad()
+def predict(model, dataset, idx, device, chunk = 65536):
+    model.eval()
+    preds = []
+    for i in range(0, len(idx), chunk):
+        X, _ = dataset.take(idx[i:i + chunk])
+        preds.append(model(X.float().to(device)).flatten().cpu().numpy())
+    return np.concatenate(preds)
+
+def segment_masks(eval_set):
+    masks = {'all': np.ones(len(eval_set.y), dtype = bool)}
+    for i, name in enumerate(CHARACTERS):
+        masks[f'char_{name}'] = eval_set.character == i
+    for name, low, high in FLOOR_BUCKETS:
+        masks[name] = (eval_set.floor >= low) & (eval_set.floor <= high)
+    return masks
+
+############### BASELINES ##############
+
+def read_rows(dataset, n_rows, seed):
+    rng = np.random.default_rng(seed)
+    idx = np.sort(rng.choice(len(dataset), min(len(dataset), n_rows), replace = False))
+    return np.asarray(dataset.data[idx])
+
+def run_baselines(ft_train, ft_eval, base_rate, out_dir):
+    # Simple models scored on the same rows as the network. If the network can't beat these it is not learning much about decks
+    results = {}
+    y = ft_eval.y
+
+    results['constant_base_rate'], _ = compute_metrics(y, np.full(len(y), base_rate), base_rate)
+
+    # Win rate by character and floor range only, no deck information at all
+    train_rows = read_rows(ft_train, 1000000, 1)
+    def segment_ids(floor, character):
+        bucket = np.digitize(floor, [11, 26, 41])
+        return character * 4 + bucket
+
+    train_ids = segment_ids(train_rows[:, FLOOR_COL], train_rows[:, CHARACTER_COLS].argmax(axis = 1))
+    rate_by_segment = np.array([train_rows[train_ids == s, -1].mean() if (train_ids == s).any() else base_rate for s in range(16)])
+    results['character_floor_lookup'], _ = compute_metrics(y, rate_by_segment[segment_ids(ft_eval.floor, ft_eval.character)], base_rate)
+
+    # Logistic regression on the full feature set (floor scaled so it is on a similar scale to card counts)
+    fit_rows = train_rows[:500000]
+    def features(rows):
+        X = rows[:, :-1].astype(np.float32)
+        X[:, FLOOR_COL] /= 50
+        return X
+
+    start = time()
+    log_reg = LogisticRegression(max_iter = 300)
+    log_reg.fit(features(fit_rows), fit_rows[:, -1])
+
+    X_eval = np.concatenate([features(np.asarray(ft_eval.dataset.data[ft_eval.idx[i:i + 200000]])) for i in range(0, len(ft_eval.idx), 200000)])
+    results['logistic_regression'], _ = compute_metrics(y, log_reg.predict_proba(X_eval)[:, 1], base_rate)
+    results['logistic_regression']['fit_seconds'] = time() - start
+
+    with open(f'{out_dir}/baselines.json', 'w') as f:
+        json.dump(results, f, indent = 2, default = float)
+
+    for name, m in results.items():
+        print(f'baseline {name}: log_loss {m["log_loss"]:.4f}, auc {m["auc"]:.4f}, avg_precision {m["avg_precision"]:.4f}')
+
+    return results
+
+############### TRAINING ##############
+
+def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng):
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.flatten(0,1), y.flatten()
+    perm = rng.permutation(len(dataset))[:config['max_train_rows']]
+    batch_size = config['batch_size']
+
+    bce_sum = torch.zeros((), device = device)
+    n_batches = 0
+    grad_norms = []
+
+    for i in range(0, len(perm), batch_size):
+        # Sorting inside a batch doesn't change the batch but keeps the disk reads closer together
+        X, y = dataset.take(np.sort(perm[i:i + batch_size]))
         X, y = X.to(device), y.to(device)
 
-        # Compute prediction error
         pred = model(X.float())
-        loss = loss_fn(pred, y.unsqueeze(1).float())
+        bce = loss_fn(pred, y.unsqueeze(1).float())
+        loss = bce
 
-        # Backpropagation
+        if config['l1'] > 0:
+            loss = loss + config['l1'] * sum(p.abs().sum() for p in model.parameters() if p.dim() > 1)
+
         loss.backward()
+
+        # Gradient norm is sampled because reading it forces a sync with the gpu
+        if n_batches % 200 == 0:
+            grad_norms.append(float(torch.sqrt(sum((p.grad ** 2).sum() for p in model.parameters()))))
+
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 500 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        bce_sum += bce.detach()
+        n_batches += 1
 
-def test(dataloader, model, loss_fn):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.eval()
-    test_loss, correct = 0, 0
-    with torch.no_grad():
-        for X, y in dataloader:
-            X, y = X.flatten(0,1), y.flatten()
-            X, y = X.to(device), y.to(device)
-            pred = model(X.float())
+        if n_batches % 20000 == 0:
+            print(f'  batch {n_batches}/{len(perm) // batch_size}, running loss {float(bce_sum) / n_batches:.5f}')
 
-            test_loss += loss_fn(pred, y.unsqueeze(1).float()).item()
-            correct += sum(np.int32(np.int32((pred.flatten() > 0.5).cpu()) == y.cpu().numpy()))
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-    return test_loss
+    weight_norm = float(torch.sqrt(sum((p ** 2).sum() for p in model.parameters() if p.dim() > 1)))
+    return {'train_loss_running': float(bce_sum) / n_batches, 'grad_norm_mean': float(np.mean(grad_norms)), 'weight_norm': weight_norm}
 
+def parse_overrides(argv):
+    config = json.loads(json.dumps(DEFAULT_CONFIG))
+
+    if '--set' in argv:
+        for item in argv[argv.index('--set') + 1:]:
+            key, value = item.split('=', 1)
+            if key not in config:
+                raise SystemExit(f'Unknown setting {key}, options are {list(config)}')
+
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                pass
+
+            # stages=finetuning or stages=pre_training_beta,finetuning
+            if key == 'stages' and isinstance(value, str):
+                value = value.split(',')
+
+            config[key] = value
+
+    return config
+
+def git_commit(project_dir):
+    try:
+        return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd = project_dir, text = True).strip()
+    except Exception:
+        return 'unknown'
+
+def save_learning_curves(metrics, out_dir):
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return
+
+    fig, axes = plt.subplots(2, 2, figsize = (13, 8))
+    panels = [('ft_log_loss', 'Finetuning test log loss'), ('ft_auc', 'Finetuning test AUC'),
+              ('ft_avg_precision', 'Finetuning test average precision'), ('ft_ece', 'Finetuning test calibration error')]
+
+    boundaries = metrics.groupby('stage')['global_epoch'].min().sort_values()
+
+    for ax, (col, title) in zip(axes.flatten(), panels):
+        ax.plot(metrics['global_epoch'], metrics[col], marker = 'o', markersize = 3, label = 'test')
+
+        if col == 'ft_log_loss' and 'train_eval_log_loss' in metrics:
+            ax.plot(metrics['global_epoch'], metrics['train_eval_log_loss'], marker = 'o', markersize = 3, label = 'train (current stage data)')
+            ax.legend()
+
+        for stage, start in boundaries.items():
+            ax.axvline(start - 0.5, color = 'gray', linestyle = ':')
+            ax.text(start, ax.get_ylim()[1], stage.replace('pre_training_', 'pre_'), fontsize = 7, va = 'top')
+
+        ax.set_title(title)
+        ax.set_xlabel('epoch')
+
+    fig.tight_layout()
+    fig.savefig(f'{out_dir}/learning_curves.png', dpi = 120)
+    plt.close(fig)
 
 ############### RUN ##############
 
 if __name__ == '__main__':
 
     project_dir = os.getcwd()
-
-    model_version = 'fnn_v17'
+    config = parse_overrides(sys.argv[1:])
+    version = config['model_version']
 
     # Makes directory for model training if it doesn't exist already
-    if not os.path.exists(f'{project_dir}/model_objects/dev/{model_version}'):
-        os.makedirs(f'{project_dir}/model_objects/dev/{model_version}')
-    
-    # Run time variables
-    # increase chunksize to speed training at the expense of memory usage
-    # if chunk size > number of rows in file, then pandas reads the entire file w/out erroring
-    chunk_size = 1000000
-    batch_size = 64
+    out_dir = f'{project_dir}/model_objects/dev/{version}'
+    os.makedirs(out_dir, exist_ok = True)
 
-    # true batch size is chunk_size * batch_size
-
-    # How many epochs for each data set and in which order
-    training_dict = [
-        {'destination': 'pre_training_alpha', 'epochs': 8},
-        {'destination': 'pre_training_beta', 'epochs': 20},
-        {'destination': 'finetuning', 'epochs': 20}
-    ]
+    torch.manual_seed(config['seed'])
+    rng = np.random.default_rng(config['seed'])
 
     # Where is training to take place?
     device = (
@@ -241,48 +370,146 @@ if __name__ == '__main__':
     print(f'Using device: {device}')
 
     # Instantiate Model
-    model = NeuralNetwork().to(device)
+    model = NeuralNetwork(config['n_hidden'], config['hidden_width'], config['dropout']).to(device)
+    n_params = sum(p.numel() for p in model.parameters())
+    print(f'Model has {n_params:,} parameters')
 
     # Setup optimization
     loss_fn = nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
+    if config['optimizer'] == 'adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr = config['lr'], weight_decay = config['l2'])
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum = config['momentum'], weight_decay = config['l2'])
 
-    for regimen in training_dict:
-        print(f'Training on destination: {regimen['destination']}')
-        # Setup reading data for training and testing
-        training_data = load_dataset(f'{project_dir}/data/training_data/{regimen['destination']}/train/train.csv', chunk_size)
-        training_loader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+    # Data and fixed evaluation subsets. Finetuning test is what every epoch is judged on, whichever stage is training
+    data_dir = f'{project_dir}/data/training_data'
+    ft_train = BinDataset(f'{data_dir}/finetuning/train/train.bin')
+    ft_test = BinDataset(f'{data_dir}/finetuning/test/test.bin')
+    ft_eval = EvalSet(ft_test, config['ft_eval_rows'], 100)
 
-        testing_data = load_dataset(f'{project_dir}/data/training_data/{regimen['destination']}/test/test.csv', chunk_size)
-        testing_loader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
+    ft_base_rate = float(read_rows(ft_train, 1000000, 2)[:, -1].mean())
 
-        loss_tracker = []
-        for t in range(regimen['epochs']):
-            print(f"Epoch {t+1}\n-------------------------------")
-            train(training_loader, model, loss_fn, optimizer)
-            epoch_test_loss = test(testing_loader, model, loss_fn)
+    data_stats = {}
+    for d in ['pre_training_alpha', 'pre_training_beta', 'finetuning']:
+        for split in ['train', 'test']:
+            ds = BinDataset(f'{data_dir}/{d}/{split}/{split}.bin')
+            data_stats[f'{d}_{split}'] = {'rows': len(ds), 'win_rate': float(read_rows(ds, 200000, 3)[:, -1].mean())}
 
-            loss_tracker += [epoch_test_loss]
+    with open(f'{out_dir}/config.json', 'w') as f:
+        json.dump({'config': config, 'n_params': n_params, 'device': device, 'torch': torch.__version__, 'git_commit': git_commit(project_dir),
+                   'started': time(), 'data': data_stats, 'ft_eval_rows': len(ft_eval.y)}, f, indent = 2)
+
+    baselines = run_baselines(ft_train, ft_eval, ft_base_rate, out_dir) if config['baselines'] else {}
+
+    metric_rows = []
+    segment_rows = []
+    calibration_rows = []
+    global_epoch = 0
+    run_start = time()
+
+    for destination in config['stages']:
+        print(f'Training on destination: {destination}')
+
+        training_data = BinDataset(f'{data_dir}/{destination}/train/train.bin')
+        testing_data = BinDataset(f'{data_dir}/{destination}/test/test.bin')
+
+        train_eval = EvalSet(training_data, config['train_eval_rows'], 200)
+        own_eval = ft_eval if destination == 'finetuning' else EvalSet(testing_data, config['eval_rows'], 300)
+        own_base_rate = ft_base_rate if destination == 'finetuning' else float(read_rows(training_data, 500000, 4)[:, -1].mean())
+
+        for t in range(config['epochs'][destination]):
+            print(f"{destination} epoch {t + 1}/{config['epochs'][destination]}\n-------------------------------")
+            epoch_start = time()
+
+            row = {'stage': destination, 'epoch': t, 'global_epoch': global_epoch}
+            row.update(train_epoch(model, training_data, optimizer, loss_fn, config, device, rng))
+            row['epoch_seconds'] = time() - epoch_start
+            row['rows_per_second'] = min(len(training_data), config['max_train_rows'] or len(training_data)) / row['epoch_seconds']
+
+            # Same data the model trained on, in eval mode (no dropout): the gap to test shows over fitting
+            m, _ = compute_metrics(train_eval.y, predict(model, training_data, train_eval.idx, device), own_base_rate)
+            row.update({f'train_eval_{k}': v for k, v in m.items()})
+
+            # Test set of the data being trained on
+            if destination != 'finetuning':
+                m, _ = compute_metrics(own_eval.y, predict(model, testing_data, own_eval.idx, device), own_base_rate)
+                row.update({f'own_{k}': v for k, v in m.items()})
+
+            # Finetuning test: overall, then by character and floor range, and calibration
+            p_ft = predict(model, ft_test, ft_eval.idx, device)
+            for name, mask in segment_masks(ft_eval).items():
+                m, bins = compute_metrics(ft_eval.y[mask], p_ft[mask], ft_base_rate)
+                segment_rows.append({'stage': destination, 'epoch': t, 'global_epoch': global_epoch, 'segment': name, **m})
+
+                if name == 'all':
+                    row.update({f'ft_{k}': v for k, v in m.items()})
+                    calibration_rows += [{'stage': destination, 'epoch': t, 'global_epoch': global_epoch, **b} for b in bins]
+
+            # Skill relative to simple models on the same rows
+            for name, base in baselines.items():
+                if name != 'constant_base_rate':
+                    row[f'ft_auc_vs_{name}'] = row['ft_auc'] - base['auc']
+                    row[f'ft_log_loss_vs_{name}'] = row['ft_log_loss'] - base['log_loss']
+
+            metric_rows.append(row)
 
             # Save out the model
-            model_path = f'{project_dir}/model_objects/dev/{model_version}/{regimen['destination']}_epoch_{t}.pth'
+            model_path = f'{out_dir}/{destination}_epoch_{t}.pth'
             model_scripted = torch.jit.script(model) # Export to TorchScript
             model_scripted.save(model_path) # Save
-            print(f"Saved PyTorch Model State to {model_path}")
 
-        index_min = np.argmin(loss_tracker)
-        print(f'Best Model Was Epoch: {index_min} with a loss of {loss_tracker[index_min]}')
-        print(loss_tracker)
+            print(f"  train loss {row['train_loss_running']:.5f} | finetuning test: log_loss {row['ft_log_loss']:.5f}, auc {row['ft_auc']:.4f}, "
+                  f"avg_precision {row['ft_avg_precision']:.4f}, ece {row['ft_ece']:.5f} | {row['epoch_seconds'] / 60:.1f} min")
 
-        # Loads the best model into memory for use in the next training step
-        # NOTE: this causes issue using MPS backed and requires fallback to CPU which is slow
-        ## Disabling using the best model and instead uses the last epoch from pre-training which is probably close enough 
-        # model_path = f'{project_dir}/model_objects/dev/{model_version}/{regimen['destination']}_epoch_{index_min}.pth'        
-        # model = torch.jit.load(model_path).to(device)
+            # Written every epoch so a crashed or stopped run still leaves its curves
+            metrics = pd.DataFrame(metric_rows)
+            metrics.to_csv(f'{out_dir}/metrics.csv', index = False)
+            pd.DataFrame(segment_rows).to_csv(f'{out_dir}/segments.csv', index = False)
+            pd.DataFrame(calibration_rows).to_csv(f'{out_dir}/calibration.csv', index = False)
+
+            global_epoch += 1
+
+    save_learning_curves(metrics, out_dir)
+
+    # Best finetuning epoch by the chosen metric (for runs without finetuning, the last stage)
+    final_stage = 'finetuning' if 'finetuning' in config['stages'] else config['stages'][-1]
+    stage_metrics = metrics[metrics['stage'] == final_stage].reset_index(drop = True)
+    select_col = f"ft_{config['select_metric']}"
+    best = stage_metrics[select_col].idxmin() if config['select_metric'] in LOWER_IS_BETTER else stage_metrics[select_col].idxmax()
+    best_row = stage_metrics.loc[best]
+
+    print(f"Best {final_stage} epoch was {int(best_row['epoch'])} by {config['select_metric']}")
+    print(stage_metrics[['epoch', 'ft_log_loss', 'ft_auc', 'ft_avg_precision', 'ft_lift_top_decile', 'ft_ece']].to_string(index = False))
+
+    summary = {
+        'model_version': version,
+        'best_stage': final_stage,
+        'best_epoch': int(best_row['epoch']),
+        'select_metric': config['select_metric'],
+        'best_metrics': {k: float(v) for k, v in best_row.items() if k.startswith('ft_') or k.startswith('train_eval_')},
+        'baselines': {name: {k: v for k, v in m.items() if k in ['log_loss', 'auc', 'avg_precision', 'ece']} for name, m in baselines.items()},
+        'train_minutes': (time() - run_start) / 60,
+    }
+
+    with open(f'{out_dir}/summary.json', 'w') as f:
+        json.dump(summary, f, indent = 2)
+
+    # One line per run so architectures can be compared across runs
+    experiment = {'model_version': version, 'git_commit': git_commit(project_dir), 'n_params': n_params,
+                  **{k: (json.dumps(v) if isinstance(v, (list, dict)) else v) for k, v in config.items() if k != 'model_version'},
+                  'best_stage': final_stage, 'best_epoch': summary['best_epoch'], 'train_minutes': summary['train_minutes']}
+    experiment.update({f'best_{k}': v for k, v in summary['best_metrics'].items() if k in
+                       [f'ft_{m}' for m in ['log_loss', 'brier', 'ece', 'auc', 'avg_precision', 'lift_top_decile', 'log_loss_skill', 'best_f1']] + ['train_eval_log_loss', 'train_eval_auc']})
+    experiment.update({f'baseline_logreg_{k}': v for k, v in summary['baselines'].get('logistic_regression', {}).items()})
+
+    experiments_path = f'{project_dir}/model_objects/experiments.csv'
+    experiment_df = pd.DataFrame([experiment])
+    if os.path.exists(experiments_path):
+        experiment_df = pd.concat([pd.read_csv(experiments_path), experiment_df], ignore_index = True)
+    experiment_df.to_csv(experiments_path, index = False)
 
     # Move the top performing finetuned model to production
-    shutil.copy(
-        f'{project_dir}/model_objects/dev/{model_version}/finetuning_epoch_{index_min}.pth',
-        f'{project_dir}/model_objects/production/{model_version}.pth')
-
-        
+    if config['save_production'] and final_stage == 'finetuning':
+        shutil.copy(
+            f"{out_dir}/finetuning_epoch_{int(best_row['epoch'])}.pth",
+            f'{project_dir}/model_objects/production/{version}.pth')

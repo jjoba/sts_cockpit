@@ -137,3 +137,7 @@ Model Version: FNN 15 Small
 - Binary Cross Entropy Loss: 0.0437
 - Brier Score: 0.0139
 - Recall: 68%
+## Training and comparing models
+`python scripts/train_model.py` trains on alpha, beta, then finetuning data. Settings (layers, width, dropout, L1 / L2, optimizer, epochs per stage, which stages to run) are at the top of `scripts/train_model.py` and can be overridden per run, e.g. `python scripts/train_model.py --set model_version=fnn_v17_wide hidden_width=1400 dropout=0.3` or `--set stages=finetuning` to test whether pre training helps. `max_train_rows=500000` caps the rows seen per epoch for quick trials.
+
+Every epoch is scored on the same finetuning test rows, whichever stage is training, and compared with simple baselines (base rate, character and floor range only, logistic regression). Results are written to `model_objects/dev/<model_version>/` (`metrics.csv`, `segments.csv`, `calibration.csv`, `baselines.json`, `summary.json`, `learning_curves.png`), and one line per run is appended to `model_objects/experiments.csv`.

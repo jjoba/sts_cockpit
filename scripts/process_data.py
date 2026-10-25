@@ -30,6 +30,8 @@ import re
 import multiprocessing
 import itertools
 import random
+import shutil
+import sys
 
 import pandas as pd
 import numpy as np
@@ -47,14 +49,14 @@ from run_replay import replay_run
 HEART_MIN_FLOOR = 55
 
 # Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
-# because training data is rows x ~921 bytes: finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
-FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 2, 'pre_training_alpha': 1}
+# because training data is rows x 921 bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 1, 'pre_training_alpha': 1}
 
 # Runs whose replayed final deck differs from the logged final deck by more than this many cards are dropped
 # replay_stats.csv has the residual distribution to help tune this
 MAX_REPLAY_RESIDUAL = 0
 
-# Columns written to the training csvs: cards + relics (915), characters (4), floor, victory
+# Columns written to the training files: cards + relics (915), characters (4), floor, victory
 N_TRAIN_COLS = 921
 
 def combine_and_clean(d, s, combine = True):
@@ -64,27 +66,19 @@ def combine_and_clean(d, s, combine = True):
   data_dir = os.getcwd() + '/data'
   temp_dir = f'{data_dir}/training_data/{d}/{s}'
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
+  output_file = f'{temp_dir}/{s}.bin'
 
   for file_name in file_list:
 
     if combine is True:
-      temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
-
-      # Checks to ensure the file has the correct number of columns
-      # Update to correct number of columns in future
-      if temp_file.shape[1] == N_TRAIN_COLS:
-
-        output_file = f'{temp_dir}/{s}.csv'
-        # output_file = f'{temp_dir}/{s}.parquet'
-
-        if Path(output_file).exists():      
-          temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
-
-        else:
-          temp_file.to_csv(output_file, index = False, mode = 'w')
+      # Per file outputs are raw int8 rows N_TRAIN_COLS wide with no header, so a file that isn't a whole number of rows is bad
+      if os.path.getsize(file_name) % N_TRAIN_COLS == 0:
+        with open(file_name, 'rb') as fin, open(output_file, 'ab') as fout:
+          shutil.copyfileobj(fin, fout, 64 * 1024 * 1024)
 
       else:
-        temp_file.to_csv(f'{os.getcwd()}/data/processing_failures/incorrect_columns_{d}_{int(time())}.csv', index = False)
+        shutil.move(file_name, f'{os.getcwd()}/data/processing_failures/incorrect_columns_{d}_{int(time())}.bin')
+        continue
 
     os.remove(file_name)
 
@@ -243,6 +237,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   if model_data_storage.shape[1] != N_TRAIN_COLS + 2:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
+    return stats
   
   
   # Write out files
@@ -263,17 +258,20 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
     # Split on runs (not rows) since a run can have several rows
     run_ids = temp_data['id'].unique()
 
+    # Floor is capped so endless runs can't wrap around int8
+    temp_data = temp_data.assign(floor = temp_data['floor'].clip(upper = 127))
+
     if len(run_ids) > 1:
       train_ids, test_ids = train_test_split(run_ids, test_size=0.2)
 
       train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
       test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
 
-      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
-      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.csv', index = False)
+      train.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
+      test.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.bin')
     # If there's only one run in a file write it to train
     else:
-      temp_data.drop('id', axis = 1).astype('int8').to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
+      temp_data.drop('id', axis = 1).astype('int8').to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
 
   return stats
 
@@ -308,8 +306,16 @@ if __name__ == '__main__':
   # Pull list of all files to iterate through
   file_list = [data_dir + '/raw/' + f for f in os.listdir(data_dir + '/raw/')]
 
+  # Optional first argument limits the number of zips processed, for trial runs
+  if len(sys.argv) > 1:
+    file_list = sorted(file_list)[:int(sys.argv[1])]
+
   k = 0
   total_stats = Counter()
+
+  # Zip sizes are used to project total output size and time from the zips processed so far
+  zip_bytes = [os.path.getsize(f) for f in file_list]
+  start_time = time()
 
   # Extract ip archive and dump to temp folder - note: extraction takes some time, would be wise to skip if possible
   for file in file_list:
@@ -341,7 +347,14 @@ if __name__ == '__main__':
 
     print(dict(total_stats))
 
-    k += 1    
+    k += 1
+
+    # Projects totals from the share of zip bytes processed so far
+    share_done = sum(zip_bytes[:k]) / sum(zip_bytes)
+    output_gb = sum(os.path.getsize(os.path.join(root, name)) for root, _, names in os.walk(f'{data_dir}/training_data') for name in names) / 1e9
+    elapsed = time() - start_time
+    print(f'{k}/{len(file_list)} zips: {output_gb:.1f} GB written so far, projected total {output_gb / share_done:.0f} GB')
+    print(f'{elapsed / 60:.0f} min elapsed, projected total {elapsed / share_done / 60:.0f} min')
   
   # Appends all of the individual files together into one, single file then cleans up the temp files
   # Runs serially to prevent data races against the main aggregation files
