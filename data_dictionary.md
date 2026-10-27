@@ -12,8 +12,17 @@ Passed to production database.
     - stored as list of <u>individual</u> cards. QTY can be determined by counting instances
     - example file has '_R' as the end of strikes and defends. Unsure about meaning of this
 - **character_chosen** *(str)*: name in caps of the character being used in this run
-- **victory** *(bool)*: whether or not the player won. This was only looked at with an example that beat the heart, so unsure if this applies to only beating act 3. This is what the model is attempting to predict. 'true' means the player won.
+- **victory** *(bool)*: whether or not the player won. True also for beating the act 3 boss without keys, so the modeling label is `victory and floor_reached >= 55` (Heart kill). Runs missing `floor_reached` keep the raw flag.
+    - original note: whether or not the player won. This was only looked at with an example that beat the heart, so unsure if this applies to only beating act 3. This is what the model is attempting to predict. 'true' means the player won.
 - **play_id** *(str)*: run ID; used as ID field when joining data together
+
+**Per floor rows**
+Each run produces up to n rows (n per destination set by `FLOORS_PER_RUN` in process_data.py), one for each of n randomly sampled floors between 1 and `floor_reached`. A row holds the deck and relics on arriving at that floor, rebuilt by `scripts/run_replay.py` from `card_choices`, `items_purchased`/`item_purchase_floors`, `items_purged`/`items_purged_floors`, `campfire_choices` (SMITH), `event_choices` (`cards_obtained`, `cards_removed`, `cards_transformed`, `cards_upgraded`, `relics_obtained`), `relics_obtained`, and `boss_relics`. The rows of a run share its `victory` label and `floor` is a feature.
+- The replayed end state is compared to `master_deck`. Runs that differ by more than `MAX_REPLAY_RESIDUAL` cards are dropped
+- Untracked deck changes (Neow transforms, Dolly's Mirror, Astrolabe, etc.) show up as residual
+- Boss relic picks have no floor in the data, so they are placed at floors 17, 34, 51
+- The `cards_removed`, `cards_transformed`, `cards_upgraded` event keys are not in the example run, so they are unverified
+- Train / test split is by run
 
 **Modeling Data Format Example**
 Each row is a separate run.

@@ -29,6 +29,9 @@ import json
 import re
 import multiprocessing
 import itertools
+import random
+import shutil
+import sys
 
 import pandas as pd
 import numpy as np
@@ -39,7 +42,22 @@ from sklearn.model_selection import train_test_split
 from time import time
 from zipfile import ZipFile
 
-import pdb
+from name_utils import RENAMES
+from run_replay import replay_run
+
+# Heart kill is recorded at floor 56 (see winning_run_example.json), act 3 boss kill is ~51. Verify against the dump
+HEART_MIN_FLOOR = 55
+
+# Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
+# because training data is rows x 921 bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 1, 'pre_training_alpha': 1}
+
+# Runs whose replayed final deck differs from the logged final deck by more than this many cards are dropped
+# replay_stats.csv has the residual distribution to help tune this
+MAX_REPLAY_RESIDUAL = 0
+
+# Columns written to the training files: cards + relics (915), characters (4), floor, victory
+N_TRAIN_COLS = 921
 
 def combine_and_clean(d, s, combine = True):
   # d = destination
@@ -48,27 +66,19 @@ def combine_and_clean(d, s, combine = True):
   data_dir = os.getcwd() + '/data'
   temp_dir = f'{data_dir}/training_data/{d}/{s}'
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
+  output_file = f'{temp_dir}/{s}.bin'
 
   for file_name in file_list:
 
     if combine is True:
-      temp_file = pd.read_csv(file_name, header = 0, dtype = 'int8')
-
-      # Checks to ensure the file has the correct number of columns
-      # Update to correct number of columns in future
-      if temp_file.shape[1] == 864:
-
-        output_file = f'{temp_dir}/{s}.csv'
-        # output_file = f'{temp_dir}/{s}.parquet'
-
-        if Path(output_file).exists():      
-          temp_file.to_csv(output_file, index = False, mode = 'a', header = False)
-
-        else:
-          temp_file.to_csv(output_file, index = False, mode = 'w')
+      # Per file outputs are raw int8 rows N_TRAIN_COLS wide with no header, so a file that isn't a whole number of rows is bad
+      if os.path.getsize(file_name) % N_TRAIN_COLS == 0:
+        with open(file_name, 'rb') as fin, open(output_file, 'ab') as fout:
+          shutil.copyfileobj(fin, fout, 64 * 1024 * 1024)
 
       else:
-        temp_file.to_csv(f'{os.getcwd()}/data/processing_failures/incorrect_columns_{d}_{int(time())}.csv', index = False)
+        shutil.move(file_name, f'{os.getcwd()}/data/processing_failures/incorrect_columns_{d}_{int(time())}.bin')
+        continue
 
     os.remove(file_name)
 
@@ -79,31 +89,17 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # gzip_file = gzipped binary string of a gzipped json file
   runs = json.loads(gzip.decompress(gzip_file))
 
-  # Holds all extracted runs from a given json file
+  # Names allowed as columns, anything else in a run is ignored rather than breaking the schema for the whole file
+  card_set = {re.sub('\n', '', card) for card in master_card_list}
+  relic_set = {re.sub('\n', '', relic) for relic in master_relic_list}
+
+  # Counts of what happened to runs in this file, summed across files in main
+  stats = Counter()
+
+  # Holds all extracted rows from a given json file
   model_data_storage = []
 
   for current_run in runs:
-    # Conform card names to remove '+1' from upgrade, also treats all searing blows the same
-    # Force to lowercase
-    master_deck = current_run['event']['master_deck']
-    # Handles starter cards with _X at the end
-    master_deck = [re.sub(r'_.{1}', '', card_name).lower() for card_name in master_deck]    
-    master_deck = [re.sub(r'\+.*$', '_u', card_name) for card_name in master_deck]
-
-    # First regex didn't catch all searing blows. Forcing them to all become the same
-    # Keys off the fact that it's the only card with a number in it
-    master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
-
-    # Gets the list of relics for a given run
-    relics = current_run['event']['relics']
-    relics = [re.sub(' ', '_', r).lower() for r in relics]
-
-    # list and QTY of all items picked up in a run
-    run_items = master_deck + relics
-
-    # QTY of each card in the final deck
-    item_counts = dict(Counter(run_items))
-
     # Logic field determining which dataset this should go to
     destination = 'finetuning'
     if current_run['event']['is_trial'] is True:
@@ -141,19 +137,42 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
         if current_run['event']['ascension_level'] < 20:
             destination = 'pre_training_beta'
 
-    # Append on character name and victory to create modeling data
-    modeling_data = item_counts
-    modeling_data['character'] = current_run['event']['character_chosen'].lower()
-    modeling_data['victory'] = current_run['event']['victory']
-    modeling_data['destination'] = destination
-    
-    # add onto the model data storage
-    id = current_run['event']['play_id']
-    #model_data_storage[id] = modeling_data
-    modeling_data['id'] = id
+    stats[f'{destination}_runs'] += 1
 
-    model_data_storage.append(modeling_data)
-  
+    # Rebuild deck & relics at sampled floors
+    rng = random.Random(current_run['event']['play_id'])
+    replay = replay_run(current_run['event'], card_set, relic_set, FLOORS_PER_RUN[destination], rng)
+
+    if replay is None:
+      stats[f'{destination}_dropped_not_replayable'] += 1
+      continue
+
+    rows, residual = replay
+
+    # Residual distribution is across all replayable runs so MAX_REPLAY_RESIDUAL can be tuned
+    stats['residual_' + ('0' if residual == 0 else '1' if residual == 1 else '2-3' if residual < 4 else '4-6' if residual < 7 else '7+')] += 1
+
+    if residual > MAX_REPLAY_RESIDUAL:
+      stats[f'{destination}_dropped_residual'] += 1
+      continue
+
+    # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
+    victory = current_run['event']['victory'] and current_run['event']['floor_reached'] >= HEART_MIN_FLOOR
+
+    stats[f'{destination}_runs_kept'] += 1
+    stats[f'{destination}_rows'] += len(rows)
+
+    for floor, deck, relics in rows:
+      modeling_data = dict(deck)
+      modeling_data.update(Counter(relics))
+      modeling_data['floor'] = floor
+      modeling_data['character'] = current_run['event']['character_chosen'].lower()
+      modeling_data['victory'] = victory
+      modeling_data['destination'] = destination
+      modeling_data['id'] = current_run['event']['play_id']
+
+      model_data_storage.append(modeling_data)
+
   # Process lists into dictionaries with value 1 to ensure all items are captured
   card_dict = {re.sub('\n', '', card):1 for card in master_card_list}
   relic_dict = {re.sub('\n', '', relic):1 for relic in master_relic_list}
@@ -165,6 +184,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   dummy_row['id'] = 'dummy_row'
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
   dummy_row['victory'] = True
+  dummy_row['floor'] = 0
 
   # model_data_storage_save = model_data_storage.copy()
 
@@ -189,40 +209,35 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Setting unknown as the reference
   model_data_storage = model_data_storage.drop('unknown', axis = 1)
   
-  # Remove dummy row and drop id column
+  # Remove dummy rows, id is kept until after the train / test split so a run's rows never land on both sides
   model_data_storage = model_data_storage[model_data_storage['id'] != 'dummy_row']
-  model_data_storage = model_data_storage.drop('id', axis = 1)
 
   # Moving victory to the end -- standard practice for modeling
   model_data_storage = model_data_storage[[c for c in model_data_storage if c not in ['victory']] + ['victory']]
 
   # Changing card titles to reflect current naming
-  model_data_storage = model_data_storage.rename(columns={
-    'underhanded_strike':'sneaky_strike', 
-    'underhanded_strike_u':'sneaky_strike_u',
-    'wireheading':'foresight', 
-    'wireheading_u':'foresight_u', 
-    'conserve_battery':'charge_battery',
-    'conserve_battery':'charge_battery_u', 
-    'lockon':'bullseye',
-    'lockon_u':'bullseye_u',
-    'undo':'equilibrium',
-    'undo_u':'equilibrium_u',
-    'steam_power': 'steam_barrier',
-    'steam_power_u':'steam_barrier_u',
-    'molten_egg_2': 'molten_egg',
-    'toxic_egg_2': 'toxic_egg',
-    'frozen_egg_2': 'frozen_egg'
-  })
+  model_data_storage = model_data_storage.rename(columns = RENAMES)
+
+  # Files that happen to have no runs for a character would otherwise be missing that one hot column
+  character_cols = ['defect', 'ironclad', 'the_silent', 'watcher']
+  for character_col in character_cols:
+    if character_col not in model_data_storage.columns:
+      model_data_storage[character_col] = 0
+
+  # Explicit column order so every file matches starting_decks.csv and the model input
+  item_cols = [RENAMES.get(c, c) for c in list(card_dict) + list(relic_dict)]
+  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + ['id', 'destination', 'victory']]
 
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
   # Root cause is NOT incorrect character names or victory column issues
   # Until then issue is handled by writing out file as a processing error and NOT write out
   
-  if model_data_storage.shape[1] != 864:
+  # destination and id are still attached at this point
+  if model_data_storage.shape[1] != N_TRAIN_COLS + 2:
     failure_path = f'{os.getcwd()}/data/processing_failures/incorrect_col_count_failure_{int(time())}.csv'
     model_data_storage.to_csv(failure_path, index = False, )
+    return stats
   
   
   # Write out files
@@ -234,27 +249,34 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Loop through each of unique destinations (finetuning, etc.)
   for u_d in unique_destinations:
 
-    # Remove destination column and reduce data footprint
+    # Remove destination column
     temp_data = model_data_storage[model_data_storage['destination'] == u_d]
     temp_data = temp_data.drop('destination', axis = 1)
-    temp_data = temp_data.astype('int8')
 
     time_stamp = int(time() + np.random.randint(0, 10000000000, 1))
 
-    if temp_data.shape[0] > 1:
-      train, test = train_test_split(temp_data, test_size=0.2)
+    # Split on runs (not rows) since a run can have several rows
+    run_ids = temp_data['id'].unique()
 
-      train.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
-      test.to_csv(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.csv', index = False)
-    # If there's only one row in a file write it to train
+    # Floor is capped so endless runs can't wrap around int8
+    temp_data = temp_data.assign(floor = temp_data['floor'].clip(upper = 127))
+
+    if len(run_ids) > 1:
+      train_ids, test_ids = train_test_split(run_ids, test_size=0.2)
+
+      train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
+      test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
+
+      train.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
+      test.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.bin')
+    # If there's only one run in a file write it to train
     else:
-      temp_data.to_csv(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.csv', index = False)
+      temp_data.drop('id', axis = 1).astype('int8').to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
 
-  # Ends function, nothing needed from this value
-  return 'success'
+  return stats
 
 if __name__ == '__main__':
-  # NOTE: 864 = number of cols when accounting for cards, relics, character, and victory cols
+  # NOTE: N_TRAIN_COLS = number of cols when accounting for cards, relics, character, floor, and victory cols
 
   num_cores = multiprocessing.cpu_count() - 1
   
@@ -284,7 +306,16 @@ if __name__ == '__main__':
   # Pull list of all files to iterate through
   file_list = [data_dir + '/raw/' + f for f in os.listdir(data_dir + '/raw/')]
 
+  # Optional first argument limits the number of zips processed, for trial runs
+  if len(sys.argv) > 1:
+    file_list = sorted(file_list)[:int(sys.argv[1])]
+
   k = 0
+  total_stats = Counter()
+
+  # Zip sizes are used to project total output size and time from the zips processed so far
+  zip_bytes = [os.path.getsize(f) for f in file_list]
+  start_time = time()
 
   # Extract ip archive and dump to temp folder - note: extraction takes some time, would be wise to skip if possible
   for file in file_list:
@@ -310,8 +341,20 @@ if __name__ == '__main__':
     items = list(itertools.product(res.values(), [data_dir], [master_card_list], [master_relic_list]))
     run_progress = pool_obj.starmap(process_runs, items)
     pool_obj.close()
-    
-    k += 1    
+
+    for file_stats in run_progress:
+      total_stats.update(file_stats)
+
+    print(dict(total_stats))
+
+    k += 1
+
+    # Projects totals from the share of zip bytes processed so far
+    share_done = sum(zip_bytes[:k]) / sum(zip_bytes)
+    output_gb = sum(os.path.getsize(os.path.join(root, name)) for root, _, names in os.walk(f'{data_dir}/training_data') for name in names) / 1e9
+    elapsed = time() - start_time
+    print(f'{k}/{len(file_list)} zips: {output_gb:.1f} GB written so far, projected total {output_gb / share_done:.0f} GB')
+    print(f'{elapsed / 60:.0f} min elapsed, projected total {elapsed / share_done / 60:.0f} min')
   
   # Appends all of the individual files together into one, single file then cleans up the temp files
   # Runs serially to prevent data races against the main aggregation files
@@ -326,3 +369,5 @@ if __name__ == '__main__':
   run_progress = pool_obj.starmap(combine_and_clean, items)
   pool_obj.close()
   
+
+  pd.Series(total_stats).sort_index().to_csv(f'{data_dir}/processing_failures/replay_stats.csv', header = ['count'])

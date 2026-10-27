@@ -8,6 +8,8 @@ Create a data and AI/ML tool as a companion to support players during runs. Ther
 ## How It Works
 STS Cockpit provides a Command Line Interface (CLI) to manage adding/removing/upgrading cards from the deck as well as simulating potential choices (e.g. which of these three cards, if any, should I add to my deck?). When a given action or simulation is taken by the user STS Cockpit provides expected win rates for each choice (this is the number output to the terminal. 1 = 100% chance of victory). This is always compared to a baseline of doing nothing where a higher win rate than the baseline would suggest an adventageous choice.
 
+Training rows are snapshots of a run's deck and relics on arrival at a randomly sampled floor (replayed from the card choice, shop, event, and campfire logs), labeled with whether the run went on to beat the Heart. Floor is a model input. Runs whose replayed final deck does not match the logged final deck are dropped (see `data/processing_failures/replay_stats.csv` after processing).
+
 Supporting the calculations is a four layer Feed Foward Neural Network with drop out regularization (~2.2M Parameters) trained to predict whether or not a given run will win. The model has "seen" a total of 77M runs, but only 1.5M runs were used for finetuning. These runs are all at A20 difficulty after watcher was released and do not contain daily runs, beta test, or endless mode.
 
 All data comes from [this data dump](https://www.reddit.com/r/slaythespire/comments/jt5y1w/77_million_runs_an_sts_metrics_dump/)
@@ -39,17 +41,18 @@ For more detailed information on the fields and data structure see data_dump.md 
 
 ## Interacting With STS Cockpit
 - On menu screens or prompts with numbered options, the program expects the number followed by enter. For example, if you saw "1. Start a new run" you'd input "1" followed by enter to select this choice
-- All card and relic names should be in lowercase with underscores as spaces (e.g. infinite_blades). If that doesn't work try again without the underscores as naming conventions in the data are inconsistent (e.g. justlucky). Watcher tends to have everything smushed into a single word. Eventually, I'll conform all items to follow this format.
-- Upgraded cards have an "_u" at the end (e.g. infinite_blades_u)
-    - Note: Searing Blow is not handled as it is in the game. Currently, all number of upgrades are grouped into "searing_blow_u" (e.g. an 8 upgrade searing blow is equivalent to a 20 times upgraded one as far as the model is concerned). As a result, searing_blow_u is overvalued and in game upgrades to the card cannot be reflected in STS Cockpit. This will be fixed in a future release, but for now, use this card with caution.
+- All card and relic names should be lowercase, one word, with no spaces, underscores, apostrophes, or numbers (e.g. infiniteblades, pandorasbox). Hyphens and periods are kept (e.g. multi-cast, j.a.x.).
+- Upgraded cards have an "_u" at the end (e.g. infiniteblades_u)
+    - Note: Searing Blow is not handled as it is in the game. Currently, all number of upgrades are grouped into "searingblow_u" (e.g. an 8 upgrade searing blow is equivalent to a 20 times upgraded one as far as the model is concerned). As a result, searingblow_u is overvalued and in game upgrades to the card cannot be reflected in STS Cockpit. This will be fixed in a future release, but for now, use this card with caution.
 - If you've double checked the spelling and are still getting issues with unknown cards you'll just have to ignore that card for simulations and cannot add it to the deck. This is a known issue as the dataset contains old card names and all have not been fixed yet. If this happens please create an Issue in the github repo including both what you typed in and the card you expected to appear.
 - After selecting to start a new run you'll be asked to pick a model
     - A pop up window will appear to select a file. On windows it's often hidden and you'll have to alt-tab into it (look for the feather icon).
     - Navigate to sts_cockpit/model_objects/production. Any of the models here can be used and perform comparably with fnn_v15_small having the slightest edge (see /analyses for more info on model performance)
 - Expected character names are ironclad, the_silent, defect, watcher
+- Set your current floor from the main menu (option 4). The model takes floor as an input, so win rates change with it. It starts at floor 1.
 - Key menu concepts:
     - Simulate: this allows the user to ask "what if" questions w/out modifying their deck in order to make a choice. For example, "which card should I add to my deck?"
-    - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add a_thousand_cuts) it can simply be reversed with no harm done (select remove and pull out a_thousand_cuts). You can manually use this tool to simulate custom deck combinations.
+    - Update Deck / Relics: this makes permanent changes to your deck and relic set within cockpit. Changes here will be reflected in subsequent simulations. If you input the wrong thing (e.g. accidentally add athousandcuts) it can simply be reversed with no harm done (select remove and pull out athousandcuts). You can manually use this tool to simulate custom deck combinations.
 - Understanding the outut:
     - The underlying model is trained to predict the probability of beating the heart on A20 given a certain deck and relic combo.
     - The numbers shown reflect this probability in decimal format (0 = 0% chance of victory, 1 = 100% chance of victory)
@@ -122,14 +125,19 @@ In no particular order, below are some development ideas
 - Add data processing and model building functionality directly to sts_cockpit script to streamline experience
 - Properly handle searing blow (currently all quantity of upgrades are treated as a single upgrade, overvaluing the card)
 - Create full list of curses
-- Standardize naming (some items have space with underscores, some don't)
 - Identify the names of the last few missing cards
 - Fuzzy matching to support typos in UI
 
 ## Test Set Model Performance
+Note: these numbers are for the previous version of the model (end of run decks, victory = any win) and are not comparable to models trained on per floor rows.
+
 Model Version: FNN 15 Small
 - Accuracy: 97.99%
     - Test set win rate: 4% (i.e. anything about 96% shows predictive lift)
 - Binary Cross Entropy Loss: 0.0437
 - Brier Score: 0.0139
 - Recall: 68%
+## Training and comparing models
+`python scripts/train_model.py` trains on alpha, beta, then finetuning data. Settings (layers, width, dropout, L1 / L2, optimizer, epochs per stage, which stages to run) are at the top of `scripts/train_model.py` and can be overridden per run, e.g. `python scripts/train_model.py --set model_version=fnn_v17_wide hidden_width=1400 dropout=0.3` or `--set stages=finetuning` to test whether pre training helps. `max_train_rows=500000` caps the rows seen per epoch for quick trials.
+
+Every epoch is scored on the same finetuning test rows, whichever stage is training, and compared with simple baselines (base rate, character and floor range only, logistic regression). Results are written to `model_objects/dev/<model_version>/` (`metrics.csv`, `segments.csv`, `calibration.csv`, `baselines.json`, `summary.json`, `learning_curves.png`), and one line per run is appended to `model_objects/experiments.csv`.

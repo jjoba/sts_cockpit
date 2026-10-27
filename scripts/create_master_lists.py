@@ -7,10 +7,11 @@
 import os
 import gzip
 import json
-import re
 import multiprocessing
 
 from zipfile import ZipFile
+
+from name_utils import clean_cards, clean_relics
 
 import pdb
 
@@ -27,14 +28,8 @@ def get_list(gzip_file):
 
         master_deck = temp_run['master_deck']
 
-        # Cleans up card names
-        # Handles starter cards with _X at the end
-        master_deck = [re.sub(r'_.{1}', '', card_name).lower() for card_name in master_deck]    
-        master_deck = [re.sub(r'\+.*$', '_u', card_name) for card_name in master_deck]
-
-        # First regex didn't catch all searing blows. Forcing them to all become the same
-        # Keys off the fact that it's the only card with a number in it
-        master_deck = [re.sub(' ', '_', card_name) for card_name in master_deck]
+        # Cleans up card names (see name_utils.py)
+        master_deck = clean_cards(master_deck)
 
         # update the card list
         card_list += [c for c in set(master_deck)]
@@ -42,7 +37,7 @@ def get_list(gzip_file):
         # Process relics
         relics = temp_run['relics']
 
-        relic_list += [re.sub(' ', '_', r).lower() for r in set(relics)]
+        relic_list += [r for r in set(clean_relics(relics))]
 
     # Sort lists and get unique values before returning
     card_list = [c for c in set(card_list)]
@@ -90,11 +85,11 @@ if __name__ == '__main__':
         pool_obj.close()
 
         # Unpack, set, and sort
-        file_card_list = [c[0] for c in output][0]
+        file_card_list = [c for c_list in output for c in c_list[0]]
         file_card_list = [c for c in set(file_card_list)]
         file_card_list.sort()
 
-        file_relic_list = [r[1] for r in output][0]
+        file_relic_list = [r for r_list in output for r in r_list[1]]
         file_relic_list = [r for r in set(file_relic_list)]
         file_relic_list.sort()
 
