@@ -65,6 +65,13 @@ DEFAULT_CONFIG = {
     'momentum': 0.0, # sgd only
     'batch_size': 64,
 
+    # Learning rate over each stage: constant, cosine or linear decay from lr down to lr * lr_final_factor
+    'lr_schedule': 'constant',
+    'lr_final_factor': 0.01,
+
+    # Start from the weights of a saved TorchScript model (same n_hidden / hidden_width), e.g. a pre training checkpoint to compare finetuning settings
+    'init_from': None,
+
     # Which data sets to train on in order, and for how many epochs each. Set stages=finetuning to see if pre training helps
     'stages': ['pre_training_alpha', 'pre_training_beta', 'finetuning'],
     'epochs': {'pre_training_alpha': 8, 'pre_training_beta': 20, 'finetuning': 20},
@@ -82,6 +89,9 @@ DEFAULT_CONFIG = {
 
     'baselines': True,
     'save_production': True,
+
+    # False when several runs go at once (the experiments file is not safe to append to in parallel)
+    'log_experiment': True,
 }
 
 LOWER_IS_BETTER = {'log_loss', 'brier', 'ece'}
@@ -244,7 +254,18 @@ def run_baselines(ft_train, ft_eval, base_rate, out_dir):
 
 ############### TRAINING ##############
 
-def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng):
+def lr_at(config, progress):
+    # progress = share of the stage's training completed, 0 to 1
+    floor = config['lr_final_factor']
+    if config['lr_schedule'] == 'cosine':
+        scale = floor + (1 - floor) * 0.5 * (1 + np.cos(np.pi * progress))
+    elif config['lr_schedule'] == 'linear':
+        scale = 1 - (1 - floor) * progress
+    else:
+        scale = 1.0
+    return config['lr'] * scale
+
+def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng, epoch, n_epochs):
     model.train()
     perm = rng.permutation(len(dataset))[:config['max_train_rows']]
     batch_size = config['batch_size']
@@ -254,6 +275,10 @@ def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng):
     grad_norms = []
 
     for i in range(0, len(perm), batch_size):
+        if config['lr_schedule'] != 'constant':
+            for group in optimizer.param_groups:
+                group['lr'] = lr_at(config, (epoch + i / len(perm)) / n_epochs)
+
         # Sorting inside a batch doesn't change the batch but keeps the disk reads closer together
         X, y = dataset.take(np.sort(perm[i:i + batch_size]))
         X, y = X.to(device), y.to(device)
@@ -370,7 +395,11 @@ if __name__ == '__main__':
     print(f'Using device: {device}')
 
     # Instantiate Model
-    model = NeuralNetwork(config['n_hidden'], config['hidden_width'], config['dropout']).to(device)
+    model = NeuralNetwork(config['n_hidden'], config['hidden_width'], config['dropout'])
+    if config['init_from']:
+        model.load_state_dict(torch.jit.load(f"{project_dir}/{config['init_from']}", map_location = 'cpu').state_dict())
+        print(f"Initialised from {config['init_from']}")
+    model = model.to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f'Model has {n_params:,} parameters')
 
@@ -422,7 +451,7 @@ if __name__ == '__main__':
             epoch_start = time()
 
             row = {'stage': destination, 'epoch': t, 'global_epoch': global_epoch}
-            row.update(train_epoch(model, training_data, optimizer, loss_fn, config, device, rng))
+            row.update(train_epoch(model, training_data, optimizer, loss_fn, config, device, rng, t, config['epochs'][destination]))
             row['epoch_seconds'] = time() - epoch_start
             row['rows_per_second'] = min(len(training_data), config['max_train_rows'] or len(training_data)) / row['epoch_seconds']
 
@@ -502,11 +531,12 @@ if __name__ == '__main__':
                        [f'ft_{m}' for m in ['log_loss', 'brier', 'ece', 'auc', 'avg_precision', 'lift_top_decile', 'log_loss_skill', 'best_f1']] + ['train_eval_log_loss', 'train_eval_auc']})
     experiment.update({f'baseline_logreg_{k}': v for k, v in summary['baselines'].get('logistic_regression', {}).items()})
 
-    experiments_path = f'{project_dir}/model_objects/experiments.csv'
-    experiment_df = pd.DataFrame([experiment])
-    if os.path.exists(experiments_path):
-        experiment_df = pd.concat([pd.read_csv(experiments_path), experiment_df], ignore_index = True)
-    experiment_df.to_csv(experiments_path, index = False)
+    if config['log_experiment']:
+        experiments_path = f'{project_dir}/model_objects/experiments.csv'
+        experiment_df = pd.DataFrame([experiment])
+        if os.path.exists(experiments_path):
+            experiment_df = pd.concat([pd.read_csv(experiments_path), experiment_df], ignore_index = True)
+        experiment_df.to_csv(experiments_path, index = False)
 
     # Move the top performing finetuned model to production
     if config['save_production'] and final_stage == 'finetuning':
