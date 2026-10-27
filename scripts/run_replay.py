@@ -252,7 +252,7 @@ def replay_run(event, card_set, relic_set, n_floors, rng):
     if event.get('ascension_level', 0) >= 10:
         start_deck['ascendersbane'] += 1
 
-    # Some older runs have log entries with no floor, which can't be placed in time
+    # Some older runs have malformed log entries (no floor, null entries), which can't be placed in time
     try:
         card_events = get_card_events(event, card_set)
         relic_floors = get_relic_floors(event, relic_set)
@@ -260,7 +260,7 @@ def replay_run(event, card_set, relic_set, n_floors, rng):
         final_deck = Counter(n for n in clean_cards(event['master_deck']) if n in card_set)
 
         extra, residual = infer_unlogged(event, start_deck, card_events, relic_floors, floor_reached, final_deck)
-    except (KeyError, TypeError):
+    except (KeyError, TypeError, AttributeError, ValueError, IndexError):
         return None
 
     card_events = sorted(card_events + extra, key = lambda x: (x[0], x[1]))
