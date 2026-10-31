@@ -36,7 +36,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, average_precision_score, precision_recall_curve
 
 # Cards + relics + characters + floor, must match process_data.py and starting_decks.csv
-N_FEATURES = 920
+N_FEATURES = 929
 
 # Last columns of a row are floor, then the one hot characters, then victory (see process_data.py)
 FLOOR_COL = N_FEATURES - 5
@@ -47,7 +47,7 @@ CHARACTER_COLS = list(range(N_FEATURES - 4, N_FEATURES))
 FLOOR_BUCKETS = [('floor_01_10', 1, 10), ('floor_11_25', 11, 25), ('floor_26_40', 26, 40), ('floor_41_plus', 41, 127)]
 
 DEFAULT_CONFIG = {
-    'model_version': 'fnn_v17',
+    'model_version': 'fnn_v20',
     'seed': 0,
 
     # Architecture: n_hidden layers of hidden_width units (ReLU, dropout) then a sigmoid output
@@ -419,7 +419,7 @@ if __name__ == '__main__':
     ft_base_rate = float(read_rows(ft_train, 1000000, 2)[:, -1].mean())
 
     data_stats = {}
-    for d in ['pre_training_alpha', 'pre_training_beta', 'finetuning']:
+    for d in dict.fromkeys(config['stages'] + ['finetuning']):
         for split in ['train', 'test']:
             ds = BinDataset(f'{data_dir}/{d}/{split}/{split}.bin')
             data_stats[f'{d}_{split}'] = {'rows': len(ds), 'win_rate': float(read_rows(ds, 200000, 3)[:, -1].mean())}

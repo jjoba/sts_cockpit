@@ -567,6 +567,15 @@ scrawl
 scrawl_u
 searingblow
 searingblow_u
+searingblow_u2plus
+searingblow_u3plus
+searingblow_u4plus
+searingblow_u5plus
+searingblow_u6plus
+searingblow_u7plus
+searingblow_u8plus
+searingblow_u9plus
+searingblow_u10plus
 secondwind
 secondwind_u
 secrettechnique

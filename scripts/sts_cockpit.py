@@ -20,6 +20,8 @@ from tkinter import filedialog
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 
+from name_utils import SEARING_BLOW_COLUMNS, SEARING_BLOW_MAX, searing_blow_columns, searing_blow_level, searing_blow_name
+
 import pdb
 
 class Cockpit:
@@ -64,6 +66,25 @@ class Cockpit:
             print(f'Predicted Win Rate: "{pred}"')
 
         return pred
+
+    def searing_blow_levels(self, deck):
+        # {upgrades: copies} of Searing Blow in a deck. The columns count a copy at every level up to its own (see name_utils.py),
+        # so copies at exactly a level are that column minus the next. SEARING_BLOW_MAX holds that many upgrades or more
+        counts = [int(deck[c].iloc[0]) for c in SEARING_BLOW_COLUMNS]
+        levels = {level: counts[level] - (counts[level + 1] if level < SEARING_BLOW_MAX else 0) for level in range(SEARING_BLOW_MAX + 1)}
+        return {level: qty for level, qty in levels.items() if qty > 0}
+
+    def move_searing_blow(self, deck, from_level = None, to_level = None):
+        # Takes a copy out of the deck at from_level and / or puts one in at to_level (in place), keeping the columns consistent
+        for level, change in [(from_level, -1), (to_level, 1)]:
+            if level is not None:
+                for column in searing_blow_columns(level):
+                    deck[column] += change
+
+    def parse_searing_blow(self, card):
+        # Upgrades if card names a Searing Blow (searingblow, searingblow_u, searingblow_u3 = +3), otherwise None
+        level = searing_blow_level(card)
+        return None if level is None else min(level, SEARING_BLOW_MAX)
 
     def run_setup(self):
         print('Which model would you like to use?')
@@ -153,10 +174,13 @@ class Cockpit:
                                     card = input('Enter card name or type 9 to go back: ')
 
                                     # Add card to sim
-                                    if card in self.deck.columns and card != 'floor':
+                                    if self.parse_searing_blow(card) is not None or (card in self.deck.columns and card != 'floor' and card not in SEARING_BLOW_COLUMNS):
                                         temp_sim_deck = self.deck.copy()
 
-                                        temp_sim_deck[card] += 1
+                                        if self.parse_searing_blow(card) is not None:
+                                            self.move_searing_blow(temp_sim_deck, to_level = self.parse_searing_blow(card))
+                                        else:
+                                            temp_sim_deck[card] += 1
 
                                         # Joins results onto the simulated decks
                                         sim_deck = pd.concat([sim_deck, temp_sim_deck])
@@ -168,6 +192,8 @@ class Cockpit:
                                     # Go back to sim choices menu
                                     elif card == '9':
                                         valid_card = True
+                                    elif card in SEARING_BLOW_COLUMNS:
+                                        print('Give Searing Blow as searingblow_uN for N upgrades (e.g. searingblow_u3)')
                                     else:
                                         print('Unknown Card Name')
                         
@@ -191,6 +217,10 @@ class Cockpit:
                             if card in self.non_removable + self.relic_list:
                                 pass
                             
+                            # Searing Blow is done by upgrade level below
+                            elif card in SEARING_BLOW_COLUMNS:
+                                pass
+
                             # Add a row for any card currently present in the deck. subtract 1 from qty                            
                             elif self.deck[card].all() > 0:
                                 temp_sim_deck = self.deck.copy()
@@ -198,6 +228,14 @@ class Cockpit:
                                 
                                 sim_deck = pd.concat([sim_deck, temp_sim_deck])
                                 cards_removed.append(card)
+
+                        # A row for each upgrade level of Searing Blow in the deck
+                        for level in self.searing_blow_levels(self.deck):
+                            temp_sim_deck = self.deck.copy()
+                            self.move_searing_blow(temp_sim_deck, from_level = level)
+
+                            sim_deck = pd.concat([sim_deck, temp_sim_deck])
+                            cards_removed.append(searing_blow_name(level))
 
                         # Get expected impact of each card removal
                         self.get_win_rate(sim_deck)
@@ -214,6 +252,10 @@ class Cockpit:
                             if card in self.non_removable + self.curses + self.relic_list:
                                 pass
                             
+                            # Searing Blow is done by upgrade level below
+                            elif card in SEARING_BLOW_COLUMNS:
+                                pass
+
                             # No multi-upgrades
                             elif '_u' in card:
                                 pass
@@ -226,6 +268,14 @@ class Cockpit:
                                 
                                 sim_deck = pd.concat([sim_deck, temp_sim_deck])
                                 cards_upgraded.append(card)
+
+                        # Searing Blow can be upgraded again and again, a row for each upgrade level in the deck
+                        for level in self.searing_blow_levels(self.deck):
+                            temp_sim_deck = self.deck.copy()
+                            self.move_searing_blow(temp_sim_deck, from_level = level, to_level = level + 1)
+
+                            sim_deck = pd.concat([sim_deck, temp_sim_deck])
+                            cards_upgraded.append(searing_blow_name(level))
 
                         # Get expected impact of each card upgraded
                         self.get_win_rate(sim_deck)
@@ -246,8 +296,8 @@ class Cockpit:
                             # Make sure we're not simming a character card or ascenders bane or adding a relic
                             if card in self.non_removable + self.curses + self.relic_list:
                                 pass
-                            elif card == 'searingblow_u':
-                                print('searingblow_u not eligible for consideration due to model issues')
+                            # Upgraded Searing Blows are not something to pick up
+                            elif card in SEARING_BLOW_COLUMNS[1:]:
                                 pass
                             else:
                                 temp_sim_deck = self.deck.copy()
@@ -330,9 +380,16 @@ class Cockpit:
                         valid_card = False
 
                         while valid_card is False:
-                            card = input('Which card would you like to add? 9 to go back\n')
+                            card = input('Which card would you like to add? (Searing Blow with N upgrades is searingblow_uN) 9 to go back\n')
                             
-                            if card in self.deck.columns and card != 'floor':
+                            if self.parse_searing_blow(card) is not None:
+                                self.move_searing_blow(self.deck, to_level = self.parse_searing_blow(card))
+                                valid_card = True
+
+                            elif card in SEARING_BLOW_COLUMNS:
+                                print('Give Searing Blow as searingblow_uN for N upgrades (e.g. searingblow_u3)')
+
+                            elif card in self.deck.columns and card != 'floor':
                                 self.deck[card] += 1
                                 valid_card = True
                             
@@ -357,9 +414,21 @@ class Cockpit:
 
                         while valid_card is False:
                             card_qty_g0 = True
-                            card = input('Which card would you like to remove? 9 to go back\n')
+                            card = input('Which card would you like to remove? (Searing Blow with N upgrades is searingblow_uN) 9 to go back\n')
                             
-                            if card in self.deck.columns:
+                            if self.parse_searing_blow(card) is not None:
+                                if self.parse_searing_blow(card) in self.searing_blow_levels(self.deck):
+                                    self.move_searing_blow(self.deck, from_level = self.parse_searing_blow(card))
+                                    valid_card = True
+                                else:
+                                    print(f'You do not have any copies of {card} and cannot remove')
+                                    card_qty_g0 = False
+                                    valid_card = True
+
+                            elif card in SEARING_BLOW_COLUMNS:
+                                print('Give Searing Blow as searingblow_uN for N upgrades (e.g. searingblow_u3)')
+
+                            elif card in self.deck.columns:
                                 if card in self.non_removable + self.curses + self.relic_list:
                                     print(f'Cannot remove card {card}')
                                 elif self.deck[card].all() > 0:
@@ -389,9 +458,21 @@ class Cockpit:
                         valid_card = False
 
                         while valid_card is False:
-                            card = input('Which card would you like to upgrade? 9 to go back\n')
+                            card = input('Which card would you like to upgrade? (Searing Blow: give its current upgrades, e.g. searingblow_u2) 9 to go back\n')
                             
-                            if card in self.deck.columns:
+                            if self.parse_searing_blow(card) is not None:
+                                level = self.parse_searing_blow(card)
+
+                                if level in self.searing_blow_levels(self.deck):
+                                    self.move_searing_blow(self.deck, from_level = level, to_level = level + 1)
+                                    valid_card = True
+                                else:
+                                    print(f'You do not have any copies of {card} to upgrade')
+
+                            elif card in SEARING_BLOW_COLUMNS:
+                                print('Give Searing Blow as searingblow_uN for N upgrades (e.g. searingblow_u3)')
+
+                            elif card in self.deck.columns:
                                 # Check for upgraded card being passed
                                 if '_u' in card:
                                     print('Please supply unupgraded card name (i.e. with xxx_u)')
@@ -490,7 +571,9 @@ class Cockpit:
             # View Deck & Win Rate
             elif self.user_choice == '3':
                 print('Current Deck')
-                print({k:int(v[0]) for (k, v) in self.deck.to_dict('list').items() if v[0] > 0})
+                current_deck = {k:int(v[0]) for (k, v) in self.deck.to_dict('list').items() if v[0] > 0 and k not in SEARING_BLOW_COLUMNS}
+                current_deck.update({searing_blow_name(level): qty for level, qty in self.searing_blow_levels(self.deck).items()})
+                print(current_deck)
                 print('Win Rate')
                 self.get_win_rate(self.deck)
 
@@ -516,4 +599,4 @@ class Cockpit:
 if __name__ == '__main__':
 
     # Initialize
-    cockpit = Cockpit()
+    cockpit = Cockpit()

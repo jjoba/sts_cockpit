@@ -4,7 +4,6 @@
     TODO:
       Fix incorrect cols
       group pretrain beta with finetune by adding ascension column
-      handle_searing_blow_correctly
       add relics
       add neow
 
@@ -49,15 +48,18 @@ from run_replay import replay_run
 HEART_MIN_FLOOR = 55
 
 # Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
-# because training data is rows x 921 bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+# because training data is rows x 930 bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+# Destinations to write, comma separated in the DESTINATIONS env var (default all), e.g. DESTINATIONS=finetuning skips the alpha / beta runs entirely
+DESTINATIONS = os.environ.get('DESTINATIONS', 'finetuning,pre_training_beta,pre_training_alpha').split(',')
+
 FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 1, 'pre_training_alpha': 1}
 
 # Runs whose replayed final deck differs from the logged final deck by more than this many cards are dropped
 # replay_stats.csv has the residual distribution to help tune this
 MAX_REPLAY_RESIDUAL = 0
 
-# Columns written to the training files: cards + relics (915), characters (4), floor, victory
-N_TRAIN_COLS = 921
+# Columns written to the training files: cards + relics (924), characters (4), floor, victory
+N_TRAIN_COLS = 930
 
 def combine_and_clean(d, s, combine = True):
   # d = destination
@@ -137,6 +139,9 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
         if current_run['event']['ascension_level'] < 20:
             destination = 'pre_training_beta'
 
+    if destination not in DESTINATIONS:
+      continue
+
     stats[f'{destination}_runs'] += 1
 
     # Rebuild deck & relics at sampled floors
@@ -172,6 +177,10 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
       modeling_data['id'] = current_run['event']['play_id']
 
       model_data_storage.append(modeling_data)
+
+  # A file with no rows for the DESTINATIONS being written has nothing to write
+  if len(model_data_storage) == 0:
+    return stats
 
   # Process lists into dictionaries with value 1 to ensure all items are captured
   card_dict = {re.sub('\n', '', card):1 for card in master_card_list}
@@ -293,7 +302,7 @@ if __name__ == '__main__':
   master_relic_list = f.readlines()
   f.close()
 
-  destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
+  destinations = DESTINATIONS
   splits = ['train', 'test']
 
   # Removes any files already in directories
@@ -360,7 +369,7 @@ if __name__ == '__main__':
   # Runs serially to prevent data races against the main aggregation files
   print('aggregating files')
   
-  destinations = ['finetuning', 'pre_training_beta', 'pre_training_alpha']
+  destinations = DESTINATIONS
   splits = ['train', 'test']
 
   items = list(itertools.product(destinations, splits))

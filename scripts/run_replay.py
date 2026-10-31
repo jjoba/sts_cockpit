@@ -6,7 +6,7 @@
 
 from collections import Counter
 
-from name_utils import clean_cards, clean_relics
+from name_utils import clean_cards, clean_relics, expand_searing_blow, searing_blow_level, searing_blow_name
 
 # Cleaned card names, Ascender's Bane is added separately at A10+
 STARTING_DECKS = {
@@ -22,15 +22,24 @@ BOSS_RELIC_FLOORS = [17, 34, 51]
 # Order of operations when several things happen on the same floor
 ADD, REMOVE, UPGRADE = 0, 1, 2
 
+def in_card_set(name, card_set):
+    # The master card list has Searing Blow's model columns, the replay tracks its exact upgrade level (see name_utils)
+    return name in card_set or searing_blow_level(name) is not None
+
+def upgraded(name):
+    level = searing_blow_level(name)
+    return name + '_u' if level is None else searing_blow_name(level + 1)
+
 def get_card_events(event, card_set):
     # Returns list of (floor, order, op, cleaned card name). Only names in the master card list are kept
+    # Upgrades are logged with the name of the card BEFORE the upgrade, which for Searing Blow includes its level (Searing Blow+2 becomes +3)
     events = []
 
     def collect(floor, op, raw_names):
         for name in clean_cards(raw_names or []):
-            if op == UPGRADE:
+            if op == UPGRADE and searing_blow_level(name) is None:
                 name = name[:-2] if name.endswith('_u') else name
-            if name in card_set:
+            if in_card_set(name, card_set):
                 events.append((floor, op, op, name))
 
     # Card rewards (floor 0 is the Neow choice). Skips, Singing Bowl, etc. fall out of the card_set check
@@ -98,10 +107,15 @@ def apply_event(deck, op, name):
     elif op == REMOVE:
         if deck[name] > 0:
             deck[name] -= 1
-    # Searing Blow upgrades are all collapsed into _u, so a 2nd upgrade finds no base card and is a no-op
-    elif deck[name] > 0:
-        deck[name] -= 1
-        deck[name + '_u'] += 1
+    else:
+        if deck[name] == 0 and searing_blow_level(name) is not None:
+            # Only campfires log Searing Blow with its upgrades, events log it as plain Searing Blow whatever its level, so the highest one is upgraded
+            levels = [searing_blow_level(k) for k in deck if deck[k] > 0 and searing_blow_level(k) is not None]
+            name = searing_blow_name(max(levels)) if levels else name
+
+        if deck[name] > 0:
+            deck[name] -= 1
+            deck[upgraded(name)] += 1
 
 CURSES = {'ascendersbane', 'curseofthebell', 'necronomicurse', 'regret', 'doubt', 'shame', 'writhe', 'parasite', 'injury',
           'decay', 'normality', 'pain', 'clumsy', 'pride'}
@@ -134,6 +148,17 @@ STARTER_NAMES = {'strike', 'strike_u', 'defend', 'defend_u'}
 def is_strike(name):
     # Vampires removes every card tagged Strike, only the Heavy Blade has the tag without having it in its name
     return 'strike' in name or 'heavyblade' in name
+
+def upgrade_target(name, under):
+    # Returns (card, upgrades) an unlogged upgrade of name ends up as in the logged deck, or None. A Searing Blow may have been upgraded
+    # several times (e.g. Armaments), so any higher level the logged deck has too many of counts
+    level = searing_blow_level(name)
+
+    if level is None:
+        return (name + '_u', 1) if under[name + '_u'] > 0 else None
+
+    higher = [searing_blow_level(k) for k in under if under[k] > 0 and (searing_blow_level(k) or 0) > level]
+    return (searing_blow_name(min(higher)), min(higher) - level) if higher else None
 
 def infer_unlogged(event, start_deck, card_events, relic_floors, floor_reached, final_deck):
     '''
@@ -173,15 +198,23 @@ def infer_unlogged(event, start_deck, card_events, relic_floors, floor_reached, 
         return added
 
     def upgrade(n, floor, allowed = None):
+        # n counts upgrades, not cards
         done = 0
         for name in sorted(over):
-            if name.endswith('_u') or over[name] == 0 or under[name + '_u'] == 0 or (allowed is not None and name not in allowed):
+            if (name.endswith('_u') and searing_blow_level(name) is None) or (allowed is not None and name not in allowed):
                 continue
-            while over[name] > 0 and under[name + '_u'] > 0 and done < n:
+            while over[name] > 0 and done < n:
+                target = upgrade_target(name, under)
+                if target is None or done + target[1] > n:
+                    break
                 over[name] -= 1
-                under[name + '_u'] -= 1
-                done += 1
-                extra.append((floor, UPGRADE, UPGRADE, name))
+                under[target[0]] -= 1
+                done += target[1]
+
+                step = name
+                for _ in range(target[1]):
+                    extra.append((floor, UPGRADE, UPGRADE, step))
+                    step = upgraded(step)
         return done
 
     def transform(n, floor, starters_only = False):
@@ -237,7 +270,7 @@ def infer_unlogged(event, start_deck, card_events, relic_floors, floor_reached, 
 def replay_run(event, card_set, relic_set, n_floors, rng):
     '''
         Returns None if the run cannot be replayed, otherwise (rows, residual) where
-        rows = list of (floor, {card: qty}, [relics]) for up to n_floors floors sampled from 1..floor_reached
+        rows = list of (floor, {card: qty}, [relics]) for up to n_floors floors sampled from 1..floor_reached, cards as model columns (see expand_searing_blow)
         Each row is the state on arriving at that floor (events logged on floors < floor applied)
         residual = number of cards the replayed final deck still differs from the logged final deck by, after
         inferring the unlogged Neow / relic / combat upgrade changes (see infer_unlogged)
@@ -257,7 +290,7 @@ def replay_run(event, card_set, relic_set, n_floors, rng):
         card_events = get_card_events(event, card_set)
         relic_floors = get_relic_floors(event, relic_set)
 
-        final_deck = Counter(n for n in clean_cards(event['master_deck']) if n in card_set)
+        final_deck = Counter(n for n in clean_cards(event['master_deck']) if in_card_set(n, card_set))
 
         extra, residual = infer_unlogged(event, start_deck, card_events, relic_floors, floor_reached, final_deck)
     except (KeyError, TypeError, AttributeError, ValueError, IndexError):
@@ -275,6 +308,6 @@ def replay_run(event, card_set, relic_set, n_floors, rng):
             apply_event(deck, card_events[i][2], card_events[i][3])
             i += 1
 
-        rows.append((floor, {k: v for k, v in deck.items() if v > 0}, [name for f, name in relic_floors if f < floor]))
+        rows.append((floor, expand_searing_blow({k: v for k, v in deck.items() if v > 0}), [name for f, name in relic_floors if f < floor]))
 
     return rows, residual

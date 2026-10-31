@@ -11,7 +11,9 @@ import multiprocessing
 
 from zipfile import ZipFile
 
-from name_utils import clean_cards, clean_relics
+from collections import Counter
+
+from name_utils import SEARING_BLOW_COLUMNS, clean_cards, clean_relics, expand_searing_blow, sort_cards
 
 import pdb
 
@@ -31,8 +33,8 @@ def get_list(gzip_file):
         # Cleans up card names (see name_utils.py)
         master_deck = clean_cards(master_deck)
 
-        # update the card list
-        card_list += [c for c in set(master_deck)]
+        # Searing Blow levels become the model's columns (see name_utils.py)
+        card_list += list(expand_searing_blow(Counter(master_deck)))
         
         # Process relics
         relics = temp_run['relics']
@@ -99,9 +101,8 @@ if __name__ == '__main__':
 
         k += 1
 
-    # Set and sort
-    master_card_list = [c for c in set(master_card_list)]
-    master_card_list.sort()
+    # Set and sort, Searing Blow's columns are always there even if no run in the data got to the highest level
+    master_card_list = sort_cards(master_card_list + SEARING_BLOW_COLUMNS)
 
     master_relic_list = [r for r in set(master_relic_list)]
     master_relic_list.sort()
