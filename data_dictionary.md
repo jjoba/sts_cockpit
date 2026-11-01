@@ -17,7 +17,7 @@ Passed to production database.
 - **play_id** *(str)*: run ID; used as ID field when joining data together
 
 **Per floor rows**
-Each run produces up to n rows (n per destination set by `FLOORS_PER_RUN` in process_data.py), one for each of n randomly sampled floors between 1 and `floor_reached`. A row holds the deck and relics on arriving at that floor, rebuilt by `scripts/run_replay.py` from `card_choices`, `items_purchased`/`item_purchase_floors`, `items_purged`/`items_purged_floors`, `campfire_choices` (SMITH), `event_choices` (`cards_obtained`, `cards_removed`, `cards_transformed`, `cards_upgraded`, `relics_obtained`), `relics_obtained`, and `boss_relics`. The rows of a run share its `victory` label and `floor` is a feature.
+Each run produces up to n rows (n per destination set by `FLOORS_PER_RUN` in process_data.py), one for each of n randomly sampled floors between 1 and `floor_reached`. A row holds the deck and relics on arriving at that floor, rebuilt by `scripts/run_replay.py` from `card_choices`, `items_purchased`/`item_purchase_floors`, `items_purged`/`items_purged_floors`, `campfire_choices` (SMITH), `event_choices` (`cards_obtained`, `cards_removed`, `cards_transformed`, `cards_upgraded`, `relics_obtained`), `relics_obtained`, and `boss_relics`. `floor` is a feature. Each row ends with five labels, written by `run_labels` in process_data.py: `beat_act1_boss`, `beat_act2_boss`, `beat_act3_boss` (the FIRST act 3 boss, the only one below A20, so it means the same thing at every ascension), `beat_act3_second_boss` (A20 only, -1 for every row below A20) and `heart_kill` (`victory and floor_reached >= 55`, always the last column). 1 = the run went on to reach that milestone, 0 = it did not, -1 = nothing to predict because the row's floor is already past the milestone (floors 17, 34, 51 and 52 for the second boss) or the run has no such milestone, and the loss ignores it. Milestones are decided by floor reached, since boss floors are 16, 33 and 50; `victory` also covers ending the run by beating the act 3 boss without keys.
 - The replayed end state is compared to `master_deck`. Runs that differ by more than `MAX_REPLAY_RESIDUAL` cards are dropped
 - Untracked deck changes (Neow transforms, Dolly's Mirror, Astrolabe, etc.) show up as residual
 - Boss relic picks have no floor in the data, so they are placed at floors 17, 34, 51
@@ -29,7 +29,7 @@ Each row is a separate run.
 Assume this extends for all cards (aka very wide).
 One model will cover all characters.
 
-| strike | defend | bash | bash_u | wild_strike | ... | character | victory |
+| strike | defend | bash | bash_u | wild_strike | ... | character | beat_act1_boss | beat_act2_boss | beat_act3_boss | beat_act3_second_boss | heart_kill |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 4 | 5 | 0 | 1 | 0 | ... | ironclad | false
 

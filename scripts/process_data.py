@@ -24,6 +24,7 @@
 
 import os
 import gzip
+import hashlib
 import json
 import re
 import multiprocessing
@@ -37,7 +38,6 @@ import numpy as np
 
 from collections import Counter
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 from time import time
 from zipfile import ZipFile
 
@@ -48,7 +48,7 @@ from run_replay import replay_run
 HEART_MIN_FLOOR = 55
 
 # Each run contributes this many rows (one per randomly sampled floor) to a destination. Rows per run are capped
-# because training data is rows x 930 bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
+# because training data is rows x N_TRAIN_COLS bytes (raw int8, no header): finetuning has to fit in RAM to be shuffled, alpha is ~75M runs
 # Destinations to write, comma separated in the DESTINATIONS env var (default all), e.g. DESTINATIONS=finetuning skips the alpha / beta runs entirely
 DESTINATIONS = os.environ.get('DESTINATIONS', 'finetuning,pre_training_beta,pre_training_alpha').split(',')
 
@@ -58,8 +58,47 @@ FLOORS_PER_RUN = {'finetuning': 5, 'pre_training_beta': 1, 'pre_training_alpha':
 # replay_stats.csv has the residual distribution to help tune this
 MAX_REPLAY_RESIDUAL = 0
 
-# Columns written to the training files: cards + relics (924), characters (4), floor, victory
-N_TRAIN_COLS = 930
+# 1 run in TEST_ONE_IN goes to the test split. Membership comes from a hash of the run's play_id (not Python's salted hash()),
+# so it is the same on every processing run and can be recomputed later for any raw run, e.g. to evaluate on held out runs only
+TEST_ONE_IN = 5
+
+def is_test_run(play_id):
+  return int(hashlib.md5(str(play_id).encode()).hexdigest(), 16) % TEST_ONE_IN == 0
+
+# Prediction targets (heads of the network), in the order they are written as the LAST columns of every row. Heart kill must stay last
+# 1 = the run went on to hit the milestone, 0 = it did not, -1 = the row has no answer to learn from (ignored in the loss), either because
+# it is already past the milestone or the milestone does not exist for the run
+# Each milestone means the same event for every run, whatever its ascension, so rows from different ascensions can be pooled and trained on together
+LABEL_COLS = ['beat_act1_boss', 'beat_act2_boss', 'beat_act3_boss', 'beat_act3_second_boss', 'heart_kill']
+N_FEATURE_COLS = 929
+
+# Columns written to the training files: cards + relics (924), floor, characters (4), then the labels
+N_TRAIN_COLS = N_FEATURE_COLS + len(LABEL_COLS)
+
+# Floor a run is on once it has beaten each boss (bosses are fought on floors 16, 33 and 50, which is where deaths pile up in the data)
+# beat_act3_boss is the FIRST act 3 boss, the only one below A20. A20 has a second act 3 boss (floor 51) which is its own milestone, beat_act3_second_boss,
+# that only exists at A20 (-1 for every row of a run below A20). A run with no ascension_level counts as below A20
+# A no key victory ends the run on floor 51 below A20 and floor 52 at A20
+BOSS_CLEARED_FLOORS = [17, 34, 51]
+ACT_3_SECOND_BOSS_CLEARED_FLOOR = 52
+
+def run_labels(event, floor):
+  # Labels of one training row, in LABEL_COLS order, for a run's row sampled at this floor
+  # Milestone labels are about the future: a row on or after the floor the milestone is cleared has the answer built in, so it is -1
+  floor_reached = event['floor_reached']
+  victory = bool(event['victory'])
+
+  # victory is also true when ending the run by beating the act 3 boss(es) without keys, so it clears every boss milestone
+  labels = [-1 if floor >= cleared_floor else int(victory or floor_reached >= cleared_floor) for cleared_floor in BOSS_CLEARED_FLOORS]
+
+  if event.get('ascension_level', 0) >= 20 and floor < ACT_3_SECOND_BOSS_CLEARED_FLOOR:
+    labels.append(int(victory or floor_reached >= ACT_3_SECOND_BOSS_CLEARED_FLOOR))
+  else:
+    labels.append(-1)
+
+  # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
+  labels.append(int(victory and floor_reached >= HEART_MIN_FLOOR))
+  return labels
 
 def combine_and_clean(d, s, combine = True):
   # d = destination
@@ -161,9 +200,6 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
       stats[f'{destination}_dropped_residual'] += 1
       continue
 
-    # victory is also true for beating the act 3 boss without keys, so require reaching act 4 (Heart kill)
-    victory = current_run['event']['victory'] and current_run['event']['floor_reached'] >= HEART_MIN_FLOOR
-
     stats[f'{destination}_runs_kept'] += 1
     stats[f'{destination}_rows'] += len(rows)
 
@@ -172,7 +208,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
       modeling_data.update(Counter(relics))
       modeling_data['floor'] = floor
       modeling_data['character'] = current_run['event']['character_chosen'].lower()
-      modeling_data['victory'] = victory
+      modeling_data.update(dict(zip(LABEL_COLS, run_labels(current_run['event'], floor))))
       modeling_data['destination'] = destination
       modeling_data['id'] = current_run['event']['play_id']
 
@@ -192,7 +228,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Add on remaining needed columns
   dummy_row['id'] = 'dummy_row'
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
-  dummy_row['victory'] = True
+  dummy_row.update({label: 1 for label in LABEL_COLS})
   dummy_row['floor'] = 0
 
   # model_data_storage_save = model_data_storage.copy()
@@ -221,8 +257,8 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   # Remove dummy rows, id is kept until after the train / test split so a run's rows never land on both sides
   model_data_storage = model_data_storage[model_data_storage['id'] != 'dummy_row']
 
-  # Moving victory to the end -- standard practice for modeling
-  model_data_storage = model_data_storage[[c for c in model_data_storage if c not in ['victory']] + ['victory']]
+  # Moving the labels to the end -- standard practice for modeling
+  model_data_storage = model_data_storage[[c for c in model_data_storage if c not in LABEL_COLS] + LABEL_COLS]
 
   # Changing card titles to reflect current naming
   model_data_storage = model_data_storage.rename(columns = RENAMES)
@@ -235,7 +271,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
 
   # Explicit column order so every file matches starting_decks.csv and the model input
   item_cols = [RENAMES.get(c, c) for c in list(card_dict) + list(relic_dict)]
-  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + ['id', 'destination', 'victory']]
+  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + ['id', 'destination'] + LABEL_COLS]
 
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
@@ -270,22 +306,19 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
     # Floor is capped so endless runs can't wrap around int8
     temp_data = temp_data.assign(floor = temp_data['floor'].clip(upper = 127))
 
-    if len(run_ids) > 1:
-      train_ids, test_ids = train_test_split(run_ids, test_size=0.2)
+    test_ids = [run_id for run_id in run_ids if is_test_run(run_id)]
+    train_ids = [run_id for run_id in run_ids if not is_test_run(run_id)]
 
-      train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
-      test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
+    train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
+    test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
 
-      train.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
-      test.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.bin')
-    # If there's only one run in a file write it to train
-    else:
-      temp_data.drop('id', axis = 1).astype('int8').to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
+    train.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
+    test.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.bin')
 
   return stats
 
 if __name__ == '__main__':
-  # NOTE: N_TRAIN_COLS = number of cols when accounting for cards, relics, character, floor, and victory cols
+  # NOTE: N_TRAIN_COLS = number of cols when accounting for cards, relics, character, floor, and the label cols
 
   num_cores = multiprocessing.cpu_count() - 1
   

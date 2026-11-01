@@ -60,7 +60,8 @@ class Cockpit:
     def get_win_rate(self, deck, print_results=True):
         # Predicts the win rate from some deck -> this is NOT self.deck
         x = torch.from_numpy(deck.to_numpy().astype(np.float32)).to(self.device)
-        pred = self.model(x)
+        # Multi target models have one output per milestone, the last is the Heart kill (older single target models only have that one)
+        pred = self.model(x)[:, -1:]
         
         if print_results:
             print(f'Predicted Win Rate: "{pred}"')
