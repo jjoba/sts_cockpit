@@ -1,7 +1,7 @@
 # Planned experiments
 
 ## v22: cumulative upgrade encoding (like Searing Blow)
-Logged 2026-10-31, not run. Paused so the v21 pretraining variants (fnn_v21_beta_mt, fnn_v21_beta_act3_mt, fnn_v21_alpha_beta_mt) can finish.
+Logged 2026-10-31. **Run 2026-11-02** for all five v21 recipes (fnn_v22_ft_st_cum, ft_mt_cum, beta_act3_mt_cum, beta_mt_cum, alpha_beta_mt_cum); results and the comparison against v21 are in `outstanding_experiments.md` item 2 and `model_objects/bench/v22_*/report_*.md`. Small accuracy gain, better transfer to rare upgrade states, no fix for negative upgrade effects or combos. The text below is the original plan.
 
 **Idea.** Today a plain card is [card=1, card_u=0] and an upgraded one is [card=0, card_u=1], so every upgrade state learns separately. Make an upgraded copy count in both columns ([1, 1]): `card` = total copies, `card_u` = how many are upgraded. This is what Searing Blow's columns already do (see name_utils.py). Pair and combo effects learned for a card then carry over to its upgraded version, and `card_u` only has to learn what upgrading adds.
 

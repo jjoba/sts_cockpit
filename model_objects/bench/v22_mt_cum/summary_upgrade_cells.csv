@@ -1,0 +1,3 @@
+model,pairs,mean_spread_across_states,median_spread_across_states,mean_rarest_vs_best_supported_gap
+fnn_v21_ft_mt,190,0.031803720132796975,0.027424066387116905,0.018181239880524842
+fnn_v22_ft_mt_cum,190,0.03280993197892708,0.025582485876977444,0.017652200651350855
