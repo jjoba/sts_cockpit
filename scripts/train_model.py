@@ -72,6 +72,15 @@ DEFAULT_CONFIG = {
     # the model adds the upgraded columns onto their plain ones as its first step
     'upgrade_encoding': 'split',
 
+    # Priors that upgrading a card should not lower the win probability (cumulative encoding only). upgrade_l2 penalizes the squared first layer weights of the
+    # upgraded columns, which pulls an upgraded copy toward the plain card. upgrade_flip_weight adds a hinge on the logit: in upgrade_flip_rows rows of each batch
+    # one upgraded card is made plain again and the model is penalized, on every head, when that raises the logit by more than upgrade_flip_margin (evaluated
+    # without dropout, as the model is used)
+    'upgrade_l2': 0.0,
+    'upgrade_flip_weight': 0.0,
+    'upgrade_flip_rows': 32,
+    'upgrade_flip_margin': 0.0,
+
     # Regularization: l2 is the optimizer weight decay, l1 is a penalty on the absolute value of the weights added to the loss
     'l1': 0.0,
     'l2': 0.0,
@@ -178,6 +187,33 @@ class CumulativeUpgradeNetwork(NeuralNetwork):
         x = self.flatten(x)
         x = x.index_add(1, self.base_idx, x.index_select(1, self.up_idx))
         return self.linear_relu_stack(x)
+
+def upgrade_flip_penalty(model, X, n_rows, margin):
+    # Rows with an upgraded card get one random upgraded copy turned back into a plain one (card total unchanged, so the cumulative model sees one fewer upgrade).
+    # The logit of every head should not go up when that happens, the hinge is the average amount it does
+    has_upgrade = X[:, model.up_idx] > 0
+    rows = has_upgrade.any(1).nonzero().squeeze(1)
+    if len(rows) == 0:
+        return X.new_zeros((), dtype = torch.float32)
+
+    rows = rows[torch.randperm(len(rows), device = X.device)[:n_rows]]
+    pick = (torch.rand(len(rows), len(model.up_idx), device = X.device) * has_upgrade[rows]).argmax(1)
+    upgraded = X[rows].float()
+    plain = upgraded.clone()
+    r = torch.arange(len(rows), device = X.device)
+    plain[r, model.up_idx[pick]] -= 1
+    plain[r, model.base_idx[pick]] += 1
+
+    # Dropout off for both passes, the way the model is used and measured
+    was_training = model.training
+    model.eval()
+    x = torch.cat([upgraded, plain])
+    x = x.index_add(1, model.base_idx, x.index_select(1, model.up_idx))
+    logits = model.linear_relu_stack[:-1](x)
+    model.train(was_training)
+
+    gain = logits[len(rows):] - logits[:len(rows)] # plain minus upgraded
+    return torch.relu(gain - margin).mean()
 
 def upgrade_column_pairs(project_dir):
     # (plain column, upgraded column) of every card with a card_u column. Searing Blow is left out, its columns are cumulative already
@@ -359,6 +395,12 @@ def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng, epoch, 
         if config['l1'] > 0:
             loss = loss + config['l1'] * sum(p.abs().sum() for p in model.parameters() if p.dim() > 1)
 
+        if config['upgrade_l2'] > 0:
+            loss = loss + config['upgrade_l2'] * (model.linear_relu_stack[0].weight[:, model.up_idx] ** 2).sum()
+
+        if config['upgrade_flip_weight'] > 0:
+            loss = loss + config['upgrade_flip_weight'] * upgrade_flip_penalty(model, X, config['upgrade_flip_rows'], config['upgrade_flip_margin'])
+
         loss.backward()
 
         # Gradient norm is sampled because reading it forces a sync with the gpu
@@ -481,6 +523,8 @@ if __name__ == '__main__':
         model = NeuralNetwork(config['n_hidden'], config['hidden_width'], config['dropout'])
     else:
         raise SystemExit(f"upgrade_encoding is split or cumulative, not {config['upgrade_encoding']}")
+    if (config['upgrade_l2'] > 0 or config['upgrade_flip_weight'] > 0) and config['upgrade_encoding'] != 'cumulative':
+        raise SystemExit('upgrade_l2 and upgrade_flip_weight need upgrade_encoding=cumulative')
     if config['init_from']:
         saved = torch.jit.load(f"{project_dir}/{config['init_from']}", map_location = 'cpu').state_dict()
         state = model.state_dict()
