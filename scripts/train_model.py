@@ -39,6 +39,7 @@ from torch import nn
 from torch.utils.data import Dataset
 
 from sklearn.linear_model import LogisticRegression
+from run_state import EXTRA_GROUPS
 from sklearn.metrics import roc_auc_score, average_precision_score, precision_recall_curve
 
 # Cards + relics + characters + floor, must match process_data.py and starting_decks.csv
@@ -49,6 +50,25 @@ HEAD_NAMES = ['beat_act1_boss', 'beat_act2_boss', 'beat_act3_boss', 'beat_act3_s
 N_HEADS = len(HEAD_NAMES)
 HEART = N_HEADS - 1
 N_COLS = N_FEATURES + N_HEADS
+
+# Data written by process_data.py since v24 has extra run state columns (HP, max HP, gold) between the 929 features and the labels, described by layout.json in the
+# data folder. extra_features in the config picks which groups the network gets; set_layout() sets the globals below before any data is read
+EXTRA_SCALES = {'hp_pct': 1 / 100, 'max_hp': 1 / 100, 'gold_25': 1 / 20} # brings the stored int8 values to about 0-1
+N_COLS_FILE = N_COLS
+INPUT_COLS = np.arange(N_FEATURES)
+INPUT_SCALE = np.ones(N_FEATURES, dtype = np.float32)
+
+def set_layout(data_dir, extra_features):
+    global N_COLS, INPUT_COLS, INPUT_SCALE
+    layout_path = f'{data_dir}/layout.json'
+    extra_cols = json.load(open(layout_path))['extra_cols'] if os.path.exists(layout_path) else []
+    N_COLS = N_FEATURES + len(extra_cols) + N_HEADS
+    chosen = [c for g in extra_features for c in EXTRA_GROUPS[g]]
+    missing = [c for c in chosen if c not in extra_cols]
+    if missing:
+        raise SystemExit(f'extra_features {extra_features} need columns {missing} that {data_dir} does not have')
+    INPUT_COLS = np.concatenate([np.arange(N_FEATURES), [N_FEATURES + extra_cols.index(c) for c in chosen]]).astype(int)
+    INPUT_SCALE = np.concatenate([np.ones(N_FEATURES), [EXTRA_SCALES[c] for c in chosen]]).astype(np.float32)
 
 # Last feature columns of a row are floor, then the one hot characters (see process_data.py)
 FLOOR_COL = N_FEATURES - 5
@@ -71,6 +91,11 @@ DEFAULT_CONFIG = {
     # the total copies and card_u how many of them are upgraded (what Searing Blow's columns already do). The data and the cockpit inputs stay as they are,
     # the model adds the upgraded columns onto their plain ones as its first step
     'upgrade_encoding': 'split',
+
+    # Folder under data/ holding the training files, and which extra run state groups (see run_state.EXTRA_GROUPS: hp, gold) the network gets as inputs.
+    # The default folder has no extra columns (the 929 column layout of v21-v23)
+    'data_dir_name': 'training_data',
+    'extra_features': [],
 
     # Priors that upgrading a card should not lower the win probability (cumulative encoding only). upgrade_l2 penalizes the squared first layer weights of the
     # upgraded columns, which pulls an upgraded copy toward the plain card. upgrade_flip_weight adds a hinge on the logit: in upgrade_flip_rows rows of each batch
@@ -140,7 +165,7 @@ class BinDataset(Dataset):
     def take(self, idx):
         # idx should be sorted, which keeps the reads close to sequential
         rows = torch.from_numpy(np.asarray(self.data[idx]))
-        return rows[:, :N_FEATURES], rows[:, N_FEATURES:]
+        return rows[:, INPUT_COLS], rows[:, -N_HEADS:]
 
 class EvalSet:
     # A fixed random subset of a data set, labels and segment columns are read once and the features are read at eval time
@@ -150,7 +175,7 @@ class EvalSet:
         self.dataset = dataset
         self.idx = np.sort(rng.choice(n, min(n, max_rows), replace = False))
 
-        meta = np.asarray(dataset.data[self.idx][:, [FLOOR_COL] + CHARACTER_COLS + list(range(N_FEATURES, N_COLS))])
+        meta = np.asarray(dataset.data[self.idx][:, [FLOOR_COL] + CHARACTER_COLS + list(range(N_COLS - N_HEADS, N_COLS))])
         self.floor = meta[:, 0].astype(np.int16)
         self.character = meta[:, 1:5].argmax(axis = 1)
         self.labels = meta[:, 5:].astype(np.int8) # every head's label, -1 where the row is past that milestone
@@ -163,7 +188,8 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
 
         layers = []
-        width_in = N_FEATURES
+        self.register_buffer('input_scale', torch.tensor(INPUT_SCALE))
+        width_in = len(INPUT_SCALE)
         for _ in range(n_hidden):
             layers += [nn.Linear(width_in, hidden_width), nn.ReLU(), nn.Dropout(dropout)]
             width_in = hidden_width
@@ -172,7 +198,7 @@ class NeuralNetwork(nn.Module):
         self.linear_relu_stack = nn.Sequential(*layers)
 
     def forward(self, x):
-        x = self.flatten(x)
+        x = self.flatten(x) * self.input_scale
         logits = self.linear_relu_stack(x)
         return logits
 
@@ -185,7 +211,7 @@ class CumulativeUpgradeNetwork(NeuralNetwork):
 
     def forward(self, x):
         x = self.flatten(x)
-        x = x.index_add(1, self.base_idx, x.index_select(1, self.up_idx))
+        x = x.index_add(1, self.base_idx, x.index_select(1, self.up_idx)) * self.input_scale
         return self.linear_relu_stack(x)
 
 def upgrade_flip_penalty(model, X, n_rows, margin):
@@ -208,7 +234,7 @@ def upgrade_flip_penalty(model, X, n_rows, margin):
     was_training = model.training
     model.eval()
     x = torch.cat([upgraded, plain])
-    x = x.index_add(1, model.base_idx, x.index_select(1, model.up_idx))
+    x = x.index_add(1, model.base_idx, x.index_select(1, model.up_idx)) * model.input_scale
     logits = model.linear_relu_stack[:-1](x)
     model.train(was_training)
 
@@ -252,6 +278,12 @@ def compute_metrics(y, p, base_rate = None):
         out['log_loss_skill'] = float(1 - out['log_loss'] / const_loss)
 
     out['acc_at_0.5'] = float(((p > 0.5) == y).mean())
+
+    # Precision, recall and F1 at the standard 0.5 threshold (not a tuned one)
+    tp = float(((p > 0.5) & (y == 1)).sum())
+    out['precision_at_0.5'] = tp / max(float((p > 0.5).sum()), 1)
+    out['recall_at_0.5'] = tp / max(float((y == 1).sum()), 1)
+    out['f1_at_0.5'] = 2 * out['precision_at_0.5'] * out['recall_at_0.5'] / max(out['precision_at_0.5'] + out['recall_at_0.5'], 1e-12)
 
     if 0 < y.sum() < len(y):
         out['auc'] = float(roc_auc_score(y, p))
@@ -491,6 +523,7 @@ if __name__ == '__main__':
     project_dir = os.getcwd()
     config = parse_overrides(sys.argv[1:])
     version = config['model_version']
+    set_layout(f"{project_dir}/data/{config['data_dir_name']}", config['extra_features'])
 
     for weights in [config['head_weights']] + list(config['stage_head_weights'].values()):
         if len(weights) != N_HEADS or min(weights) < 0 or sum(weights) <= 0:
@@ -553,7 +586,7 @@ if __name__ == '__main__':
         optimizer = torch.optim.SGD(model.parameters(), lr = config['lr'], momentum = config['momentum'], weight_decay = config['l2'])
 
     # Data and fixed evaluation subsets. Finetuning test is what every epoch is judged on, whichever stage is training
-    data_dir = f'{project_dir}/data/training_data'
+    data_dir = f"{project_dir}/data/{config['data_dir_name']}"
     ft_train = BinDataset(f'{data_dir}/finetuning/train/train.bin')
     ft_test = BinDataset(f'{data_dir}/finetuning/test/test.bin')
     ft_eval = EvalSet(ft_test, config['ft_eval_rows'], 100)
@@ -565,7 +598,7 @@ if __name__ == '__main__':
         for split in ['train', 'test']:
             ds = BinDataset(f'{data_dir}/{d}/{split}/{split}.bin')
             sample = read_rows(ds, 200000, 3)
-            labels = sample[:, N_FEATURES:]
+            labels = sample[:, -N_HEADS:]
             data_stats[f'{d}_{split}'] = {'rows': len(ds), 'win_rate': float(sample[:, -1].mean()),
                                           'positive_rate_by_head': {name: float(labels[labels[:, h] >= 0, h].mean()) if (labels[:, h] >= 0).any() else None for h, name in enumerate(HEAD_NAMES)},
                                           'share_past_milestone_by_head': {name: float((labels[:, h] < 0).mean()) for h, name in enumerate(HEAD_NAMES)}}
@@ -679,7 +712,7 @@ if __name__ == '__main__':
                   **{k: (json.dumps(v) if isinstance(v, (list, dict)) else v) for k, v in config.items() if k != 'model_version'},
                   'best_stage': final_stage, 'best_epoch': summary['best_epoch'], 'train_minutes': summary['train_minutes']}
     experiment.update({f'best_{k}': v for k, v in summary['best_metrics'].items() if k in
-                       [f'ft_{m}' for m in ['log_loss', 'brier', 'ece', 'auc', 'avg_precision', 'lift_top_decile', 'log_loss_skill', 'best_f1'] + [f'{h}_log_loss' for h in HEAD_NAMES[:HEART]]] + ['train_eval_log_loss', 'train_eval_auc']})
+                       [f'ft_{m}' for m in ['log_loss', 'brier', 'ece', 'auc', 'avg_precision', 'lift_top_decile', 'log_loss_skill', 'best_f1', 'precision_at_0.5', 'recall_at_0.5', 'f1_at_0.5'] + [f'{h}_log_loss' for h in HEAD_NAMES[:HEART]]] + ['train_eval_log_loss', 'train_eval_auc']})
     experiment.update({f'baseline_logreg_{k}': v for k, v in summary['baselines'].get('logistic_regression', {}).items()})
 
     if config['log_experiment']:

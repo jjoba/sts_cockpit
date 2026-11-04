@@ -7,6 +7,9 @@ Models are TorchScript files in model_objects/production, the Heart head (last o
     models    comma separated model names (required)
     name      output folder under model_objects/bench (default: first model name)
     sections  combos, upgrades, picks (default all three)
+    data      data folder under data/ (default training_data). Folders written by process_data.py since v24 carry HP / max HP / gold columns after the
+              929 features (layout.json); models are fed the extras their config.json lists, models without extras ignore them. The counterfactual
+              contexts keep each held-out deck's own HP and gold. The picks section is skipped for such folders (decisions_X.npy has no run state)
     n_null    random control pairs per character (default 25)
     seed      seed for control pairs, contexts and the control row sample (default 0)
 
@@ -27,6 +30,7 @@ What each section answers
             per-card calibration after the pick, and how often the model's best option is the one the player took.
 '''
 
+import json
 import os
 import sys
 import itertools
@@ -47,10 +51,21 @@ NAMES = CARDS + RELICS + ['floor', 'defect', 'ironclad', 'the_silent', 'watcher'
 IDX = {n: i for i, n in enumerate(NAMES)}
 N_FEATURES, N_HEADS = len(NAMES), 5
 N_COLS = N_FEATURES + N_HEADS
+DATA_NAME, N_EXTRA, EXTRA_COLS = 'training_data', 0, []
+EXTRA_GROUPS = {'hp': ['hp_pct', 'max_hp'], 'gold': ['gold_25']}
 FLOOR = IDX['floor']
 CHARS = ['defect', 'ironclad', 'the_silent', 'watcher']
 CHAR_COL = {c: IDX[c] for c in CHARS}
 MIN_FLOOR = 20 # combos are judged on decks from this floor on
+
+def configure(data_name):
+    # Row layout of the data folder: features, then (v24 data) the extra run state columns, then the head labels
+    global DATA_NAME, N_COLS, N_EXTRA, EXTRA_COLS
+    DATA_NAME = data_name
+    layout = f'{ROOT}/data/{data_name}/layout.json'
+    EXTRA_COLS = json.load(open(layout))['extra_cols'] if os.path.exists(layout) else []
+    N_EXTRA = len(EXTRA_COLS)
+    N_COLS = N_FEATURES + N_EXTRA + N_HEADS
 
 device = 'mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu'
 sigmoid = lambda z: 1 / (1 + np.exp(-z))
@@ -65,9 +80,22 @@ class Net:
         sd = torch.jit.load(self.path, map_location = 'cpu').state_dict()
         self.base_idx = sd['base_idx'].to(device) if 'base_idx' in sd else None
         self.up_idx = sd['up_idx'].to(device) if 'up_idx' in sd else None
+        cfg_path = f'{ROOT}/model_objects/dev/{name}/config.json'
+        extras = json.load(open(cfg_path))['config'].get('extra_features', []) if os.path.exists(cfg_path) else []
+        self.extras = '+'.join(extras)
+        self.extra_names = [c for g in extras for c in EXTRA_GROUPS[g]]
+        self.scale = sd['input_scale'].to(device) if 'input_scale' in sd else None
+        assert len(self.extra_names) == (0 if self.scale is None else len(self.scale) - N_FEATURES), f'{name}: extra inputs do not match its saved input_scale'
+        self.cols = None # columns of a data row fed to the network, set by use_layout()
         sd = {k: v for k, v in sd.items() if k.startswith('linear_relu_stack')}
         keys = sorted({k.rsplit('.', 1)[0] for k in sd}, key = lambda s: int(s.split('.')[-1]))
         self.layers = [(sd[k + '.weight'].to(device), sd[k + '.bias'].to(device)) for k in keys]
+
+    def use_layout(self):
+        missing = [c for c in self.extra_names if c not in EXTRA_COLS]
+        if missing:
+            raise SystemExit(f'{self.name} needs {missing}, data/{DATA_NAME} does not have them')
+        self.cols = torch.tensor(list(range(N_FEATURES)) + [N_FEATURES + EXTRA_COLS.index(c) for c in self.extra_names], device = device)
 
     def tag(self):
         st = os.stat(self.path)
@@ -78,6 +106,11 @@ class Net:
         out = []
         for i in range(0, len(X), batch):
             x = torch.as_tensor(np.asarray(X[i:i + batch]), dtype = torch.float32).to(device)
+            if self.cols is None:
+                self.use_layout()
+            x = x.index_select(1, self.cols)
+            if self.scale is not None:
+                x = x * self.scale
             if self.base_idx is not None:
                 x = x.index_add(1, self.base_idx, x.index_select(1, self.up_idx))
             for j, (W, b) in enumerate(self.layers):
@@ -90,7 +123,7 @@ class Net:
 ############### DATA ##############
 
 def open_split(split):
-    return np.memmap(f'{ROOT}/data/training_data/finetuning/{split}/{split}.bin', dtype = np.int8, mode = 'r').reshape(-1, N_COLS)
+    return np.memmap(f'{ROOT}/data/{DATA_NAME}/finetuning/{split}/{split}.bin', dtype = np.int8, mode = 'r').reshape(-1, N_COLS)
 
 def base_name(n):
     return n[:-2] if n.endswith('_u') and n[:-2] in IDX else n
@@ -168,7 +201,7 @@ def scan(split, nets, combos, cache_dir, support_and_cells, pool_rate, rng):
     step = 400000
     for lo in range(0, n, step):
         r = np.asarray(d[lo:lo + step])
-        X = r[:, :N_FEATURES]
+        X = r[:, :N_FEATURES + N_EXTRA] # features and the extra run state, the labels are not fed to the models
         f = X[:, FLOOR].astype(np.int16)
         # Rows of one run are adjacent with rising floors, a drop in floor starts the next run
         drop = np.zeros(len(r), bool)
@@ -531,7 +564,8 @@ if __name__ == '__main__':
     names = opts['models'].split(',')
     sections = opts['sections'].split(',')
     out_dir = f"{ROOT}/model_objects/bench/{opts.get('name', names[0])}"
-    cache_dir = f'{ROOT}/data/bench/cache'
+    configure(opts.get('data', 'training_data'))
+    cache_dir = f'{ROOT}/data/bench/cache' + ('' if DATA_NAME == 'training_data' else f'_{DATA_NAME}')
     os.makedirs(out_dir, exist_ok = True); os.makedirs(cache_dir, exist_ok = True)
     pd.set_option('display.width', 250); pd.set_option('display.max_columns', 40); pd.set_option('display.float_format', lambda v: f'{v:.4f}')
 
@@ -572,7 +606,9 @@ if __name__ == '__main__':
         rare.to_csv(f'{out_dir}/rare_cells.csv', index = False)
         summary['rare_cells'] = summarise_rare(rare)
 
-    if 'picks' in sections:
+    if 'picks' in sections and N_EXTRA:
+        print('Card picks skipped: the saved pick decisions have no HP / gold (extract_pick_decisions.py would need to write them)')
+    elif 'picks' in sections:
         print('Card picks')
         agree, cal = run_picks(nets)
         if agree is not None:

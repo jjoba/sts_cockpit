@@ -43,6 +43,7 @@ from zipfile import ZipFile
 
 from name_utils import RENAMES
 from run_replay import replay_run
+from run_state import EXTRA_COLS, run_state
 
 # Heart kill is recorded at floor 56 (see winning_run_example.json), act 3 boss kill is ~51. Verify against the dump
 HEART_MIN_FLOOR = 55
@@ -72,8 +73,11 @@ def is_test_run(play_id):
 LABEL_COLS = ['beat_act1_boss', 'beat_act2_boss', 'beat_act3_boss', 'beat_act3_second_boss', 'heart_kill']
 N_FEATURE_COLS = 929
 
-# Columns written to the training files: cards + relics (924), floor, characters (4), then the labels
-N_TRAIN_COLS = N_FEATURE_COLS + len(LABEL_COLS)
+# Columns written to the training files: cards + relics (924), floor, characters (4), then the run state columns (HP, max HP, gold, see run_state.py), then the labels
+N_TRAIN_COLS = N_FEATURE_COLS + len(EXTRA_COLS) + len(LABEL_COLS)
+
+# Folder under data/ the training files go to. The v24 layout has the extra columns, so it never writes over data/training_data (the 929 column layout)
+TRAINING_DIR = os.environ.get('TRAINING_DIR', 'training_data_v24')
 
 # Floor a run is on once it has beaten each boss (bosses are fought on floors 16, 33 and 50, which is where deaths pile up in the data)
 # beat_act3_boss is the FIRST act 3 boss, the only one below A20. A20 has a second act 3 boss (floor 51) which is its own milestone, beat_act3_second_boss,
@@ -81,6 +85,18 @@ N_TRAIN_COLS = N_FEATURE_COLS + len(LABEL_COLS)
 # A no key victory ends the run on floor 51 below A20 and floor 52 at A20
 BOSS_CLEARED_FLOORS = [17, 34, 51]
 ACT_3_SECOND_BOSS_CLEARED_FLOOR = 52
+
+# Runs with values no normal run reaches (max hp or gold edited by mods / save editing) are not real gameplay and have far higher win rates.
+# In a sample of A20 runs, max hp above 200 had a 54% Heart rate (3% overall) and gold above 3,000 25%. They go to alpha pretraining, not finetuning or beta
+MODDED_MAX_HP = 250
+MODDED_GOLD = 3000
+
+def is_modded(event):
+  # Checked on the whole run, not only the sampled floors, so a run is moved as a whole
+  def peak(values):
+    return max([v for v in values if isinstance(v, (int, float))], default = 0) if isinstance(values, list) else 0
+
+  return peak(event.get('max_hp_per_floor')) > MODDED_MAX_HP or peak(event.get('gold_per_floor')) > MODDED_GOLD
 
 def run_labels(event, floor):
   # Labels of one training row, in LABEL_COLS order, for a run's row sampled at this floor
@@ -105,7 +121,7 @@ def combine_and_clean(d, s, combine = True):
   # s = split
   # Lazy programming... putting this here instead of figuring out how to actually pass properly  
   data_dir = os.getcwd() + '/data'
-  temp_dir = f'{data_dir}/training_data/{d}/{s}'
+  temp_dir = f'{data_dir}/{TRAINING_DIR}/{d}/{s}'
   file_list = [f'{temp_dir}/{file_name}' for file_name in os.listdir(temp_dir)]
   output_file = f'{temp_dir}/{s}.bin'
 
@@ -178,6 +194,10 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
         if current_run['event']['ascension_level'] < 20:
             destination = 'pre_training_beta'
 
+    if destination in ('finetuning', 'pre_training_beta') and is_modded(current_run['event']):
+      destination = 'pre_training_alpha'
+      stats['modded_moved_to_alpha'] += 1
+
     if destination not in DESTINATIONS:
       continue
 
@@ -206,6 +226,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
     for floor, deck, relics in rows:
       modeling_data = dict(deck)
       modeling_data.update(Counter(relics))
+      modeling_data.update(run_state(current_run['event'], floor))
       modeling_data['floor'] = floor
       modeling_data['character'] = current_run['event']['character_chosen'].lower()
       modeling_data.update(dict(zip(LABEL_COLS, run_labels(current_run['event'], floor))))
@@ -230,6 +251,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
   dummy_row['character'] = 'unknown' # Setting to unknown to ensure every file has it
   dummy_row.update({label: 1 for label in LABEL_COLS})
   dummy_row['floor'] = 0
+  dummy_row.update({c: 0 for c in EXTRA_COLS})
 
   # model_data_storage_save = model_data_storage.copy()
 
@@ -271,7 +293,7 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
 
   # Explicit column order so every file matches starting_decks.csv and the model input
   item_cols = [RENAMES.get(c, c) for c in list(card_dict) + list(relic_dict)]
-  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + ['id', 'destination'] + LABEL_COLS]
+  model_data_storage = model_data_storage[item_cols + ['floor'] + character_cols + EXTRA_COLS + ['id', 'destination'] + LABEL_COLS]
 
   # Double checks we have the correct number of columns -- this error tends to occur with pre train alpha
   # As of now I can't figure out why this occurs, but only seems to happen with a large minority of files
@@ -312,8 +334,8 @@ def process_runs(gzip_file, data_dir, master_card_list, master_relic_list):
     train = temp_data[temp_data['id'].isin(train_ids)].drop('id', axis = 1).astype('int8')
     test = temp_data[temp_data['id'].isin(test_ids)].drop('id', axis = 1).astype('int8')
 
-    train.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/train/{time_stamp}.bin')
-    test.to_numpy().tofile(f'{data_dir}/training_data/{u_d}/test/{time_stamp}.bin')
+    train.to_numpy().tofile(f'{data_dir}/{TRAINING_DIR}/{u_d}/train/{time_stamp}.bin')
+    test.to_numpy().tofile(f'{data_dir}/{TRAINING_DIR}/{u_d}/test/{time_stamp}.bin')
 
   return stats
 
@@ -337,6 +359,12 @@ if __name__ == '__main__':
 
   destinations = DESTINATIONS
   splits = ['train', 'test']
+
+  # Output folders and a layout file the training code reads to find the extra columns
+  for d, sp in itertools.product(destinations, splits):
+    os.makedirs(f'{data_dir}/{TRAINING_DIR}/{d}/{sp}', exist_ok = True)
+  with open(f'{data_dir}/{TRAINING_DIR}/layout.json', 'w') as f:
+    json.dump({'n_base': N_FEATURE_COLS, 'extra_cols': EXTRA_COLS, 'n_labels': len(LABEL_COLS)}, f)
 
   # Removes any files already in directories
   print('Cleaning Up Old Files')
@@ -393,7 +421,7 @@ if __name__ == '__main__':
 
     # Projects totals from the share of zip bytes processed so far
     share_done = sum(zip_bytes[:k]) / sum(zip_bytes)
-    output_gb = sum(os.path.getsize(os.path.join(root, name)) for root, _, names in os.walk(f'{data_dir}/training_data') for name in names) / 1e9
+    output_gb = sum(os.path.getsize(os.path.join(root, name)) for root, _, names in os.walk(f'{data_dir}/{TRAINING_DIR}') for name in names) / 1e9
     elapsed = time() - start_time
     print(f'{k}/{len(file_list)} zips: {output_gb:.1f} GB written so far, projected total {output_gb / share_done:.0f} GB')
     print(f'{elapsed / 60:.0f} min elapsed, projected total {elapsed / share_done / 60:.0f} min')

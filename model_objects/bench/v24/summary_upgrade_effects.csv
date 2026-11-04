@@ -1,0 +1,4 @@
+model,cards,mean_effect,share_negative,share_below_m0.05
+fnn_v22_alpha_beta_mt_cum,344,0.18047602607666882,0.11320754716981132,0.03773584905660377
+fnn_v24_ft_mt_hp_gold,344,0.22804186189313239,0.0,0.0
+fnn_v24_alpha_beta_mt_hp_gold,344,0.2366552853098285,0.0,0.0
