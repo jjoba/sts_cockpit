@@ -1,0 +1,134 @@
+/Users/johnjoba/local_git_repos/sts_cockpit/scripts/train_model.py:553: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  weight_norm = float(torch.sqrt(sum((p ** 2).sum() for p in model.parameters() if p.dim() > 1)))
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Using device: mps
+Cumulative upgrade encoding: 350 upgraded columns added onto their plain columns
+Model has 3,463,317 parameters
+Flip statistics: 26 of 350 upgraded columns have under 1000 training rows
+baseline constant_base_rate: log_loss 0.0914, auc 0.5000, avg_precision 0.0183
+baseline character_floor_lookup: log_loss 0.0718, auc 0.8265, avg_precision 0.1639
+baseline logistic_regression: log_loss 0.0577, auc 0.9026, avg_precision 0.4155
+Training on destination: finetuning
+finetuning epoch 1/20
+-------------------------------
+  train loss 0.06440 | finetuning test: log_loss 0.05754, auc 0.9069, avg_precision 0.4158, ece 0.00209 | 1.9 min
+finetuning epoch 2/20
+-------------------------------
+  train loss 0.05876 | finetuning test: log_loss 0.05652, auc 0.9125, avg_precision 0.4320, ece 0.00421 | 1.9 min
+finetuning epoch 3/20
+-------------------------------
+  train loss 0.05751 | finetuning test: log_loss 0.05537, auc 0.9141, avg_precision 0.4374, ece 0.00145 | 1.9 min
+finetuning epoch 4/20
+-------------------------------
+  train loss 0.05671 | finetuning test: log_loss 0.05599, auc 0.9164, avg_precision 0.4413, ece 0.00441 | 1.9 min
+finetuning epoch 5/20
+-------------------------------
+  train loss 0.05625 | finetuning test: log_loss 0.05490, auc 0.9168, avg_precision 0.4473, ece 0.00190 | 1.9 min
+finetuning epoch 6/20
+-------------------------------
+  train loss 0.05577 | finetuning test: log_loss 0.05609, auc 0.9163, avg_precision 0.4483, ece 0.00657 | 1.9 min
+finetuning epoch 7/20
+-------------------------------
+  train loss 0.05556 | finetuning test: log_loss 0.05447, auc 0.9192, avg_precision 0.4543, ece 0.00299 | 1.9 min
+finetuning epoch 8/20
+-------------------------------
+  train loss 0.05528 | finetuning test: log_loss 0.05526, auc 0.9203, avg_precision 0.4559, ece 0.00653 | 1.9 min
+finetuning epoch 9/20
+-------------------------------
+  train loss 0.05493 | finetuning test: log_loss 0.05399, auc 0.9215, avg_precision 0.4578, ece 0.00275 | 1.9 min
+finetuning epoch 10/20
+-------------------------------
+  train loss 0.05470 | finetuning test: log_loss 0.05355, auc 0.9224, avg_precision 0.4623, ece 0.00185 | 1.9 min
+finetuning epoch 11/20
+-------------------------------
+  train loss 0.05438 | finetuning test: log_loss 0.05398, auc 0.9219, avg_precision 0.4634, ece 0.00354 | 1.9 min
+finetuning epoch 12/20
+-------------------------------
+  train loss 0.05414 | finetuning test: log_loss 0.05334, auc 0.9229, avg_precision 0.4648, ece 0.00158 | 1.9 min
+finetuning epoch 13/20
+-------------------------------
+  train loss 0.05384 | finetuning test: log_loss 0.05327, auc 0.9230, avg_precision 0.4686, ece 0.00153 | 1.9 min
+finetuning epoch 14/20
+-------------------------------
+  train loss 0.05356 | finetuning test: log_loss 0.05300, auc 0.9236, avg_precision 0.4694, ece 0.00033 | 1.9 min
+finetuning epoch 15/20
+-------------------------------
+  train loss 0.05333 | finetuning test: log_loss 0.05300, auc 0.9241, avg_precision 0.4706, ece 0.00159 | 1.9 min
+finetuning epoch 16/20
+-------------------------------
+  train loss 0.05312 | finetuning test: log_loss 0.05289, auc 0.9243, avg_precision 0.4709, ece 0.00128 | 1.9 min
+finetuning epoch 17/20
+-------------------------------
+  train loss 0.05292 | finetuning test: log_loss 0.05294, auc 0.9245, avg_precision 0.4725, ece 0.00201 | 1.9 min
+finetuning epoch 18/20
+-------------------------------
+  train loss 0.05278 | finetuning test: log_loss 0.05275, auc 0.9247, avg_precision 0.4723, ece 0.00057 | 2.2 min
+finetuning epoch 19/20
+-------------------------------
+  train loss 0.05273 | finetuning test: log_loss 0.05270, auc 0.9248, avg_precision 0.4734, ece 0.00025 | 3.4 min
+finetuning epoch 20/20
+-------------------------------
+  train loss 0.05267 | finetuning test: log_loss 0.05273, auc 0.9248, avg_precision 0.4731, ece 0.00075 | 1.9 min
+Best finetuning epoch was 18 by log_loss
+ epoch  ft_log_loss   ft_auc  ft_avg_precision  ft_lift_top_decile   ft_ece
+     0     0.057542 0.906928          0.415764            7.573276 0.002093
+     1     0.056523 0.912455          0.431973            7.653448 0.004212
+     2     0.055370 0.914136          0.437430            7.702155 0.001447
+     3     0.055989 0.916392          0.441319            7.744828 0.004412
+     4     0.054904 0.916754          0.447307            7.772414 0.001896
+     5     0.056087 0.916271          0.448279            7.778448 0.006573
+     6     0.054473 0.919174          0.454273            7.824138 0.002986
+     7     0.055260 0.920335          0.455875            7.853448 0.006528
+     8     0.053993 0.921513          0.457779            7.851293 0.002746
+     9     0.053548 0.922429          0.462254            7.874138 0.001853
+    10     0.053979 0.921876          0.463356            7.881034 0.003545
+    11     0.053339 0.922932          0.464788            7.885345 0.001580
+    12     0.053269 0.923043          0.468591            7.877586 0.001529
+    13     0.053003 0.923564          0.469400            7.891379 0.000328
+    14     0.052996 0.924118          0.470555            7.902155 0.001590
+    15     0.052894 0.924338          0.470909            7.909914 0.001278
+    16     0.052938 0.924461          0.472504            7.917672 0.002007
+    17     0.052751 0.924749          0.472304            7.905172 0.000573
+    18     0.052703 0.924806          0.473353            7.906897 0.000251
+    19     0.052727 0.924843          0.473122            7.906034 0.000745
+Results table in outstanding_experiments.md refreshed

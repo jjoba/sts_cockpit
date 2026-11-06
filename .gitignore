@@ -4,3 +4,4 @@
 **/.DS_Store
 /sts_cockpit_venv/
 __pycache__/
+/ui/server/data/shapes_cache.json

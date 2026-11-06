@@ -1,0 +1,2669 @@
+[
+ {
+  "name": "A Thousand Cuts",
+  "column": "athousandcuts",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Accuracy",
+  "column": "accuracy",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Acrobatics",
+  "column": "acrobatics",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Adrenaline",
+  "column": "adrenaline",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "After Image",
+  "column": "afterimage",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Aggregate",
+  "column": "aggregate",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "All for One",
+  "column": "allforone",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "All-Out Attack",
+  "column": "alloutattack",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Alpha",
+  "column": "alpha",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Amplify",
+  "column": "amplify",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Anger",
+  "column": "anger",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Apotheosis",
+  "column": "apotheosis",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Apparition",
+  "column": "ghostly",
+  "owner": "special",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Armaments",
+  "column": "armaments",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Ascender's Bane",
+  "column": "ascendersbane",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Auto-Shields",
+  "column": "autoshields",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Backflip",
+  "column": "backflip",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Backstab",
+  "column": "backstab",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Ball Lightning",
+  "column": "balllightning",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Bandage Up",
+  "column": "bandageup",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Bane",
+  "column": "bane",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Barrage",
+  "column": "barrage",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Barricade",
+  "column": "barricade",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Bash",
+  "column": "bash",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Battle Hymn",
+  "column": "battlehymn",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Battle Trance",
+  "column": "battletrance",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Beam Cell",
+  "column": "beamcell",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "becomealmighty",
+  "column": "becomealmighty",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Berserk",
+  "column": "berserk",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Beta",
+  "column": "beta",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "betterdefend",
+  "column": "betterdefend",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Biased Cognition",
+  "column": "biasedcognition",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Bite",
+  "column": "bite",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Blade Dance",
+  "column": "bladedance",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Blasphemy",
+  "column": "blasphemy",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "blessed",
+  "column": "blessed",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Blind",
+  "column": "blind",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "bliss",
+  "column": "bliss",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Blizzard",
+  "column": "blizzard",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Blood for Blood",
+  "column": "bloodforblood",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Bloodletting",
+  "column": "bloodletting",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Bludgeon",
+  "column": "bludgeon",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Blur",
+  "column": "blur",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Body Slam",
+  "column": "bodyslam",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Boot Sequence",
+  "column": "bootsequence",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Bouncing Flask",
+  "column": "bouncingflask",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Bowling Bash",
+  "column": "bowlingbash",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Brilliance",
+  "column": "brilliance",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Brutality",
+  "column": "brutality",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Buffer",
+  "column": "buffer",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Bullet Time",
+  "column": "bullettime",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Bullseye",
+  "column": "bullseye",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Burn",
+  "column": "burn",
+  "owner": "status",
+  "type": "status",
+  "upgradable": true
+ },
+ {
+  "name": "Burning Pact",
+  "column": "burningpact",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Burst",
+  "column": "burst",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Calculated Gamble",
+  "column": "calculatedgamble",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Caltrops",
+  "column": "caltrops",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Capacitor",
+  "column": "capacitor",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Carnage",
+  "column": "carnage",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Carve Reality",
+  "column": "carvereality",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Catalyst",
+  "column": "catalyst",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Chaos",
+  "column": "chaos",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Charge Battery",
+  "column": "chargebattery",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Chill",
+  "column": "chill",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Choke",
+  "column": "choke",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Chrysalis",
+  "column": "chrysalis",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "clarity",
+  "column": "clarity",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Clash",
+  "column": "clash",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Claw",
+  "column": "gash",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "cleanseevil",
+  "column": "cleanseevil",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Cleave",
+  "column": "cleave",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Cloak and Dagger",
+  "column": "cloakanddagger",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Clothesline",
+  "column": "clothesline",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Clumsy",
+  "column": "clumsy",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Cold Snap",
+  "column": "coldsnap",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Collect",
+  "column": "collect",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Combust",
+  "column": "combust",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Compile Driver",
+  "column": "compiledriver",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Concentrate",
+  "column": "concentrate",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Conclude",
+  "column": "conclude",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Conjure Blade",
+  "column": "conjureblade",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Consecrate",
+  "column": "consecrate",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Consume",
+  "column": "consume",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "contentment",
+  "column": "contentment",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "controlledchange",
+  "column": "controlledchange",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Coolheaded",
+  "column": "coolheaded",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Core Surge",
+  "column": "coresurge",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Corpse Explosion",
+  "column": "corpseexplosion",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Corruption",
+  "column": "corruption",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Creative AI",
+  "column": "creativeai",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Crescendo",
+  "column": "crescendo",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Crippling Poison",
+  "column": "cripplingpoison",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Crush Joints",
+  "column": "crushjoints",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Curse of the Bell",
+  "column": "curseofthebell",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Cut Through Fate",
+  "column": "cutthroughfate",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Dagger Spray",
+  "column": "daggerspray",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Dagger Throw",
+  "column": "daggerthrow",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Dark Embrace",
+  "column": "darkembrace",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Dark Shackles",
+  "column": "darkshackles",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Darkness",
+  "column": "darkness",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Dash",
+  "column": "dash",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Deadly Poison",
+  "column": "deadlypoison",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Decay",
+  "column": "decay",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Deceive Reality",
+  "column": "deceivereality",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Deep Breath",
+  "column": "deepbreath",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Defend",
+  "column": "defend",
+  "owner": "starter",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Deflect",
+  "column": "deflect",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Defragment",
+  "column": "defragment",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Demon Form",
+  "column": "demonform",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Deus Ex Machina",
+  "column": "deusexmachina",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Deva Form",
+  "column": "devaform",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Devotion",
+  "column": "devotion",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Die Die Die",
+  "column": "diediedie",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Disarm",
+  "column": "disarm",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Discovery",
+  "column": "discovery",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Distraction",
+  "column": "distraction",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Dodge and Roll",
+  "column": "dodgeandroll",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Doom and Gloom",
+  "column": "doomandgloom",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Doppelganger",
+  "column": "doppelganger",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Double Energy",
+  "column": "doubleenergy",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Double Tap",
+  "column": "doubletap",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Doubt",
+  "column": "doubt",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Dramatic Entrance",
+  "column": "dramaticentrance",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Dropkick",
+  "column": "dropkick",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Dual Wield",
+  "column": "dualwield",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Dualcast",
+  "column": "dualcast",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Echo Form",
+  "column": "echoform",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Electrodynamics",
+  "column": "electrodynamics",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Empty Body",
+  "column": "emptybody",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Empty Fist",
+  "column": "emptyfist",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Empty Mind",
+  "column": "emptymind",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Endless Agony",
+  "column": "endlessagony",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Enlightenment",
+  "column": "enlightenment",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Entrench",
+  "column": "entrench",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Envenom",
+  "column": "envenom",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Equilibrium",
+  "column": "equilibrium",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Eruption",
+  "column": "eruption",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Escape Plan",
+  "column": "escapeplan",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Establishment",
+  "column": "establishment",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Evaluate",
+  "column": "evaluate",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Eviscerate",
+  "column": "eviscerate",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Evolve",
+  "column": "evolve",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Exhume",
+  "column": "exhume",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "experienced",
+  "column": "experienced",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Expertise",
+  "column": "expertise",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Expunger",
+  "column": "expunger",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": false
+ },
+ {
+  "name": "fameandfortune",
+  "column": "fameandfortune",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Fasting",
+  "column": "fasting",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Fear No Evil",
+  "column": "fearnoevil",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Feed",
+  "column": "feed",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Feel No Pain",
+  "column": "feelnopain",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Fiend Fire",
+  "column": "fiendfire",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Finesse",
+  "column": "finesse",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Finisher",
+  "column": "finisher",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Fire Breathing",
+  "column": "firebreathing",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Fission",
+  "column": "fission",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Flame Barrier",
+  "column": "flamebarrier",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Flash of Steel",
+  "column": "flashofsteel",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Flechettes",
+  "column": "flechettes",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Flex",
+  "column": "flex",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "flow",
+  "column": "flow",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "flowstate",
+  "column": "flowstate",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Flurry of Blows",
+  "column": "flurryofblows",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Flying Knee",
+  "column": "flyingknee",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Flying Sleeves",
+  "column": "flyingsleeves",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Follow-Up",
+  "column": "followup",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Footwork",
+  "column": "footwork",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Force Field",
+  "column": "forcefield",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Foreign Influence",
+  "column": "foreigninfluence",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Foresight",
+  "column": "foresight",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Forethought",
+  "column": "forethought",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "FTL",
+  "column": "ftl",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Fusion",
+  "column": "fusion",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Genetic Algorithm",
+  "column": "geneticalgorithm",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Ghostly Armor",
+  "column": "ghostlyarmor",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Glacier",
+  "column": "glacier",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Glass Knife",
+  "column": "glassknife",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Go for the Eyes",
+  "column": "gofortheeyes",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Good Instincts",
+  "column": "goodinstincts",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Grand Finale",
+  "column": "grandfinale",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Halt",
+  "column": "halt",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Hand of Greed",
+  "column": "handofgreed",
+  "owner": "colorless",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Havoc",
+  "column": "havoc",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Headbutt",
+  "column": "headbutt",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Heatsinks",
+  "column": "heatsinks",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Heavy Blade",
+  "column": "heavyblade",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Heel Hook",
+  "column": "heelhook",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Hello World",
+  "column": "helloworld",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Hemokinesis",
+  "column": "hemokinesis",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Hologram",
+  "column": "hologram",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Hyperbeam",
+  "column": "hyperbeam",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Immolate",
+  "column": "immolate",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Impatience",
+  "column": "impatience",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Impervious",
+  "column": "impervious",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Indignation",
+  "column": "indignation",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Infernal Blade",
+  "column": "infernalblade",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Infinite Blades",
+  "column": "infiniteblades",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Inflame",
+  "column": "inflame",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Injury",
+  "column": "injury",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Inner Peace",
+  "column": "innerpeace",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Insight",
+  "column": "insight",
+  "owner": "special",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Intimidate",
+  "column": "intimidate",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Iron Wave",
+  "column": "ironwave",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "J.A.X.",
+  "column": "j.a.x.",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Jack of All Trades",
+  "column": "jackofalltrades",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Judgment",
+  "column": "judgement",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Juggernaut",
+  "column": "juggernaut",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Just Lucky",
+  "column": "justlucky",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Leap",
+  "column": "leap",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Leg Sweep",
+  "column": "legsweep",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Lesson Learned",
+  "column": "lessonlearned",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Like Water",
+  "column": "likewater",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Limit Break",
+  "column": "limitbreak",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "liveforever",
+  "column": "liveforever",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Loop",
+  "column": "loop",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Machine Learning",
+  "column": "machinelearning",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Madness",
+  "column": "madness",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Magnetism",
+  "column": "magnetism",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Malaise",
+  "column": "malaise",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Master of Strategy",
+  "column": "masterofstrategy",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Master Reality",
+  "column": "masterreality",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Masterful Stab",
+  "column": "masterfulstab",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Mayhem",
+  "column": "mayhem",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Meditate",
+  "column": "meditate",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Melter",
+  "column": "melter",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Mental Fortress",
+  "column": "mentalfortress",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Metallicize",
+  "column": "metallicize",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Metamorphosis",
+  "column": "metamorphosis",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "metaphysics",
+  "column": "metaphysics",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Meteor Strike",
+  "column": "meteorstrike",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Mind Blast",
+  "column": "mindblast",
+  "owner": "colorless",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Miracle",
+  "column": "miracle",
+  "owner": "special",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "monkeyspaw",
+  "column": "monkeyspaw",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Multi-Cast",
+  "column": "multi-cast",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Necronomicurse",
+  "column": "necronomicurse",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Neutralize",
+  "column": "neutralize",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Nightmare",
+  "column": "nightterror",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Nirvana",
+  "column": "nirvana",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Normality",
+  "column": "normality",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Noxious Fumes",
+  "column": "noxiousfumes",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Offering",
+  "column": "offering",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Omega",
+  "column": "omega",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Omniscience",
+  "column": "omniscience",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Outmaneuver",
+  "column": "outmaneuver",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Pain",
+  "column": "pain",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Panacea",
+  "column": "panacea",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Panache",
+  "column": "panache",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "panger",
+  "column": "panger",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Panic Button",
+  "column": "panicbutton",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Parasite",
+  "column": "parasite",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Perfected Strike",
+  "column": "perfectedstrike",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Perseverance",
+  "column": "perseverance",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Phantasmal Killer",
+  "column": "phantasmalkiller",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Piercing Wail",
+  "column": "piercingwail",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Poisoned Stab",
+  "column": "poisonedstab",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Pommel Strike",
+  "column": "pommelstrike",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Power Through",
+  "column": "powerthrough",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Pray",
+  "column": "pray",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Predator",
+  "column": "predator",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Prepared",
+  "column": "prepared",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Pressure Points",
+  "column": "pathtovictory",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Pride",
+  "column": "pride",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Prostrate",
+  "column": "prostrate",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Protect",
+  "column": "protect",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Pummel",
+  "column": "pummel",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Purity",
+  "column": "purity",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Quick Slash",
+  "column": "quickslash",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Rage",
+  "column": "rage",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Ragnarok",
+  "column": "ragnarok",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "rainbow",
+  "column": "rainbow",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Rampage",
+  "column": "rampage",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "ravage",
+  "column": "ravage",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Reach Heaven",
+  "column": "reachheaven",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Reaper",
+  "column": "reaper",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Reboot",
+  "column": "reboot",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Rebound",
+  "column": "rebound",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Reckless Charge",
+  "column": "recklesscharge",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Recursion",
+  "column": "redo",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Recycle",
+  "column": "recycle",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Reflex",
+  "column": "reflex",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Regret",
+  "column": "regret",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Reinforced Body",
+  "column": "reinforcedbody",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Reprogram",
+  "column": "reprogram",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "retreatinghand",
+  "column": "retreatinghand",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Riddle with Holes",
+  "column": "riddlewithholes",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Rip and Tear",
+  "column": "ripandtear",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Ritual Dagger",
+  "column": "ritualdagger",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Rupture",
+  "column": "rupture",
+  "owner": "Ironclad",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Rushdown",
+  "column": "adaptation",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Sadistic Nature",
+  "column": "sadisticnature",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Safety",
+  "column": "safety",
+  "owner": "special",
+  "type": "skill",
+  "upgradable": false
+ },
+ {
+  "name": "Sanctity",
+  "column": "sanctity",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Sands of Time",
+  "column": "sandsoftime",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Sash Whip",
+  "column": "sashwhip",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Scrape",
+  "column": "scrape",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Scrawl",
+  "column": "scrawl",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Searing Blow",
+  "column": "searingblow",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Second Wind",
+  "column": "secondwind",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Secret Technique",
+  "column": "secrettechnique",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Secret Weapon",
+  "column": "secretweapon",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Seeing Red",
+  "column": "seeingred",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Seek",
+  "column": "seek",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Self Repair",
+  "column": "selfrepair",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Sentinel",
+  "column": "sentinel",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Setup",
+  "column": "setup",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Sever Soul",
+  "column": "seversoul",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Shame",
+  "column": "shame",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Shiv",
+  "column": "shiv",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Shockwave",
+  "column": "shockwave",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Shrug It Off",
+  "column": "shrugitoff",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Signature Move",
+  "column": "signaturemove",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Simmering Fury",
+  "column": "vengeance",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "simmeringrage",
+  "column": "simmeringrage",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Skewer",
+  "column": "skewer",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Skim",
+  "column": "skim",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Slice",
+  "column": "slice",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Smite",
+  "column": "smite",
+  "owner": "special",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Sneaky Strike",
+  "column": "sneakystrike",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Spirit Shield",
+  "column": "spiritshield",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Spot Weakness",
+  "column": "spotweakness",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Stack",
+  "column": "stack",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Static Discharge",
+  "column": "staticdischarge",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "steam",
+  "column": "steam",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Steam Barrier",
+  "column": "steambarrier",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "stepandstrike",
+  "column": "stepandstrike",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Storm",
+  "column": "storm",
+  "owner": "Defect",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Storm of Steel",
+  "column": "stormofsteel",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Streamline",
+  "column": "streamline",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Strike",
+  "column": "strike",
+  "owner": "starter",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Study",
+  "column": "study",
+  "owner": "Watcher",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Sucker Punch",
+  "column": "suckerpunch",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Sunder",
+  "column": "sunder",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Survivor",
+  "column": "survivor",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Sweeping Beam",
+  "column": "sweepingbeam",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Swift Strike",
+  "column": "swiftstrike",
+  "owner": "colorless",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Swivel",
+  "column": "swivel",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Sword Boomerang",
+  "column": "swordboomerang",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Tactician",
+  "column": "tactician",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Talk to the Hand",
+  "column": "talktothehand",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Tantrum",
+  "column": "tantrum",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Tempest",
+  "column": "tempest",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Terror",
+  "column": "terror",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "The Bomb",
+  "column": "thebomb",
+  "owner": "colorless",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Thinking Ahead",
+  "column": "thinkingahead",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Third Eye",
+  "column": "thirdeye",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Thunder Strike",
+  "column": "thunderstrike",
+  "owner": "Defect",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Thunderclap",
+  "column": "thunderclap",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "thwack",
+  "column": "thwack",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Tools of the Trade",
+  "column": "toolsofthetrade",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Tranquility",
+  "column": "clearthemind",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Transmutation",
+  "column": "transmutation",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Trip",
+  "column": "trip",
+  "owner": "colorless",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "True Grit",
+  "column": "truegrit",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "truecontrol",
+  "column": "truecontrol",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Turbo",
+  "column": "turbo",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Twin Strike",
+  "column": "twinstrike",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Unload",
+  "column": "unload",
+  "owner": "The Silent",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "unraveling",
+  "column": "unraveling",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": true
+ },
+ {
+  "name": "Uppercut",
+  "column": "uppercut",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Vault",
+  "column": "vault",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Venomology",
+  "column": "venomology",
+  "owner": "The Silent",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Vigilance",
+  "column": "vigilance",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "vigoraura",
+  "column": "vigoraura",
+  "owner": "legacy",
+  "type": "unknown",
+  "upgradable": false
+ },
+ {
+  "name": "Violence",
+  "column": "violence",
+  "owner": "colorless",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Wallop",
+  "column": "wallop",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Warcry",
+  "column": "warcry",
+  "owner": "Ironclad",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Wave of the Hand",
+  "column": "waveofthehand",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Weave",
+  "column": "weave",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Well-Laid Plans",
+  "column": "welllaidplans",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Wheel Kick",
+  "column": "wheelkick",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Whirlwind",
+  "column": "whirlwind",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "White Noise",
+  "column": "whitenoise",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Wild Strike",
+  "column": "wildstrike",
+  "owner": "Ironclad",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Windmill Strike",
+  "column": "windmillstrike",
+  "owner": "Watcher",
+  "type": "attack",
+  "upgradable": true
+ },
+ {
+  "name": "Wish",
+  "column": "wish",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Worship",
+  "column": "worship",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Wound",
+  "column": "wound",
+  "owner": "status",
+  "type": "status",
+  "upgradable": false
+ },
+ {
+  "name": "Wraith Form",
+  "column": "wraithformv",
+  "owner": "The Silent",
+  "type": "power",
+  "upgradable": true
+ },
+ {
+  "name": "Wreath of Flame",
+  "column": "wreathofflame",
+  "owner": "Watcher",
+  "type": "skill",
+  "upgradable": true
+ },
+ {
+  "name": "Writhe",
+  "column": "writhe",
+  "owner": "curse",
+  "type": "curse",
+  "upgradable": false
+ },
+ {
+  "name": "Zap",
+  "column": "zap",
+  "owner": "Defect",
+  "type": "skill",
+  "upgradable": true
+ }
+]

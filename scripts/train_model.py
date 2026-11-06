@@ -29,6 +29,8 @@ import sys
 import json
 import shutil
 import subprocess
+import threading
+import queue
 
 from time import time
 
@@ -90,7 +92,7 @@ DEFAULT_CONFIG = {
     # How upgraded cards enter the network: split = a copy is in either card (plain) or card_u (upgraded), cumulative = an upgraded copy is in BOTH, so card is
     # the total copies and card_u how many of them are upgraded (what Searing Blow's columns already do). The data and the cockpit inputs stay as they are,
     # the model adds the upgraded columns onto their plain ones as its first step
-    'upgrade_encoding': 'split',
+    'upgrade_encoding': 'cumulative',
 
     # Folder under data/ holding the training files, and which extra run state groups (see run_state.EXTRA_GROUPS: hp, gold) the network gets as inputs.
     # The default folder has no extra columns (the 929 column layout of v21-v23)
@@ -102,9 +104,20 @@ DEFAULT_CONFIG = {
     # one upgraded card is made plain again and the model is penalized, on every head, when that raises the logit by more than upgrade_flip_margin (evaluated
     # without dropout, as the model is used)
     'upgrade_l2': 0.0,
-    'upgrade_flip_weight': 0.0,
+    'upgrade_flip_weight': 1.0,
     'upgrade_flip_rows': 32,
     'upgrade_flip_margin': 0.0,
+
+    # How the flip is aimed at rare upgrade states (needs upgrade_flip_weight > 0). synthetic is the default since 2026-11-04 (cumulative encoding, flip weight 1,
+    # synthetic mode: no negative upgrade effects left on any card, see outstanding_experiments.md item 11). rows = the flipped card is any upgraded card of a random row (the old default,
+    # common cards dominate). inv_freq = rows and cards are drawn with probability inversely proportional to how many finetuning training rows hold that upgraded
+    # card. synthetic = rows as above plus upgrade_flip_synth_rows extra tests per batch: a real deck gets a copy of a random card (same character or colorless,
+    # every card equally likely) added as the plain card and as the upgraded card, and the upgraded copy should not score lower
+    'upgrade_flip_mode': 'synthetic',
+    'upgrade_flip_synth_rows': 32,
+    # The flip penalty is added on every upgrade_flip_every th batch only, with its weight multiplied by that number so its average strength is unchanged (it costs
+    # about 2.8x the time of a plain step)
+    'upgrade_flip_every': 1,
 
     # Regularization: l2 is the optimizer weight decay, l1 is a penalty on the absolute value of the weights added to the loss
     'l1': 0.0,
@@ -143,6 +156,8 @@ DEFAULT_CONFIG = {
 
     # Caps the rows seen per epoch (a fresh random subset each epoch), for quick architecture trials. null = the whole file
     'max_train_rows': None,
+    # Batches read ahead by a background thread (0 = read in the training loop). The batches and their order are the same, only the disk read overlaps the gpu step
+    'prefetch_batches': 0, # 2026-11-05 benchmark: no speedup at 8 (the read is not the bottleneck), results bit-identical
 
     'baselines': True,
     'save_production': True,
@@ -214,7 +229,29 @@ class CumulativeUpgradeNetwork(NeuralNetwork):
         x = x.index_add(1, self.base_idx, x.index_select(1, self.up_idx)) * self.input_scale
         return self.linear_relu_stack(x)
 
-def upgrade_flip_penalty(model, X, n_rows, margin):
+FLIP_INFO = {} # set in main for the inv_freq and synthetic modes: 'inv' = 1 / training rows holding each upgraded column, 'allowed' = card may be added to a character's deck
+
+def upgrade_flip_stats(dataset, model, device, chunk = 500000):
+    # Finetuning training rows holding each upgraded column, and which characters have the card in their decks (a card used by under a tenth of the share of the
+    # character that uses it most belongs to the other one; cards nobody uses much are allowed for all)
+    up, base = model.up_idx.cpu().numpy(), model.base_idx.cpu().numpy()
+    rows_with = np.zeros(len(up))
+    by_char = np.zeros((4, len(up)))
+    char_rows = np.zeros(4)
+    for lo in range(0, len(dataset), chunk):
+        block = np.asarray(dataset.data[lo:lo + chunk])
+        held = (block[:, up] > 0) | (block[:, base] > 0)
+        rows_with += (block[:, up] > 0).sum(0)
+        chars = block[:, CHARACTER_COLS].argmax(1)
+        for c in range(4):
+            by_char[c] += held[chars == c].sum(0)
+            char_rows[c] += (chars == c).sum()
+    share = by_char / np.maximum(char_rows[:, None], 1)
+    allowed = (share >= 0.1 * share.max(0, keepdims = True)) | (share.max(0, keepdims = True) < 0.001)
+    return {'inv': torch.tensor(1 / np.maximum(rows_with, 1), dtype = torch.float32, device = device),
+            'allowed': torch.tensor(allowed.T, dtype = torch.float32, device = device), 'rows_with': rows_with}
+
+def upgrade_flip_penalty(model, X, n_rows, margin, mode = 'rows', n_synth = 0):
     # Rows with an upgraded card get one random upgraded copy turned back into a plain one (card total unchanged, so the cumulative model sees one fewer upgrade).
     # The logit of every head should not go up when that happens, the hinge is the average amount it does
     has_upgrade = X[:, model.up_idx] > 0
@@ -222,8 +259,15 @@ def upgrade_flip_penalty(model, X, n_rows, margin):
     if len(rows) == 0:
         return X.new_zeros((), dtype = torch.float32)
 
-    rows = rows[torch.randperm(len(rows), device = X.device)[:n_rows]]
-    pick = (torch.rand(len(rows), len(model.up_idx), device = X.device) * has_upgrade[rows]).argmax(1)
+    if mode == 'rows' or mode == 'synthetic':
+        rows = rows[torch.randperm(len(rows), device = X.device)[:n_rows]]
+        pick = (torch.rand(len(rows), len(model.up_idx), device = X.device) * has_upgrade[rows]).argmax(1)
+    else:
+        # Rows are drawn by the summed rarity of their upgraded cards, then the card within the row by rarity
+        w = has_upgrade[rows].float() * FLIP_INFO['inv']
+        rows_i = torch.multinomial(w.sum(1), min(n_rows, len(rows)), replacement = False)
+        rows, w = rows[rows_i], w[rows_i]
+        pick = torch.multinomial(w, 1).squeeze(1)
     upgraded = X[rows].float()
     plain = upgraded.clone()
     r = torch.arange(len(rows), device = X.device)
@@ -239,7 +283,30 @@ def upgrade_flip_penalty(model, X, n_rows, margin):
     model.train(was_training)
 
     gain = logits[len(rows):] - logits[:len(rows)] # plain minus upgraded
-    return torch.relu(gain - margin).mean()
+    penalty = torch.relu(gain - margin).mean()
+
+    if mode == 'synthetic' and n_synth > 0:
+        penalty = penalty + synthetic_add_penalty(model, X, n_synth, margin)
+    return penalty
+
+def synthetic_add_penalty(model, X, n_rows, margin):
+    # A copy of a random upgradable card added to real decks, as the plain card or as the upgraded one: the upgraded copy should not lower the logit of any head
+    r = torch.randperm(len(X), device = X.device)[:n_rows]
+    deck = X[r].float()
+    chars = deck[:, CHARACTER_COLS].argmax(1)
+    card = torch.multinomial(FLIP_INFO['allowed'][:, chars].T, 1).squeeze(1)
+    plain, up = deck.clone(), deck.clone()
+    k = torch.arange(len(r), device = X.device)
+    plain[k, model.base_idx[card]] += 1
+    up[k, model.up_idx[card]] += 1
+
+    was_training = model.training
+    model.eval()
+    x = torch.cat([plain, up])
+    x = x.index_add(1, model.base_idx, x.index_select(1, model.up_idx)) * model.input_scale
+    logits = model.linear_relu_stack[:-1](x)
+    model.train(was_training)
+    return torch.relu(logits[:len(r)] - logits[len(r):] - margin).mean()
 
 def upgrade_column_pairs(project_dir):
     # (plain column, upgraded column) of every card with a card_u column. Searing Blow is left out, its columns are cumulative already
@@ -395,6 +462,40 @@ def lr_at(config, progress):
         scale = 1.0
     return config['lr'] * scale
 
+def read_batches(dataset, perm, batch_size, prefetch):
+    # Yields (start index, features, labels) of consecutive batches of perm. With prefetch > 0 a thread reads up to that many batches ahead
+    # Sorting inside a batch doesn't change the batch but keeps the disk reads closer together
+    starts = range(0, len(perm), batch_size)
+    if prefetch <= 0:
+        for i in starts:
+            yield (i, *dataset.take(np.sort(perm[i:i + batch_size])))
+        return
+    q = queue.Queue(maxsize = prefetch)
+    stop = threading.Event()
+    def work():
+        try:
+            for i in starts:
+                if stop.is_set():
+                    return
+                q.put((i, *dataset.take(np.sort(perm[i:i + batch_size]))))
+            q.put(None)
+        except BaseException as e: # hand the error to the training loop
+            q.put(e)
+    t = threading.Thread(target = work, daemon = True)
+    t.start()
+    try:
+        while True:
+            item = q.get()
+            if item is None:
+                break
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+    finally:
+        stop.set()
+        while not q.empty(): # let a blocked put finish
+            q.get_nowait()
+
 def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng, epoch, n_epochs, head_weights):
     model.train()
     perm = rng.permutation(len(dataset))[:config['max_train_rows']]
@@ -407,13 +508,11 @@ def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng, epoch, 
     n_batches = 0
     grad_norms = []
 
-    for i in range(0, len(perm), batch_size):
+    for i, X, y in read_batches(dataset, perm, batch_size, config['prefetch_batches']):
         if config['lr_schedule'] != 'constant':
             for group in optimizer.param_groups:
                 group['lr'] = lr_at(config, (epoch + i / len(perm)) / n_epochs)
 
-        # Sorting inside a batch doesn't change the batch but keeps the disk reads closer together
-        X, y = dataset.take(np.sort(perm[i:i + batch_size]))
         X, y = X.to(device), y.to(device)
 
         pred = model(X.float())
@@ -430,8 +529,9 @@ def train_epoch(model, dataset, optimizer, loss_fn, config, device, rng, epoch, 
         if config['upgrade_l2'] > 0:
             loss = loss + config['upgrade_l2'] * (model.linear_relu_stack[0].weight[:, model.up_idx] ** 2).sum()
 
-        if config['upgrade_flip_weight'] > 0:
-            loss = loss + config['upgrade_flip_weight'] * upgrade_flip_penalty(model, X, config['upgrade_flip_rows'], config['upgrade_flip_margin'])
+        if config['upgrade_flip_weight'] > 0 and n_batches % config['upgrade_flip_every'] == 0:
+            loss = loss + config['upgrade_flip_weight'] * config['upgrade_flip_every'] * upgrade_flip_penalty(model, X, config['upgrade_flip_rows'], config['upgrade_flip_margin'],
+                                                                                   config['upgrade_flip_mode'], config['upgrade_flip_synth_rows'])
 
         loss.backward()
 
@@ -593,6 +693,16 @@ if __name__ == '__main__':
 
     ft_base_rate = float(read_rows(ft_train, 1000000, 2)[:, -1].mean())
 
+    if config['upgrade_flip_every'] < 1:
+        raise SystemExit('upgrade_flip_every is 1 or more')
+    if config['upgrade_flip_mode'] not in ('rows', 'inv_freq', 'synthetic'):
+        raise SystemExit(f"upgrade_flip_mode is rows, inv_freq or synthetic, not {config['upgrade_flip_mode']}")
+    if config['upgrade_flip_mode'] != 'rows':
+        if config['upgrade_flip_weight'] <= 0:
+            raise SystemExit('upgrade_flip_mode needs upgrade_flip_weight > 0')
+        FLIP_INFO.update(upgrade_flip_stats(ft_train, model, device))
+        print(f"Flip statistics: {int((FLIP_INFO['rows_with'] < 1000).sum())} of {len(FLIP_INFO['rows_with'])} upgraded columns have under 1000 training rows")
+
     data_stats = {}
     for d in dict.fromkeys(config['stages'] + ['finetuning']):
         for split in ['train', 'test']:
@@ -721,6 +831,12 @@ if __name__ == '__main__':
         if os.path.exists(experiments_path):
             experiment_df = pd.concat([pd.read_csv(experiments_path), experiment_df], ignore_index = True)
         experiment_df.to_csv(experiments_path, index = False)
+        # Refresh the results table of outstanding_experiments.md from experiments.csv so every logged run is tracked without a manual step
+        try:
+            subprocess.run([sys.executable, f'{project_dir}/scripts/v24_record.py'], cwd = project_dir, check = True, capture_output = True)
+            print('Results table in outstanding_experiments.md refreshed')
+        except Exception as e:
+            print(f'Results table not refreshed: {e}')
 
     # Move the top performing finetuned model to production
     if config['save_production'] and final_stage == 'finetuning':

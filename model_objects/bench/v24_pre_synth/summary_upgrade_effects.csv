@@ -1,0 +1,3 @@
+model,cards,mean_effect,share_negative,share_below_m0.05
+fnn_v25_alpha_beta_mt_hp_gold_flip_synthetic,344,0.2509382822603221,0.0,0.0
+fnn_v24_alpha_beta_mt_hp_gold,344,0.2366552853098285,0.0,0.0

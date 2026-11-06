@@ -1,0 +1,26 @@
+{
+ "ironclad": {
+  "max_hp": 75,
+  "hp_pct": 100,
+  "gold": 99,
+  "rows": 37023
+ },
+ "the_silent": {
+  "max_hp": 66,
+  "hp_pct": 100,
+  "gold": 99,
+  "rows": 31698
+ },
+ "defect": {
+  "max_hp": 71,
+  "hp_pct": 100,
+  "gold": 99,
+  "rows": 23008
+ },
+ "watcher": {
+  "max_hp": 68,
+  "hp_pct": 100,
+  "gold": 99,
+  "rows": 10752
+ }
+}

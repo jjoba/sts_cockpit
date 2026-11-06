@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STS Cockpit UI Mockups</title>
+<style>
+:root{--bg:#14110f;--panel:#1d1916;--panel2:#26211d;--line:#3a322b;--text:#ece4d8;--mute:#9a8f80;--gold:#e0b04c;--good:#6fcf7f;--bad:#e5645a;--attack:#b9473d;--skill:#3f7fb5;--power:#8a5bc2;--curse:#6b6b6b;--status:#7d7d3a}
+@media (prefers-color-scheme:light){:root{--bg:#f4efe7;--panel:#fffdf9;--panel2:#f0e9de;--line:#d9cfbf;--text:#2a2420;--mute:#7a6f60;--gold:#a8741a;--good:#2f8a43;--bad:#c0392f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,sans-serif}
+header{display:flex;gap:16px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.logo{font-weight:700;color:var(--gold);letter-spacing:.04em}
+nav{display:flex;gap:4px}nav button{background:none;border:0;color:var(--mute);padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--panel2);color:var(--text)}nav button:disabled{opacity:.4;cursor:not-allowed}
+.sp{flex:1}
+select,input,button.b{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font:inherit}
+button.b{cursor:pointer}button.b:hover{border-color:var(--gold)}button.pri{background:var(--gold);color:#1a1307;border-color:var(--gold);font-weight:600}
+main{padding:20px;max-width:1500px;margin:0 auto}
+.page{display:none}.page.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:600}
+h1{margin:0 0 4px;font-size:22px}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.lbl{font-size:12px;color:var(--mute)}
+.hero{display:flex;align-items:baseline;gap:12px}.hero .n{font-size:52px;font-weight:700;color:var(--gold);line-height:1}
+.delta{font-weight:600}.up{color:var(--good)}.dn{color:var(--bad)}
+.heads .row{display:grid;grid-template-columns:90px 1fr 54px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.track{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}.fill{height:100%;background:var(--gold)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px}
+.card{position:relative;border:2px solid var(--c);border-radius:10px;background:var(--panel2);padding:8px 8px 10px;min-height:118px;display:flex;flex-direction:column;transition:.15s}
+.card:hover{transform:translateY(-3px)}
+.card.attack{--c:var(--attack)}.card.skill{--c:var(--skill)}.card.power{--c:var(--power)}.card.curse{--c:var(--curse)}
+.card .art{height:46px;border-radius:6px;background:linear-gradient(135deg,color-mix(in srgb,var(--c) 45%,transparent),transparent);margin-bottom:6px}
+.card .nm{font-weight:600;font-size:13px}.card.up .nm{color:var(--good)}
+.card .ty{font-size:11px;color:var(--mute);text-transform:uppercase}
+.card .cnt{position:absolute;top:-8px;right:-8px;background:var(--gold);color:#1a1307;border-radius:999px;font-weight:700;font-size:12px;min-width:24px;height:24px;display:grid;place-items:center;padding:0 5px}
+.card .imp{position:absolute;top:6px;left:8px;font-size:11px;font-weight:700}
+.card .acts{display:flex;gap:4px;margin-top:auto;opacity:0;transition:.15s}.card:hover .acts,.card:focus-within .acts{opacity:1}
+.acts button{flex:1;font-size:11px;padding:3px 0;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}
+.acts button:hover{border-color:var(--gold)}.acts .x:hover{border-color:var(--bad);color:var(--bad)}
+.card.add{border-style:dashed;--c:var(--line);align-items:center;justify-content:center;color:var(--mute);cursor:pointer;background:none}
+.relics{display:flex;gap:10px;flex-wrap:wrap}.relic{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-size:13px}
+.relic i{width:26px;height:26px;border-radius:50%;background:var(--gold);opacity:.8;display:block}.relic button{background:none;border:0;color:var(--mute);cursor:pointer}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}.tabs button{background:var(--panel2);border:1px solid var(--line);color:var(--mute);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px}.tabs button.on{color:var(--text);border-color:var(--gold)}
+.res{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:center}
+.res:first-of-type{border-top:0}.res .best{font-size:10px;background:var(--good);color:#06210d;border-radius:4px;padding:1px 5px;margin-left:6px;font-weight:700}
+.mono{font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;display:flex;gap:6px}.chip b{cursor:pointer;color:var(--mute)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+tr.sel{background:var(--panel2)}tr.m{cursor:pointer}tr.m:hover{background:var(--panel2)}
+.tag{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--mute);margin-right:4px}
+.tag.rec{color:#06210d;background:var(--good);border-color:var(--good);font-weight:700}.tag.leg{opacity:.7}
+.tblwrap{overflow-x:auto}
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}@media(max-width:900px){.cmp{grid-template-columns:1fr}}
+.mb{display:grid;grid-template-columns:150px 1fr 56px;gap:8px;align-items:center;font-size:12px;margin:5px 0}
+.note{font-size:12px;color:var(--mute)}
+.banner{background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid var(--gold);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+.step{display:flex;gap:10px;align-items:center;margin:6px 0}.step span{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#1a1307;display:grid;place-items:center;font-weight:700;font-size:12px}
+.charpick{display:flex;gap:10px;flex-wrap:wrap}.charpick button{flex:1;min-width:110px;padding:14px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font:inherit}.charpick button.on{border-color:var(--gold)}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:20;padding:20px;overflow:auto}.ov.on{display:block}
+.shopw{max-width:1180px;margin:0 auto;background:radial-gradient(ellipse at 20% 0%,color-mix(in srgb,var(--gold) 14%,var(--panel)),var(--panel) 60%);border:1px solid var(--gold);border-radius:14px;padding:20px}
+.shopg{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px}@media(max-width:900px){.shopg{grid-template-columns:1fr}}
+.shelf{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:10px}
+.shelf.c2{grid-template-columns:repeat(5,minmax(0,1fr));padding-left:0}
+@media(max-width:700px){.shelf,.shelf.c2{grid-template-columns:repeat(2,1fr)}}
+.si{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.si .card{width:100%;min-height:150px;cursor:pointer}.si.on .card,.si.on .tok{box-shadow:0 0 0 3px var(--gold),0 0 18px var(--gold);transform:translateY(-4px)}
+.si.off{opacity:.4;cursor:not-allowed}.si.best .card,.si.best .tok{outline:2px dashed var(--good);outline-offset:3px}
+.price{display:flex;align-items:center;gap:5px;font-weight:700}.price i{width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}
+.price.no{color:var(--bad)}.dl{font-size:12px;font-weight:700}
+.sale{position:absolute;top:-8px;left:-8px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;border-radius:4px;padding:2px 6px}
+.relicrow{display:flex;gap:22px;margin:6px 0 16px;flex-wrap:wrap}
+.tok{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--gold),color-mix(in srgb,var(--gold) 35%,#000));border:3px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;color:#1a1307;text-align:center;line-height:1.1;padding:6px;transition:.15s}
+.svc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px}
+.svc .bin{width:72px;height:84px;margin:6px auto 10px;border:3px solid var(--line);border-radius:8px 8px 14px 14px;background:repeating-linear-gradient(90deg,transparent 0 10px,var(--line) 10px 12px)}
+.svc.on{border-color:var(--gold);box-shadow:0 0 14px var(--gold)}
+.gold{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700}.gold i{width:22px;height:22px;border-radius:50%;background:var(--gold)}
+.row2{display:flex;justify-content:space-between;gap:10px}
+.shl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);margin:12px 0 8px}
+
+.think{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-weight:600}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--gold);display:inline-block;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:30;background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);max-width:calc(100vw - 32px)}
+</style></head><body>
+<header>
+  <span class="logo">⟡ STS COCKPIT</span>
+  <nav id="nav">
+    <button data-p="setup">New Run</button>
+    <button data-p="run" class="on">Run</button>
+    <button data-p="models">Model Directory</button>
+    <button data-p="roadmap">Roadmap</button>
+    <button disabled title="Not implemented in CLI either">Train</button>
+    <button disabled title="Not implemented in CLI either">Build Data</button>
+  </nav>
+  <span class="sp"></span>
+  <span class="lbl">Model</span>
+  <select id="hdrModel"></select>
+</header>
+<main>
+<div class="banner" style="border-color:var(--bad)"><b>MOCKUP: every win rate and what-if number on this page is made up.</b> The app that runs the real models is started with <code>python ui/server/app.py</code> (it shows "Live models" in a banner like this one). Only the Model Directory metrics here are real. Hover cards to see remove / upgrade. Click tabs and rows.</div>
+
+<!-- NEW RUN -->
+<section class="page" id="p-setup">
+  <h1>Start a new run</h1><p class="note">Replaces CLI option 1 plus the character and model prompts.</p>
+  <div class="two">
+    <div class="panel"><h2>1 · Character</h2>
+      <div class="charpick" id="chars"></div></div>
+    <div class="panel"><h2>2 · Model</h2>
+      <select id="setupModel" style="width:100%"></select>
+      <p class="note" id="setupModelNote"></p>
+      <button class="b" onclick="go('models')">Compare all models →</button></div>
+  </div>
+  <div class="panel"><h2>3 · Starting state</h2>
+    <p class="note">Starting deck and relic loaded from <code>starting_decks.csv</code>. Floor starts at 1. Optionally import a run (<code>winning_run_example.json</code> format) to jump to a mid-run state.</p>
+    <button class="b">Import run JSON…</button> <button class="b pri" onclick="startRun()">Start run</button></div>
+</section>
+
+<!-- RUN -->
+<section class="page on" id="p-run">
+ <div class="grid">
+  <div>
+   <div class="panel">
+     <div class="bar">
+       <div><h1><span id="chName">Watcher</span> · Floor <span id="floorV">17</span></h1><span class="lbl">Model: <b id="runModelLbl"></b> · <a href="#" onclick="go('models');return false" style="color:var(--gold)">change</a></span></div>
+       <span class="sp"></span>
+       <div style="min-width:240px"><span class="lbl">Current floor (1–57)</span><br><div class="bar" style="gap:6px;flex-wrap:nowrap"><button class="b" id="floorPrev" title="Previous floor">−</button><input type="range" id="floor" min="1" max="57" value="17" style="flex:1"><button class="b pri" id="floorNext" title="Advance one floor">Next floor ▶</button></div></div>
+       <button class="b" id="resetRun" title="Back to floor 1 with the starting deck for this character">⟲ Reset run</button><button class="b" id="undo">↶ Undo</button>
+     </div>
+   </div>
+   <div class="panel">
+     <div class="bar"><h2 style="margin:0">Deck · <span id="deckN"></span> cards</h2><span class="sp"></span>
+       <button class="b pri" onclick="openPicker()">＋ Add card</button><input id="quickAdd" list="cardList2" placeholder="Add card to deck…" style="width:200px"><button class="b" id="quickBtn">Add</button><span class="lbl dn" id="quickErr"></span><span class="lbl">Each card shows its win-rate impact if removed</span>
+       <select id="sort"><option>Sort: type</option><option>Sort: impact</option><option>Sort: name</option></select></div>
+     <datalist id="cardList2"></datalist><div class="cards" id="deck" style="margin-top:14px"></div>
+   </div>
+   <div class="panel"><h2>Relics</h2>
+     <div class="relics" id="relics"></div>
+     <div class="lbl dn" id="relicErr" style="margin-top:4px"></div><div id="relicAct"></div>
+     <div class="bar" style="margin-top:12px"><input id="relicIn" list="relicList2" placeholder="Add relic… (try Prismatic Shard)" style="flex:1"><button class="b" id="relicAdd">Add</button><datalist id="relicList2"></datalist></div></div>
+  </div>
+
+  <aside>
+   <div class="panel">
+     <h2>Heart-kill probability</h2>
+     <div class="hero"><span class="n" id="wr">—</span><span class="delta" id="wrd"></span></div>
+     <div class="note" id="wrNote"></div>
+     <div class="heads" style="margin-top:14px">
+       <h2 style="margin-bottom:2px">Milestones</h2>
+       <div id="heads"></div>
+       <div class="note">Multi-target models only. Single-target models show Heart only.</div>
+     </div>
+   </div>
+   <div class="panel">
+     <h2>What if…</h2>
+     <div class="tabs" id="simTabs"></div>
+     <div id="simBody"></div>
+   </div>
+  </aside>
+ </div>
+</section>
+
+<!-- MODELS -->
+<section class="page" id="p-models">
+  <h1>Model directory</h1>
+  <p class="note">Everything in <code>model_objects/production</code>. Held-out Heart-kill metrics from the cached test logits (same test split for v21 and v22, so they are directly comparable; earlier models used a different split). Precision, recall and F1 use the standard 0.5 threshold. ECE is equal-frequency-bin calibration error.</p>
+  <div class="panel tblwrap"><table id="mt"></table></div>
+  <div class="panel"><h2>Compare (v21 and v22, same test set)</h2>
+    <div class="cmp" id="cmp"></div></div>
+  <div class="panel" id="detail"></div>
+  <div class="panel"><h2>Which should I use?</h2>
+    <p><b>Default pick:</b> highest version number with the best AUC, so <b>fnn_v22_alpha_beta_mt_cum</b>. In the real app these numbers would be read from a metrics file written next to each model, so a new model shows up and becomes the default automatically. The differences between the top models are small (see the noise note in <code>outstanding_experiments.md</code>), and F1 and recall at 0.5 are low for every model because the Heart-kill rate is low.</p>
+    <p class="note">Rule of thumb: all models are close. Pick a faster-to-load or older model only if you want a different set of card preferences; none is dramatically better on the 0-1 decision scale.</p></div>
+</section>
+<!-- ROADMAP -->
+<section class="page" id="p-roadmap">
+  <h1>Roadmap</h1>
+  <p class="note">Open decisions and planned work for the UI. Status chips: <span class="tag">decision</span> needs an answer, <span class="tag">planned</span> agreed, <span class="tag">idea</span> not committed.</p>
+  <div id="road"></div>
+</section>
+</main>
+
+<div class="toast" id="think"></div>
+<div class="ov" id="pickOv"><div class="shopw" id="pickBox" style="max-width:1000px"></div></div>
+<div class="ov" id="shopOv"><div class="shopw" id="shopBox"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const MODELS=[
+ {id:'fnn_v22_alpha_beta_mt_cum',v:22,fam:'Multi-target · alpha→beta→finetune · cumulative upgrades',ll:0.05301,auc:0.9264,ece:0.0005,brier:0.01261,ap:0.4842,p:0.701,r:0.306,f1:0.426,t:'9 h 11 m',mt:1,desc:'Pretrained on the full dump (alpha), then beta, then finetuned, all five heads, with the cumulative upgrade encoding (an upgraded card is [1,1] instead of [0,1]). Best AUC and log loss of any model so far.'},
+ {id:'fnn_v22_beta_mt_cum',v:22,fam:'Multi-target · beta→finetune · cumulative upgrades',ll:0.0533,auc:0.9256,ece:0.0006,brier:0.01268,ap:0.479,p:0.685,r:0.312,f1:0.429,t:'4 h 42 m',mt:1,desc:'Beta pretraining then finetune, all five heads, cumulative upgrades. Best F1 at 0.5 and within noise of the top model at about half the training time.'},
+ {id:'fnn_v22_beta_act3_mt_cum',v:22,fam:'Multi-target · beta (act 3 label)→finetune · cumulative upgrades',ll:0.05354,auc:0.9245,ece:0.0002,brier:0.01273,ap:0.4747,p:0.69,r:0.297,f1:0.416,t:'4 h 12 m',mt:1,desc:'Beta pretrain using only the act-3-boss label, then finetune all heads, cumulative upgrades. Lowest calibration error of the v22 set.'},
+ {id:'fnn_v22_ft_mt_cum',v:22,fam:'Multi-target · finetune only · cumulative upgrades',ll:0.05401,auc:0.9227,ece:0.0007,brier:0.01282,ap:0.4685,p:0.68,r:0.305,f1:0.421,t:'1 h 40 m',mt:1,desc:'No pretraining, all five heads, cumulative upgrades.'},
+ {id:'fnn_v22_ft_st_cum',v:22,fam:'Single-target · finetune only · cumulative upgrades',ll:0.05455,auc:0.9201,ece:0.0007,brier:0.0129,ap:0.465,p:0.682,r:0.299,f1:0.416,t:'1 h 29 m',mt:0,desc:'Heart head only, no pretraining, cumulative upgrades. Simplest and fastest of the v22 set.'},
+ {id:'fnn_v21_alpha_beta_mt',v:21,fam:'Multi-target · alpha→beta→finetune',ll:0.05326,auc:0.9259,ece:0.0005,brier:0.01268,ap:0.4797,p:0.694,r:0.301,f1:0.42,t:'6 h 36 m',mt:1,desc:'Same recipe as the v22 top model with the original split upgrade encoding.'},
+ {id:'fnn_v21_beta_mt',v:21,fam:'Multi-target · beta→finetune',ll:0.05361,auc:0.9247,ece:0.0003,brier:0.01276,ap:0.474,p:0.69,r:0.3,f1:0.418,t:'1 h 50 m',mt:1,desc:'Beta pretraining then finetune, all five heads.'},
+ {id:'fnn_v21_beta_act3_mt',v:21,fam:'Multi-target · beta (act 3 label)→finetune',ll:0.05389,auc:0.9234,ece:0.0002,brier:0.01281,ap:0.4696,p:0.69,r:0.292,f1:0.41,t:'1 h 49 m',mt:1,desc:'Beta pretrain on the act-3-boss label only, then finetune all heads.'},
+ {id:'fnn_v21_ft_mt',v:21,fam:'Multi-target · finetune only',ll:0.0543,auc:0.9219,ece:0.0009,brier:0.01289,ap:0.4643,p:0.68,r:0.302,f1:0.418,t:'1 h 22 m',mt:1,desc:'No pretraining, all five heads. Weaker at late floors than pretrained variants.'},
+ {id:'fnn_v21_ft_st',v:21,fam:'Single-target · finetune only',ll:0.05485,auc:0.919,ece:0.0007,brier:0.01296,ap:0.4609,p:0.683,r:0.293,f1:0.41,t:'52 m',mt:0,desc:'Heart head only, no pretraining. Simplest baseline.'},
+ {id:'fnn_v20',v:20,fam:'Legacy · 929 features',ll:null,auc:null,ece:null,brier:null,ap:null,p:null,r:null,f1:null,t:'—',mt:0,leg:1,desc:'Previous format and split. Not comparable to v21/v22 numbers.'},
+ {id:'fnn_v19',v:19,fam:'Legacy',ll:null,auc:null,ece:null,brier:null,ap:null,p:null,r:null,f1:null,t:'—',mt:0,leg:1,desc:'Legacy model.'},
+ {id:'fnn_v15_small',v:15,fam:'Legacy · small',ll:null,auc:null,ece:null,brier:null,ap:null,p:null,r:null,f1:null,t:'—',mt:0,leg:1,desc:'Previous README recommendation. Smallest network.'}
+];
+const best=[...MODELS].filter(m=>m.auc).sort((a,b)=>b.v-a.v||b.auc-a.auc)[0];
+let model=best.id;
+const fmt=x=>x==null?'—':x.toFixed(4);
+function fillSel(el){el.innerHTML=MODELS.map(m=>`<option value="${m.id}" ${m.id==model?'selected':''}>${m.id}${m.id==best.id?'  ★ recommended':''}</option>`).join('');el.onchange=e=>setModel(e.target.value)}
+function setModel(id){model=id;['#hdrModel','#setupModel'].forEach(s=>$(s).value=id);$('#runModelLbl').textContent=id;renderModels();renderRun();const m=MODELS.find(x=>x.id==id);$('#setupModelNote').textContent=(id==best.id?'Default: highest version with best AUC. ':'')+(m.auc?`AUC ${m.auc} · log loss ${m.ll}`:'No metrics on the current test split.')}
+function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.toggle('on',e.id=='p-'+p));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p==p));scrollTo(0,0)}
+document.querySelectorAll('nav button[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
+
+// characters
+let ch='Watcher';
+const CH=['Ironclad','The Silent','Defect','Watcher'];
+$('#chars').innerHTML=CH.map(c=>`<button class="${c==ch?'on':''}">${c}</button>`).join('');
+$('#chars').onclick=e=>{if(e.target.tagName!='BUTTON')return;const next=e.target.textContent;if(next==ch)return;if(hasProgress()&&!confirm(`Switch to ${next}? This resets your current ${ch} run to floor 1.`))return;document.querySelectorAll('#chars button').forEach(b=>b.classList.toggle('on',b==e.target));ch=next;resetRun()};
+
+// card pools
+const POOL={
+ Ironclad:{attack:['Bash','Anger','Cleave','Clothesline','Headbutt','Twin Strike','Pommel Strike','Iron Wave','Whirlwind','Carnage','Bludgeon'],skill:['Armaments','Shrug It Off','True Grit','Flame Barrier','Impervious','Offering','Entrench','Disarm'],power:['Barricade','Demon Form','Corruption','Inflame','Metallicize','Feel No Pain','Dark Embrace']},
+ 'The Silent':{attack:['Neutralize','Dagger Spray','Poisoned Stab','Sneak Attack','Eviscerate','Die Die Die','Glass Knife'],skill:['Survivor','Backflip','Blade Dance','Deflect','Acrobatics','Prepared','Dodge and Roll','Expertise'],power:['Footwork','Noxious Fumes','Accuracy','A Thousand Cuts','Wraith Form','Envenom','Infinite Blades']},
+ Defect:{attack:['Ball Lightning','Beam Cell','Sweeping Beam','Streamline','Compile Driver','Hyperbeam','Rip and Tear'],skill:['Zap','Dualcast','Coolheaded','Charge Battery','Glacier','Chill','Skim','Seek'],power:['Defragment','Biased Cognition','Capacitor','Loop','Echo Form','Creative AI','Storm']},
+ Watcher:{attack:['Eruption','Tantrum','Wallop','Conclude','Fear No Evil','Talk to the Hand','Ragnarok','Reach Heaven'],skill:['Vigilance','Sanctity','Prostrate','Pressure Points','Inner Peace','Wish','Scrawl','Blasphemy','Crescendo'],power:['Rushdown','Mental Fortress','Fasting','Devotion','Establishment','Study']}};
+const COLORLESS={attack:['Mind Blast','Hand of Greed'],skill:['Enlightenment','Panacea','Finesse','Secret Weapon'],power:['Panache']};
+const CURSES=["Ascender's Bane",'Regret','Pain','Injury','Doubt','Shame'];
+const STARTER={Ironclad:{cards:[['Strike','attack',5],['Defend','skill',4],['Bash','attack',1]],relic:'Burning Blood'},'The Silent':{cards:[['Strike','attack',5],['Defend','skill',5],['Neutralize','attack',1],['Survivor','skill',1]],relic:'Ring of the Snake'},Defect:{cards:[['Strike','attack',4],['Defend','skill',4],['Zap','skill',1],['Dualcast','skill',1]],relic:'Cracked Core'},Watcher:{cards:[['Strike','attack',4],['Defend','skill',4],['Eruption','attack',1],['Vigilance','skill',1]],relic:'Pure Water'}};
+const CARDS={};// lowercase name -> {n,t,own}
+const nk=x=>x.toLowerCase().replace(/[^a-z0-9]/g,'');
+for(const [c,g] of Object.entries(POOL))for(const [t,l] of Object.entries(g))for(const n of l)CARDS[nk(n)]={n,t,own:c};
+for(const [t,l] of Object.entries(COLORLESS))for(const n of l)CARDS[nk(n)]={n,t,own:'colorless'};
+for(const n of CURSES)CARDS[nk(n)]={n,t:'curse',own:'curse'};
+for(const n of ['Strike','Defend'])CARDS[nk(n)]={n,t:n=='Strike'?'attack':'skill',own:'starter'};
+const shard=()=>relics.includes('Prismatic Shard');
+const allowed=c=>c.own==ch||['colorless','curse','starter'].includes(c.own)||shard();
+// relic list: one entry per line of data/master_lists/master_relic_list.txt (180), display name | owning character (blank = any character)
+const RELIC_TBL="Akabeko|;Anchor|;Ancient Tea Set|;Art of War|;Astrolabe|;Bag of Marbles|;Bag of Preparation|;Bird-Faced Urn|;Black Blood|Ironclad;Black Star|;Blood Vial|;Bloody Idol|;Blue Candle|;The Boot|;Bottled Flame|;Bottled Lightning|;Bottled Tornado|;Brimstone|Ironclad;Bronze Scales|;Burning Blood|Ironclad;Busted Crown|;Gold-Plated Cables|Defect;Calipers|;Calling Bell|;Captain's Wheel|;Cauldron|;Centennial Puzzle|;Ceramic Fish|;Champion Belt|Ironclad;Charon's Ashes|Ironclad;Chemical X|;Circlet|;Cloak Clasp|Watcher;Clockwork Souvenir|;Coffee Dripper|;Cracked Core|Defect;Cultist Headpiece|;Cursed Key|;Damaru|Watcher;Dark Stone Periapt|;Data Disk|Defect;Dead Branch|;Dodecahedron|;Dolly's Mirror|;Dream Catcher|;Du-Vu Doll|;Ectoplasm|;Emotion Chip|Defect;Empty Cage|;Enchiridion|;Eternal Feather|;Face of Cleric|;Fossilized Helix|;Frozen Core|Defect;Frozen Egg|;Frozen Eye|;Fusion Hammer|;Gambling Chip|;Ginger|;Girya|;Golden Eye|Watcher;Golden Idol|;Gremlin Horn|;Gremlin Visage|;Hand Drill|;Happy Flower|;Holy Water|Watcher;Horn Cleat|;Hovering Kite|The Silent;Ice Cream|;Incense Burner|;Ink Bottle|;Inserter|Defect;Juzu Bracelet|;Kunai|;Lantern|;Lee's Waffle|;Letter Opener|;Lizard Tail|;Magic Flower|Ironclad;Mango|;Mark of Pain|;Mark of the Bloom|;Matryoshka|;Maw Bank|;Meal Ticket|;Meat on the Bone|;Medical Kit|;Melange|Watcher;Membership Card|;Mercury Hourglass|;Molten Egg|;Mummified Hand|;Mutagenic Strength|;Necronomicon|;Neow's Lament|;Nilry's Codex|;Ninja Scroll|The Silent;N'loth's Gift|;N'loth's Hungry Face|;Nuclear Battery|Defect;Nunchaku|;Oddly Smooth Stone|;Odd Mushroom|;Old Coin|;Omamori|;Orange Pellets|;Orichalcum|;Ornamental Fan|;Orrery|;Pandora's Box|;Pantograph|;Paper Krane|The Silent;Paper Phrog|Ironclad;Peace Pipe|;Pear|;Pen Nib|;Philosopher's Stone|;Pocketwatch|;Potion Belt|;Prayer Wheel|;Preserved Insect|;Prismatic Shard|;Pure Water|Watcher;Question Card|;Red Mask|;Red Skull|Ironclad;Regal Pillow|;Ring of the Serpent|The Silent;Ring of the Snake|The Silent;Runic Capacitor|Defect;Runic Cube|Ironclad;Runic Dome|;Runic Pyramid|;Sacred Bark|;Self-Forming Clay|Ironclad;Shovel|;Shuriken|;Singing Bowl|;Slaver's Collar|;Sling of Courage|;Smiling Mask|;Snake Skull|The Silent;Snecko Eye|;Sozu|;Spirit Poop|;Ssserpent Head|;Stone Calendar|;Strange Spoon|;Strawberry|;Strike Dummy|;Sundial|;Symbiotic Virus|Defect;Teardrop Locket|Watcher;The Abacus|;The Courier|;The Specimen|The Silent;Thread and Needle|;Tingsha|The Silent;Tiny Chest|;Tiny House|;Toolbox|;Torii|;Tough Bandages|The Silent;Toxic Egg|;Toy Ornithopter|;Tungsten Rod|;Turnip|;Twisted Funnel|The Silent;Unceasing Top|;Vajra|;Velvet Choker|;Violet Lotus|Watcher;War Paint|;Warped Tongs|;Whetstone|;White Beast Statue|;Winged Greaves|;Wrist Blade|The Silent;Duality|Watcher";
+const RELICS={};for(const e of RELIC_TBL.split(';')){const [n,own]=e.split('|');RELICS[nk(n)]={n,own:own||'shared'}}
+const holds=n=>relics.some(r=>nk(r)==nk(n));
+const relicPool=()=>Object.values(RELICS).filter(r=>(r.own=='shared'||r.own==ch)&&!holds(r.n));
+function checkRelic(txt){const r=RELICS[nk(txt)];if(!r)return{err:`"${txt}" is not a known relic`};if(r.own!='shared'&&r.own!=ch)return{err:`${r.n} belongs to ${r.own}`};if(holds(r.n))return{err:`You already have ${r.n}`};return{r}}
+const lookup=txt=>CARDS[nk(txt)];
+const poolList=()=>Object.values(CARDS).filter(c=>c.own!='starter'&&allowed(c));
+const poolLabel=()=>shard()?'All characters (Prismatic Shard)':ch+' + colorless + curses';
+function checkCard(txt){const c=lookup(txt);if(!c)return{err:`"${txt}" is not a known card`};if(!allowed(c))return{err:`${c.n} belongs to ${c.own} (needs Prismatic Shard)`};return{c}}
+// run state
+let deck=[{n:'Strike',t:'attack',c:4},{n:'Defend',t:'skill',c:4},{n:'Eruption',t:'attack',c:1},{n:'Vigilance',t:'skill',c:1},{n:'Rushdown',t:'power',c:1},{n:'Tantrum',t:'attack',c:1,u:1},{n:'Inner Peace',t:'skill',c:1},{n:'Fear No Evil',t:'attack',c:1},{n:'Mental Fortress',t:'power',c:1,u:1},{n:'Talk to the Hand',t:'attack',c:1},{n:'Pressure Points',t:'skill',c:1},{n:'Ascender\'s Bane',t:'curse',c:1}];
+let relics=['Pure Water','Damaru','Ornamental Fan'];
+let hist=[];let floor=17;
+const base=()=>.02+.9*Math.pow(floor/57,2.2)*(1-.15*Math.exp(-0))*0.1;
+function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%997;return h/997}
+function score(d,r){let s=-4.2+floor/57*2.6;for(const c of d){const w=(hash(c.n)-.45)*.35;s+=w*c.c+(c.u?.12:0);if(c.t=='curse')s-=.25}s+=r.length*.18;const off=(MODELS.findIndex(m=>m.id==model))*.015;return 1/(1+Math.exp(-(s+off)))}
+const pct=x=>(x*100).toFixed(1)+'%';
+const impact=c=>{const d=deck.map(x=>x===c?{...x,c:x.c-1}:x).filter(x=>x.c>0);return score(deck,relics)-score(d,relics)};
+let used=new Set();
+function snap(){hist.push(JSON.stringify({deck,relics,used:[...used]}))}
+$('#undo').onclick=()=>{if(!hist.length)return;const s=JSON.parse(hist.pop());deck=s.deck;relics=s.relics;used=new Set(s.used||[]);renderRun()};
+$('#floor').oninput=e=>setFloor(+e.target.value);
+function setFloor(f){floor=Math.max(1,Math.min(57,f));$('#floor').value=floor;$('#floorV').textContent=floor;renderRun()}
+$('#floorPrev').onclick=()=>setFloor(floor-1);$('#floorNext').onclick=()=>setFloor(floor+1);
+function removeCard(i){snap();deck[i].c--;if(deck[i].c<=0)deck.splice(i,1);renderRun()}
+function upgradeCard(i){snap();const c=deck[i];if(c.u||c.t=='curse')return;c.c--;const e=deck.find((x,j)=>j!=i&&x.n==c.n&&x.u);if(e)e.c++;else deck.push({...c,c:1,u:1});if(c.c<=0)deck.splice(i,1);renderRun()}
+function downgradeCard(i){const c=deck[i];if(!c||!c.u)return;snap();c.c--;const e=deck.find((x,j)=>j!=i&&x.n==c.n&&!x.u);if(e)e.c++;else deck.push({...c,c:1,u:0});if(c.c<=0)deck.splice(deck.indexOf(c),1);renderRun()}
+function addCardByName(name){const r=checkCard(name);if(r.err)return r;snap();const e=deck.find(x=>x.n==r.c.n&&!x.u);e?e.c++:deck.push({n:r.c.n,t:r.c.t,c:1});renderRun();return{c:r.c}}
+function addFromSim(name){const r=addCardByName(name);if(r.err){candErr=r.err;renderSim();return}cardCands=null;candErr='';renderSim()}
+function removeByKey(k){const i=deck.findIndex(x=>keyOf(x)==k);if(i>=0)removeCard(i)}
+function upgradeByName(n){const i=deck.findIndex(x=>x.n==n&&!x.u);if(i>=0)upgradeCard(i)}
+function takeRelic(n){snap();relics.push(n);relicCands=[];cardCands=null;genShop();renderRun()}
+function quickAdd(){const i=$('#quickAdd');if(!i.value.trim())return;const r=addCardByName(i.value.trim());if(r.err){$('#quickErr').textContent=r.err;return}$('#quickErr').textContent='';i.value='';$('#quickAdd').focus()}
+// card picker popup: picks are staged here and only land in the deck (one undo step) when the popup is closed with Done
+let pickFilter='all',pickQ='',pickSort='impact',pend={};
+const pendList=()=>Object.entries(pend).filter(([,n])=>n>0);
+function pendDeck(){const d=deck.map(x=>({...x}));for(const [n,k] of pendList()){const c=lookup(n),e=d.find(x=>x.n==c.n&&!x.u);if(e)e.c+=k;else d.push({n:c.n,t:c.t,c:k})}return d}
+function openPicker(){pend={};pickQ='';pickFilter='all';$('#pickOv').classList.add('on');$('#pickBox').innerHTML=`<div class="bar"><h1 style="margin:0">Add cards</h1><span class="sp"></span><button class="b" onclick="cancelPicker()">Cancel</button><button class="b pri" onclick="closePicker()">Done</button></div><p class="note">Pool: ${poolLabel()}. Click a card to stage a copy (click again for more, ✕ on a card to take one back). Your deck updates when you press Done. The number on each card is the win-rate change in points from adding one more.</p><div class="bar" style="margin-bottom:10px"><input id="pickQ" placeholder="Search cards…" style="flex:1;min-width:160px"><select id="pickSortSel"><option value="impact">Sort: impact</option><option value="name">Sort: name</option></select></div><div class="tabs" id="pickF">${[['all','All'],['attack','Attack'],['skill','Skill'],['power','Power'],['colorless','Colorless'],['curse','Curse']].map(([k,l])=>`<button data-f="${k}" class="${pickFilter==k?'on':''}">${l}</button>`).join('')}</div><div class="panel" id="pickSum" style="margin:0 0 10px;background:var(--panel2)"></div><div class="cards" id="pickGrid"></div>`;
+ $('#pickQ').oninput=e=>{pickQ=e.target.value;renderPickGrid()};$('#pickSortSel').onchange=e=>{pickSort=e.target.value;renderPickGrid()};
+ $('#pickF').onclick=e=>{const f=e.target.dataset.f;if(!f)return;pickFilter=f;document.querySelectorAll('#pickF button').forEach(b=>b.classList.toggle('on',b.dataset.f==f));renderPickGrid()};
+ $('#pickGrid').onclick=e=>{const el=e.target.closest('.card');if(!el)return;const n=el.dataset.n;if(e.target.closest('.unstage')){pend[n]=Math.max(0,(pend[n]||0)-1)}else pend[n]=(pend[n]||0)+1;renderPickGrid()};
+ renderPickGrid();$('#pickQ').focus()}
+function closePicker(){if(!$('#pickOv').classList.contains('on'))return;const list=pendList();$('#pickOv').classList.remove('on');if(list.length){snap();for(const [n,k] of list){const c=lookup(n),e=deck.find(x=>x.n==c.n&&!x.u);if(e)e.c+=k;else deck.push({n:c.n,t:c.t,c:k})}renderRun()}pend={}}
+function cancelPicker(){pend={};$('#pickOv').classList.remove('on')}
+function renderPickGrid(){const pd=pendDeck(),base=score(pd,relics),ov=$('#pickOv'),top=ov.scrollTop,q=nk(pickQ),orig=score(deck,relics);
+ let list=poolList().filter(c=>(pickFilter=='all'||(pickFilter=='colorless'?c.own=='colorless':pickFilter=='curse'?c.t=='curse':c.t==pickFilter&&c.own!='colorless'&&c.t!='curse'))&&(!q||nk(c.n).includes(q))).map(c=>({c,d:score([...pd.map(x=>({...x})),{n:c.n,t:c.t,c:1}],relics)-base}));
+ list.sort(pickSort=='name'?(a,b)=>a.c.n.localeCompare(b.c.n):(a,b)=>b.d-a.d);
+ const pl=pendList(),tot=pl.reduce((s,[,k])=>s+k,0),dd=base-orig;
+ $('#pickSum').innerHTML=pl.length?`<b>Staged (${tot}):</b> ${pl.map(([n,k])=>`<span class="chip">${n}${k>1?' ×'+k:''}</span>`).join(' ')}<div class="note" style="margin-top:6px">Win rate if you press Done: <b class="mono">${pct(base)}</b> <span class="mono ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)} pts</span> · deck ${deck.reduce((s,c)=>s+c.c,0)} → ${deck.reduce((s,c)=>s+c.c,0)+tot} cards</div>`:`<span class="note">${list.length} cards. Nothing staged yet.</span>`;
+ $('#pickGrid').innerHTML=list.map(({c,d})=>{const have=deck.filter(x=>x.n==c.n).reduce((s,x)=>s+x.c,0),p=pend[c.n]||0;return `<div class="card ${c.t}" data-n="${c.n}" style="cursor:pointer;${p?'box-shadow:0 0 0 3px var(--good)':''}"><span class="imp ${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(1)}</span>${have?`<span class="cnt">×${have}</span>`:''}${p?`<span class="cnt" style="top:auto;bottom:-8px;background:var(--good);color:#06210d">+${p}</span><button class="unstage b" style="position:absolute;top:30px;right:6px;padding:0 6px;font-size:11px" title="Take one back">✕</button>`:''}<div class="art"></div><div class="nm">${c.n}</div><div class="ty">${c.t}${c.own=='colorless'?' · colorless':c.own!=ch&&c.own!='curse'?' · '+c.own:''}</div></div>`}).join('')||'<div class="note">No cards match.</div>';
+ ov.scrollTop=top}
+function renderRun(){
+  $('#chName').textContent=ch;$('#undo').textContent='↶ Undo'+(hist.length?' ('+hist.length+')':'');$('#undo').disabled=!hist.length;$('#relicList2').innerHTML=relicPool().map(r=>`<option value="${r.n}">`).join('');$('#cardList2').innerHTML=poolList().map(c=>`<option value="${c.n}">`).join('');
+  const w=score(deck,relics);const b0=score(STARTER[ch].cards.map(([n,t,c])=>({n,t,c})),[STARTER[ch].relic]);
+  $('#wr').textContent=pct(w);const d=w-b0;$('#wrd').className='delta '+(d>=0?'up':'dn');$('#wrd').textContent=(d>=0?'▲ ':'▼ ')+Math.abs(d*100).toFixed(1)+' pts vs. starting deck';
+  $('#wrNote').textContent='Baseline for every what-if below is this number.';
+  const ms=MODELS.find(m=>m.id==model);
+  $('#heads').innerHTML=(ms.mt?[['Act 1 boss',.9,16],['Act 2 boss',.7,33],['Act 3 boss',.45,50]]:[]).map(([n,k,bf])=>{const done=floor>bf,p=done?1:Math.min(.99,w**(k*.9));return `<div class="row"><span>${n}</span><div class="track"><div class="fill" style="width:${p*100}%;${done?'background:var(--good)':''}"></div></div><span class="mono" title="${done?'Boss is on floor '+bf+', already past it':'Boss is on floor '+bf}">${done?'✓ 100%':pct(p)}</span></div>`}).join('')+`<div class="row"><span><b>Heart</b></span><div class="track"><div class="fill" style="width:${w*100}%"></div></div><span class="mono"><b>${pct(w)}</b></span></div>`;
+  let list=deck.map((c,i)=>({c,i}));const so=$('#sort').value;
+  if(so.includes('impact'))list.sort((a,b)=>impact(b.c)-impact(a.c));else if(so.includes('name'))list.sort((a,b)=>a.c.n.localeCompare(b.c.n));else{const o={attack:0,skill:1,power:2,curse:3};list.sort((a,b)=>o[a.c.t]-o[b.c.t])}
+  $('#deckN').textContent=deck.reduce((s,c)=>s+c.c,0);
+  $('#deck').innerHTML=list.map(({c,i})=>{const im=impact(c);return `<div class="card ${c.t} ${c.u?'up':''}" tabindex="0"><span class="imp ${im>=0?'up':'dn'}">${im>=0?'+':''}${(im*100).toFixed(1)}</span>${c.c>1?`<span class="cnt">×${c.c}</span>`:''}<div class="art"></div><div class="nm">${c.n}${c.u?'+':''}</div><div class="ty">${c.t}</div><div class="acts"><button class="x" onclick="removeCard(${i})">Remove</button>${c.t=='curse'?'':c.u?`<button onclick="downgradeCard(${i})">Downgrade</button>`:`<button onclick="upgradeCard(${i})">Upgrade</button>`}</div></div>`}).join('')+`<div class="card add" onclick="openPicker()">＋ Add card</div>`;
+  $('#relics').innerHTML=relics.map((r,i)=>`<span class="relic"><i></i>${r}<button title="remove" onclick="snap();relics.splice(${i},1);cardCands=null;renderRun()">✕</button></span>`).join('');
+  $('#relicAct').innerHTML=relics.filter(r=>FX[r]).map(r=>recPanel(r,true)).join('');
+  renderSim();
+}
+// what-if
+const TABS=['Add card','Remove','Upgrade','Shop','Next best','Relic'];let tab=0;let cands=['Wallop','Sanctity','Conclude'];
+$('#simTabs').innerHTML=TABS.map((t,i)=>`<button class="${i==tab?'on':''}" data-i="${i}">${t}</button>`).join('');
+$('#simTabs').onclick=e=>{if(e.target.dataset.i==null)return;tab=+e.target.dataset.i;document.querySelectorAll('#simTabs button').forEach((b,i)=>b.classList.toggle('on',i==tab));renderSim();if(tab==3)openShop()};
+function rows(items,sub,ov,act){const w=score(deck,relics);const r=items.map(n=>{const o=ov?ov(n):null;return o==='pending'?{n,pend:1,d:-1e9}:o?{n,d:o.d,se:o.se,ms:o.ms,n2:o.n}:{n,d:(hash(n+sub+model)-.42)*.06*Math.max(.3,w*4)}}).sort((a,b)=>b.d-a.d);
+ return `<div class="res"><span>Skip / do nothing</span><span class="mono">${pct(w)}</span><span class="mono note">baseline</span></div>`+r.map((x,i)=>x.pend?`<div class="res"><span>${x.n}</span><span class="note" style="grid-column:2/4;text-align:right">${THINK}</span></div>`:`<div class="res"><span>${x.n}${i==0&&x.d>0?'<span class="best">BEST</span>':''}${act?` <button class="b" style="padding:1px 8px;font-size:11px" onclick='${act.fn}(${JSON.stringify(x.n).replace(/'/g,"&#39;")})'>${act.label}</button>`:''}</span><span class="mono">${pct(w+x.d)}</span><span class="mono delta ${x.d>=0?'up':'dn'}">${x.d>=0?'+':''}${(x.d*100).toFixed(2)}${x.se?`<span class="note"> ±${(x.se*100).toFixed(2)}</span>`:''}</span></div>`).join('')}
+function renderSim(){const b=$('#simBody');
+ if(tab==0||tab==5)renderCandTab(b,tab==5);
+ else if(tab==1)b.innerHTML=`<div class="lbl">Every card in the deck, ranked by what removing one copy does</div>`+rows([...new Set(deck.map(c=>c.n+(c.u?'+':'')))],'r',null,{label:'Remove',fn:'removeByKey'});
+ else if(tab==2)b.innerHTML=`<div class="lbl">Every upgradable card, ranked</div>`+rows(deck.filter(c=>!c.u&&c.t!='curse').map(c=>c.n),'u',null,{label:'Upgrade',fn:'upgradeByName'});
+ else if(tab==3)renderShopSummary(b);
+ else b.innerHTML=`<div class="lbl">Best single card to add from the full card pool</div>`+rows(topPicks(),'n',null,{label:'Add',fn:'addFromSim'})+`<div class="note" style="margin-top:6px">Searched: ${poolLabel()}</div>`}
+
+// relics that remove or transform cards
+const FX={'Empty Cage':{kind:'remove',n:2,note:'Remove 2 cards (one time)'},'Astrolabe':{kind:'transform',n:3,up:1,note:'Transform 3 cards into random upgraded ones (one time)'},'Peace Pipe':{kind:'remove',n:1,note:'Remove 1 card at each rest site (repeatable)',rep:1},"Pandora's Box":{kind:'all',note:'Transforms every Strike and Defend into a random card (on pickup, no choice)'}};
+const keyOf=e=>e.n+(e.u?'+':'');
+const xPool=()=>poolList().filter(c=>!['colorless','curse','starter'].includes(c.own));
+const delPool=(d,e)=>d.map(x=>x===e?{...x,c:x.c-1}:x).filter(x=>x.c>0);
+function xDelta(d,e,fx){const b=score(d,relics),w=delPool(d,e);if(fx.kind=='remove')return score(w,relics)-b;const P=xPool();let t=0;for(const c of P)t+=score([...w,{n:c.n,t:c.t,c:1,u:fx.up?1:0}],relics);return t/P.length-b}
+function recFor(name){const fx=FX[name];let d=deck.map(x=>({...x})),picks=[],ranked=[];
+ if(fx.kind=='all'){const basic=d.filter(x=>x.n=='Strike'||x.n=='Defend'),n=basic.reduce((s,x)=>s+x.c,0),rest=d.filter(x=>!(x.n=='Strike'||x.n=='Defend')),P=xPool();let t=0;for(let k=0;k<12;k++){const draw=[...P].sort((a,b)=>hash(a.n+k)-hash(b.n+k)).slice(0,n).map(c=>({n:c.n,t:c.t,c:1}));t+=score([...rest,...draw],relics)}return{fx,n,basic,exp:t/12-score(d,relics)}}
+ for(let i=0;i<fx.n;i++){let best=null;for(const e of d){const dl=xDelta(d,e,fx);if(!best||dl>best.dl)best={e,dl}}if(!best)break;picks.push({name:keyOf(best.e),dl:best.dl,e:best.e});d=delPool(d,best.e)}
+ const base=deck.map(x=>({...x}));ranked=base.map(e=>({name:keyOf(e),c:e.c,dl:xDelta(base,e,fx)})).sort((a,b)=>b.dl-a.dl);
+ return{fx,picks,ranked,total:picks.reduce((s,p)=>s+p.dl,0)}}
+const sg=x=>(x>=0?'+':'')+(x*100).toFixed(2);
+function previewCombined(name){ // remove relics only (exact, instant); safe whether or not the relic is already in `relics`
+ const without=relics.filter(r=>r!=name),b0=score(deck,without),had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name);return score(deck,[...without,name])+r.total-b0}finally{if(!had)relics.pop()}}
+// Adaptive Monte Carlo for relics whose result is random (transform). Stops at SE < 0.1 pts, 2000 draws, or 2 s, whichever comes first.
+const SE_TARGET=0.001,MAX_DRAWS=2000,MAX_MS=2000,BATCH=64,MOCK_LATENCY_MS=40; // MOCK_LATENCY_MS stands in for one batched model call
+const simCache=new Map(),simRun=new Set(),simProg={};let simBusy=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const deckKey=()=>deck.map(c=>keyOf(c)+'x'+c.c).join(',');
+const simKey=(name,pv)=>[name,pv?'p':'h',ch,model,(pv?relics.filter(r=>r!=name):relics).join(','),deckKey()].join('|');
+function rng(seed){let a=0;for(const c of seed)a=(a*31+c.charCodeAt(0))>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function simGet(name,pv){const k=simKey(name,pv);if(simCache.has(k))return simCache.get(k);if(!simRun.has(k)){simRun.add(k);runSim(name,pv,k)}return null}
+async function runSim(name,pv,k){const t0=performance.now(),fx=FX[name];
+ const without=relics.filter(r=>r!=name),withRel=[...without,name];
+ let plan;const had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name);plan=fx.kind=='all'?{w:deck.filter(x=>!(x.n=='Strike'||x.n=='Defend')).map(x=>({...x})),slots:Array(r.n).fill(''),up:0}:(()=>{let w=deck.map(x=>({...x}));for(const p of r.picks){const t=w.find(x=>keyOf(x)==p.name);if(t)t.c--}return{w:w.filter(x=>x.c>0),slots:r.picks.map(p=>p.name.replace('+','')),up:fx.up?1:0}})()}finally{if(!had)relics.pop()}
+ const base=pv?score(deck,without):score(deck,withRel);const P=xPool(),R=rng(k);let n=0,mean=0,M2=0,se=1,capped=false;simBusy++;updThink(name,0,1);
+ while(true){for(let i=0;i<BATCH;i++){const draw=plan.slots.map(ex=>{let c;do{c=P[Math.floor(R()*P.length)]}while(c.n==ex);return{n:c.n,t:c.t,c:1,u:plan.up}});const v=score([...plan.w,...draw],withRel)-base;n++;const d=v-mean;mean+=d/n;M2+=d*(v-mean)}
+  se=Math.sqrt(M2/(n-1)/n);const el=performance.now()-t0;simProg[k]={n,se};updThink(name,n,se);
+  if(n>=128&&se<SE_TARGET)break;if(n>=MAX_DRAWS)break;if(el>=MAX_MS){capped=se>=SE_TARGET;break}
+  await sleep(MOCK_LATENCY_MS)}
+ simCache.set(k,{mean,se,n,ms:performance.now()-t0,capped});simBusy--;updThink();refreshRelicUI()}
+function updThink(name,n,se){const e=$('#think');if(!e)return;if(simBusy<=0){e.style.display='none';return}e.style.display='flex';e.innerHTML=`<i class="spin"></i><span>Thinking… simulating ${name||'relics'}${n?` · ${n} draws · ±${(se*100).toFixed(2)} pts`:''} <span class="note">(max 2 s)</span></span>`}
+function refreshRelicUI(){$('#relicAct').innerHTML=relics.filter(r=>FX[r]).map(r=>recPanel(r,true)).join('');if(tab==5)renderSim()}
+const THINK='<span class="think"><i class="spin"></i>Thinking…</span>';
+function simLine(name,pv){const fx=FX[name];if(fx.kind=='remove')return{mean:pv?previewCombined(name):recFor(name).total,se:0,n:0};return simGet(name,pv)}
+function fmtSim(v){return `<b class="${v.mean>=0?'up':'dn'}">${sg(v.mean)} pts</b>${v.n?` ± ${(v.se*100).toFixed(2)} (${v.n} draws · ${(v.ms/1000).toFixed(1)} s)`:''}${v.capped?' <span class="dn">Stopped at the 2 s limit, so the error is wider than the ±0.1 target.</span>':''}`}
+function recPanel(name,act){const pv=!act&&!relics.includes(name);if(pv){relics.push(name);try{return recPanel2(name,act,true)}finally{relics.pop()}}return recPanel2(name,act,false)}
+function recPanel2(name,act,pv){const r=recFor(name),fx=r.fx,done=used.has(name)&&!fx.rep,v=simLine(name,pv),lead=pv?'Take it and use it':'Change from using it',val=v?fmtSim(v):THINK,vd=v?(v.mean>0.002?'Worth taking':v.mean<-0.002?'Probably skip':'Roughly neutral'):'',how=pv?'The relic and the changed deck are scored together as one state, not added.':'The relic is already counted.';
+ let h=`<div class="panel" style="background:var(--panel2);margin:8px 0"><div class="bar"><b>${name}</b><span class="tag">${fx.kind=='remove'?'removes':fx.kind=='all'?'transforms all basics':'transforms'}</span><span class="sp"></span>${done?'<span class="tag">used</span>':''}</div><div class="note">${fx.note}</div>`;
+ if(fx.kind=='all'){h+=`<div style="margin:8px 0">Affects <b>${r.n}</b> Strike/Defend cards. ${lead}: ${val}<div class="note">${how}</div></div><div class="note">${v?`Verdict: <b>${vd}</b>. `:''}You get no choice, so the recommendation is about taking the relic, not which cards.</div>`;
+  if(act)h+=`<button class="b pri" style="margin-top:8px" ${done?'disabled':''} onclick="applyRelic('${name}')">Apply (enter what you got)</button>`}
+ else{h+=`<div style="margin:8px 0">Recommended: ${r.picks.map(p=>`<span class="chip" style="border-color:var(--good)">${p.name} <span class="${p.dl>=0?'up':'dn'}">${sg(p.dl)}</span></span>`).join('')||'none'}</div><div class="note">${lead}: ${val}. ${how} Per-card numbers above are the card change alone.${fx.kind=='transform'?' Transform value is sampled over the cards you could get (a card can repeat, and never becomes itself). Greedy pick; later picks assume earlier ones are gone.':''}</div>
+  <details style="margin-top:6px"><summary class="note" style="cursor:pointer">All cards ranked</summary>${r.ranked.map(x=>`<div class="res"><span>${x.name}${x.c>1?' ×'+x.c:''}</span><span></span><span class="mono delta ${x.dl>=0?'up':'dn'}">${sg(x.dl)}</span></div>`).join('')}</details>`;
+  if(act)h+=`<button class="b pri" style="margin-top:8px" ${done||!r.picks.length?'disabled':''} onclick="applyRelic('${name}')">Apply recommended${fx.kind=='transform'?' (enter results)':''}</button>`}
+ return h+'</div>'}
+function applyRelic(name){const r=recFor(name),fx=r.fx;let removeList=[],adds=[];
+ if(fx.kind=='all'){removeList=r.basic.map(x=>x.e||x);}else removeList=r.picks.map(p=>p.e);
+ const nAdd=fx.kind=='remove'?0:(fx.kind=='all'?r.n:r.picks.length);
+ if(nAdd){const txt=prompt(`Enter the ${nAdd} card${nAdd>1?'s':''} you received, comma separated`);if(txt==null)return;const names=txt.split(',').map(x=>x.trim()).filter(Boolean);if(names.length!=nAdd){alert(`Need exactly ${nAdd} cards`);return}
+  for(const n of names){const c=checkCard(n);if(c.err){alert(c.err);return}adds.push({n:c.c.n,t:c.c.t,c:1,u:fx.up?1:0})}}
+ snap();
+ if(fx.kind=='all'){deck=deck.filter(x=>!(x.n=='Strike'||x.n=='Defend'))}else for(const e of removeList){const t=deck.find(x=>keyOf(x)==keyOf(e));if(t){t.c--;if(t.c<=0)deck.splice(deck.indexOf(t),1)}}
+ for(const a of adds){const t=deck.find(x=>x.n==a.n&&!!x.u==!!a.u);t?t.c++:deck.push(a)}
+ used.add(name);renderRun()}
+let cardCands=null,relicCands=['Runic Pyramid','Snecko Eye','Calipers'],candErr='';
+const defaultCands=()=>poolList().filter(c=>c.own==ch).slice(2,5).map(c=>c.n);
+const topPicks=()=>poolList().filter(c=>c.t!='curse').map(c=>({n:c.n,d:score([...deck,{n:c.n,t:c.t,c:1}],relics)})).sort((a,b)=>b.d-a.d).slice(0,5).map(x=>x.n);
+function renderCandTab(b,rel){if(!cardCands)cardCands=defaultCands();const list=rel?relicCands:cardCands;
+ b.innerHTML=`<div class="lbl">${rel?'Relic':'Card'} reward options${rel?'':' · pool: '+poolLabel()}</div><div class="chips">${list.map((c,i)=>`<span class="chip">${c}<b onclick="${rel?'relicCands':'cardCands'}.splice(${i},1);renderSim()">✕</b></span>`).join('')}</div><div class="bar"><input id="simIn" list="${rel?'relicList':'cardList'}" placeholder="Type a ${rel?'relic':'card'} name, Enter to add" style="flex:1"></div>${rel?'<datalist id="relicList">'+relicPool().map(r=>`<option value="${r.n}">`).join('')+'</datalist>':'<datalist id="cardList">'+poolList().map(c=>`<option value="${c.n}">`).join('')+'</datalist>'}<div class="dn note" id="candErr">${candErr}</div><div style="margin-top:10px">${rows(list,'a'+(rel?5:0),rel?n=>{if(!FX[n])return null;if(FX[n].kind=='remove')return{d:previewCombined(n)};const v=simGet(n,true);return v?{d:v.mean,se:v.se}:'pending'}:null,rel?{label:'Take',fn:'takeRelic'}:{label:'Add',fn:'addFromSim'})}</div>${rel?list.filter(r=>FX[r]).map(r=>recPanel(r,false)).join(''):''}`;
+ $('#simIn').onkeydown=e=>{if(e.key!='Enter'||!e.target.value)return;if(rel){const r=checkRelic(e.target.value);if(r.err)candErr=r.err;else if(relicCands.includes(r.r.n))candErr=r.r.n+' is already in the list';else{relicCands.push(r.r.n);candErr=''}}else{const r=checkCard(e.target.value);if(r.err)candErr=r.err;else{cardCands.push(r.c.n);candErr=''}}renderSim()}}
+function resetRun(){const st=STARTER[ch];deck=st.cards.map(([n,t,c])=>({n,t,c}));relics=[st.relic];hist=[];used=new Set();gold=300;rmTarget=deck[0].n;cardCands=null;relicCands=['Runic Pyramid','Snecko Eye','Calipers'];candErr='';picks=new Set();genShop();$('#shopOv').classList.remove('on');setFloor(1)}
+function startRun(){resetRun();go('run')}
+const hasProgress=()=>floor>1||hist.length>0;
+$('#resetRun').onclick=()=>{if(!confirm(`Reset to floor 1 with the starting ${ch} deck and relic? Your current deck and relics will be lost.`))return;resetRun()};
+function genShop(){const own=Object.values(CARDS).filter(c=>allowed(c)&&c.own!='colorless'&&c.own!='curse'&&c.own!='starter'),cl=Object.values(CARDS).filter(c=>c.own=='colorless');
+ const cs=own.slice(0,60).sort((a,b)=>hash(a.n+ch)-hash(b.n+ch)).slice(0,5).map((c,i)=>({n:c.n,k:'card',t:c.t,p:[55,68,82,140,61][i],sale:i==2}));
+ const cls=cl.sort((a,b)=>hash(a.n+ch)-hash(b.n+ch)).slice(0,2).map((c,i)=>({n:c.n,k:'card',t:c.t,p:[112,96][i],cl:1}));
+ shop=[...cs,...cls,...['Runic Pyramid','Calipers','Orrery','Snecko Eye'].filter(n=>!holds(n)).slice(0,3).map((n,i)=>({n,k:'relic',p:[260,195,155][i]}))]}
+// shop simulator
+let gold=300;let shopView='visual';let picks=new Set();let rmTarget="Ascender's Bane";
+let shop=[{n:'Wallop',k:'card',t:'attack',p:55},{n:'Sanctity',k:'card',t:'skill',p:68},{n:'Conclude',k:'card',t:'attack',p:82,sale:1},{n:'Fasting',k:'card',t:'power',p:140},{n:'Prostrate',k:'card',t:'skill',p:61},
+ {n:'Enlightenment',k:'card',t:'skill',p:112,cl:1},{n:'Panacea',k:'card',t:'skill',p:96,cl:1},
+ {n:'Runic Pyramid',k:'relic',p:260},{n:'Calipers',k:'relic',p:195},{n:'Orrery',k:'relic',p:155}];
+const RM={n:'Card removal',k:'remove',p:75};
+const allItems=()=>[...shop,{...RM,t:rmTarget}];
+function shopDelta(items){const w=score(deck,relics);let d=0;for(const x of items){d+=x.k=='remove'?(hash(x.t+model)*.04+(x.t.includes('Bane')?.02:0)):(hash(x.n+'s'+model)-.42)*.06*Math.max(.3,w*4)}return d}
+function bestBasket(){const it0=allItems();let best={d:0,set:[],c:0};const n=it0.length;for(let m=1;m<(1<<n);m++){const it=it0.filter((_,i)=>m>>i&1);const c=it.reduce((s,x)=>s+x.p,0);if(c>gold)continue;const d=shopDelta(it);if(d>best.d)best={d,set:it,c}}return best}
+const key=x=>x.k+':'+x.n;
+function chosen(){return allItems().filter(x=>picks.has(key(x)))}
+function renderShopSummary(b){const sel=chosen(),d=shopDelta(sel),cost=sel.reduce((s,x)=>s+x.p,0);
+ b.innerHTML=`<div class="lbl">Shop simulator</div><div class="bar" style="margin:8px 0"><div class="gold"><i></i>${gold}</div><span class="sp"></span><button class="b pri" onclick="openShop()">Open shop</button></div><div class="note">${sel.length?`Basket: ${sel.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(', ')} · ${cost}g · <span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(2)} pts</span>`:'Nothing selected. Open the shop, enter what is for sale, and pick items.'}</div>`}
+function addShopCard(){const txt=prompt('Card or relic name')||'';if(RELICS[nk(txt)]){const rr=checkRelic(txt);if(rr.err){alert(rr.err);return}shop.push({n:rr.r.n,k:'relic',p:+prompt('Price')||150});renderShop();return}const r=checkCard(txt);if(r.err){alert(r.err);return}shop.push({n:r.c.n,k:'card',t:r.c.t,p:+prompt('Price')||50,cl:r.c.own=='colorless'?1:0});renderShop()}
+function openShop(){$('#shopOv').classList.add('on');renderShop()}
+function closeShop(){$('#shopOv').classList.remove('on');renderSim()}
+function item(x,bestSet){const off=x.p>gold,on=picks.has(key(x)),dd=shopDelta([x]);const isBest=bestSet.some(y=>key(y)==key(x));
+ const vis=x.k=='card'?`<div class="card ${x.t} ${x.cl?'':''}" style="--c:${x.cl?'var(--mute)':''}">${x.sale?'<span class="sale">SALE</span>':''}<div class="art"></div><div class="nm">${x.n}</div><div class="ty">${x.t}${x.cl?' · colorless':''}</div></div>`:`<div class="tok">${x.n}</div>`;
+ return `<div class="si ${on?'on':''} ${off?'off':''} ${isBest?'best':''}" data-k="${key(x)}">${vis}<span class="price ${off?'no':''}"><i></i>${x.p}</span><span class="dl ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)}</span></div>`}
+function listView(bestSet){return `<div class="tblwrap"><table><tr><th></th><th>Item</th><th>Type</th><th>Price</th><th>Win-rate change</th></tr>`+[...shop].sort((a,b)=>({card:0,relic:1}[a.k]-{card:0,relic:1}[b.k])||(!!a.cl-!!b.cl)).map(x=>{const off=x.p>gold,dd=shopDelta([x]),b=bestSet.some(y=>key(y)==key(x));return `<tr class="m si-l ${picks.has(key(x))?'sel':''}" data-k="${key(x)}" style="${off?'opacity:.4;cursor:not-allowed':''}"><td><input type="checkbox" ${picks.has(key(x))?'checked':''} ${off?'disabled':''} tabindex="-1"></td><td><b>${x.n}</b>${b?' <span class="tag rec">BEST BASKET</span>':''}${x.sale?' <span class="tag">sale</span>':''}</td><td>${x.k=='card'?x.t+(x.cl?' · colorless':''):'relic'}</td><td class="mono ${off?'dn':''}">${x.p}g</td><td class="mono delta ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)}</td></tr>`}).join('')+`</table></div>`}
+function renderShop(){const w=score(deck,relics),sel=chosen(),d=shopDelta(sel),cost=sel.reduce((s,x)=>s+x.p,0),bb=bestBasket();
+ const rm={...RM,t:rmTarget},rmOn=picks.has(key(rm)),rmOff=rm.p>gold,rmd=shopDelta([rm]);
+ const cards=shop.filter(x=>x.k=='card'&&!x.cl),cl=shop.filter(x=>x.cl),rl=shop.filter(x=>x.k=='relic');
+ $('#shopBox').innerHTML=`<div class="bar"><h1 style="margin:0">Merchant</h1><div class="tabs" style="margin:0 0 0 12px"><button class="${shopView=='visual'?'on':''}" data-v="visual">Visual</button><button class="${shopView=='list'?'on':''}" data-v="list">List</button></div><span class="sp"></span><div class="gold"><i></i><input type="number" id="goldIn" value="${gold}" style="width:90px;font-size:16px"></div><button class="b" id="closeShop">Close ✕</button></div>
+ <p class="note">Enter the shop's stock and prices, then click items to build a basket. Green number = change in Heart-kill probability (points). Dashed outline = part of the best basket within your gold. Card pool: ${poolLabel()}.</p>
+ <div class="shopg"><div>
+  ${shopView=='visual'?`<div class="shl">Cards</div><div class="shelf">${cards.map(x=>item(x,bb.set)).join('')}</div>
+  <div class="shl">Colorless</div><div class="shelf c2">${cl.map(x=>item(x,bb.set)).join('')}</div>
+  <div class="shl">Relics</div><div class="relicrow">${rl.map(x=>item(x,bb.set)).join('')}</div>`:listView(bb.set)}
+  <button class="b" style="margin-top:10px" onclick="addShopCard()">＋ Add item</button>
+ </div><div>
+  <div class="svc ${rmOn?'on':''} ${rmOff?'off':''}" id="rmSvc" style="cursor:${rmOff?'not-allowed':'pointer'}"><div class="shl" style="margin-top:0">Card removal</div><div class="bin"></div>
+   <select id="rmSel" onclick="event.stopPropagation()" style="width:100%">${deck.map(c=>`<option ${c.n==rmTarget?'selected':''}>${c.n}</option>`).join('')}</select>
+   <div class="row2" style="margin-top:8px"><span class="price ${rmOff?'no':''}"><i></i>${rm.p}</span><span class="dl ${rmd>=0?'up':'dn'}">${rmd>=0?'+':''}${(rmd*100).toFixed(2)}</span></div></div>
+  <div class="svc" style="text-align:left"><div class="shl" style="margin-top:0">Basket</div>
+   <div class="note">${sel.length?sel.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(', '):'Empty'}</div>
+   <div class="row2" style="margin:8px 0"><span>Cost ${cost}/${gold}</span><b class="mono">${pct(w+d)} <span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(2)}</span></b></div>
+   ${cost>gold?'<div class="dn note">Over budget</div>':''}
+   <div class="note">Best: ${bb.set.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(' + ')||'buy nothing'} (${bb.c}g)</div>
+   <div class="bar" style="margin-top:10px"><button class="b" id="bestB">Select best</button><button class="b" id="clrB">Clear</button><button class="b pri" id="buyB">Buy</button></div></div>
+  <div class="note">Mockup scores items independently. The real version re-scores the whole basket so purchases interact.</div>
+ </div></div>`;
+ $('#closeShop').onclick=closeShop;
+ $('#goldIn').onchange=e=>{gold=+e.target.value;picks=new Set([...picks].filter(k=>{const x=allItems().find(y=>key(y)==k);return x&&x.p<=gold}));renderShop()};
+ $('#shopBox').querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{shopView=b.dataset.v;renderShop()});
+ $('#shopBox').querySelectorAll('.si,.si-l').forEach(el=>el.onclick=()=>{const k=el.dataset.k,x=allItems().find(y=>key(y)==k);if(x.p>gold)return;picks.has(k)?picks.delete(k):picks.add(k);renderShop()});
+ $('#rmSvc').onclick=()=>{if(rmOff)return;const k=key(rm);picks.has(k)?picks.delete(k):picks.add(k);renderShop()};
+ $('#rmSel').onchange=e=>{picks.delete(key(rm));rmTarget=e.target.value;renderShop()};
+ $('#bestB').onclick=()=>{picks=new Set(bb.set.map(key));renderShop()};$('#clrB').onclick=()=>{picks=new Set();renderShop()};
+ $('#buyB').onclick=()=>{applyShop();closeShop()}}
+function applyShop(){snap();const sel=chosen();for(const x of sel){if(x.k=='card'){const e=deck.find(c=>c.n==x.n&&!c.u);e?e.c++:deck.push({n:x.n,t:x.t,c:1})}else if(x.k=='relic')relics.push(x.n);else{const j=deck.findIndex(c=>c.n==x.t);if(j>=0){deck[j].c--;if(deck[j].c<=0)deck.splice(j,1)}}}gold-=sel.reduce((s,x)=>s+x.p,0);shop=shop.filter(x=>!picks.has(key(x)));picks=new Set();renderRun()}
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){closeShop();closePicker()}if((e.metaKey||e.ctrlKey)&&e.key=='z'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#undo').click()}});
+$('#sort').onchange=renderRun;
+
+// models
+function renderModels(){
+ const cols=[['AUC','auc',4],['Log loss','ll',4],['ECE','ece',4],['Brier','brier',5],['Prec @0.5','p',3],['Recall @0.5','r',3],['F1 @0.5','f1',3],['Avg prec.','ap',4]];
+ $('#mt').innerHTML=`<tr><th>Model</th><th>Type</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}<th>Train time</th><th></th></tr>`+MODELS.map(m=>`<tr class="m ${m.id==model?'sel':''}" data-id="${m.id}"><td><b>${m.id}</b> ${m.id==best.id?'<span class="tag rec">RECOMMENDED</span>':''}${m.leg?'<span class="tag leg">legacy</span>':''}</td><td>${m.fam}</td>${cols.map(c=>`<td class="mono">${m[c[1]]==null?'—':m[c[1]].toFixed(c[2])}</td>`).join('')}<td>${m.t}</td><td><button class="b ${m.id==model?'pri':''}" data-use="${m.id}">${m.id==model?'In use':'Use'}</button></td></tr>`).join('');
+ $('#mt').onclick=e=>{const u=e.target.dataset.use;if(u){setModel(u);return}const tr=e.target.closest('tr.m');if(tr)show(tr.dataset.id)};
+ const v=MODELS.filter(m=>m.auc);const mx=k=>Math.max(...v.map(m=>m[k])),mn=k=>Math.min(...v.map(m=>m[k]));
+ const bars=(k,lab,dg,inv)=>`<div><h2>${lab}</h2>${v.map(m=>{const lo=mn(k),hi=mx(k),f=(m[k]-lo)/((hi-lo)||1);const p=15+(inv?1-f:f)*85;return `<div class="mb"><span>${m.id.replace('fnn_','')}</span><div class="track"><div class="fill" style="width:${p}%;${m.id==best.id?'background:var(--good)':''}"></div></div><span class="mono">${m[k].toFixed(dg)}</span></div>`}).join('')}<div class="note">${inv?'Lower is better (bars inverted).':'Higher is better.'}</div></div>`;
+ $('#cmp').innerHTML=bars('ll','Log loss',5,1)+bars('auc','AUC',4)+bars('ece','ECE (calibration error)',4,1)+bars('brier','Brier',5,1)+bars('p','Precision @0.5',3)+bars('r','Recall @0.5',3)+bars('f1','F1 @0.5',3)+bars('ap','Average precision',4);
+ show(model)}
+function show(id){const m=MODELS.find(x=>x.id==id);$('#detail').innerHTML=`<h2>${m.id}</h2><p>${m.desc}</p><div class="two"><div><span class="lbl">Heads</span><br>${m.mt?'5 (act 1, act 2, act 3, act 3 second boss, Heart)':'1 (Heart)'}</div><div><span class="lbl">Input</span><br>929 features: deck, relics, floor, character</div></div><p class="note" style="margin-top:10px">Detail page would also link the analysis notebook and show interaction findings (additive share, top pair interactions) when available.</p>`}
+
+const ROAD=[
+ {s:'decision',t:'Backend and stack',d:'Proposed: a small FastAPI server wrapping the existing PyTorch inference code, with a React or plain-JS frontend in ui/. Alternative: fully local Streamlit.'},
+ {s:'decision',t:'Card art and costs',d:'The dataset has no card costs or images. Mockup uses coloured placeholders by card type. Decide whether to keep that or bring in a card data source.'},
+ {s:'decision',t:'Current card names',d:'Show current in-game names and map them to old dataset column names (Rushdown = adaptation, Foresight = wireheading, Equilibrium = undo). RENAMES in scripts/name_utils.py is a start but incomplete. This is the second fix in the README naming note.'},
+ {s:'decision',t:'Model metrics source',d:'Proposed: a small metrics.json beside each .pth so a new model (e.g. v22) appears in the directory and becomes the default automatically. Models before v21 have no comparable metrics (different test split).'},
+ {s:'planned',t:'Shop basket re-scoring',d:'The shop simulator mockup scores items independently. The real version must re-score the whole basket so purchases interact (e.g. a card plus a removal).'},
+ {s:'idea',t:'Train and Build Data pages',d:'Greyed out in the nav. The CLI never implemented them either.'}];
+$('#road').innerHTML=ROAD.map(r=>`<div class="panel"><div class="bar"><b>${r.t}</b><span class="tag ${r.s=='planned'?'rec':''}">${r.s}</span></div><p class="note" style="margin:6px 0 0">${r.d}</p></div>`).join('');
+$('#quickBtn').onclick=quickAdd;$('#quickAdd').onkeydown=e=>{if(e.key=='Enter')quickAdd()};
+$('#relicAdd').onclick=()=>{const v=$('#relicIn').value.trim();if(!v)return;const r=checkRelic(v);if(r.err){$('#relicErr').textContent=r.err;return}$('#relicErr').textContent='';snap();relics.push(r.r.n);$('#relicIn').value='';cardCands=null;genShop();renderRun()};
+$('#relicIn').onkeydown=e=>{if(e.key=='Enter')$('#relicAdd').click()};
+genShop();
+fillSel($('#hdrModel'));fillSel($('#setupModel'));setModel(model);
+</script></body></html>

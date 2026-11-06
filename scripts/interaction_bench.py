@@ -9,7 +9,7 @@ Models are TorchScript files in model_objects/production, the Heart head (last o
     sections  combos, upgrades, picks (default all three)
     data      data folder under data/ (default training_data). Folders written by process_data.py since v24 carry HP / max HP / gold columns after the
               929 features (layout.json); models are fed the extras their config.json lists, models without extras ignore them. The counterfactual
-              contexts keep each held-out deck's own HP and gold. The picks section is skipped for such folders (decisions_X.npy has no run state)
+              contexts keep each held-out deck's own HP and gold. The picks section then reads decisions_v24_X.npy / _M.npy (HP and gold of the reward's floor)
     n_null    random control pairs per character (default 25)
     seed      seed for control pairs, contexts and the control row sample (default 0)
 
@@ -26,7 +26,7 @@ What each section answers
                       states gives similar values), with the training rows each version combination has.
             effects:  model-implied logit change from upgrading each card.
             rare:     held-out calibration of the plain / upgraded copy of every card, grouped by how many training rows had that state.
-  picks     Card pick decisions of A20 held-out runs (data/bench/decisions_*.npy, built by extract_pick_decisions.py):
+  picks     Card pick decisions of A20 held-out runs (data/bench/decisions*_X.npy / _M.npy, built by extract_pick_decisions.py):
             per-card calibration after the pick, and how often the model's best option is the one the player took.
 '''
 
@@ -473,11 +473,12 @@ def summarise_rare(rare):
 
 def run_picks(nets):
     bench = f'{ROOT}/data/bench'
-    if not os.path.exists(f'{bench}/decisions_X.npy'):
+    tag = '_v24' if N_EXTRA else ''
+    if not os.path.exists(f'{bench}/decisions{tag}_X.npy'):
         print('  no pick decisions found (run scripts/extract_pick_decisions.py), skipping')
         return None, None
-    X = np.load(f'{bench}/decisions_X.npy', mmap_mode = 'r')
-    M = np.load(f'{bench}/decisions_M.npy')
+    X = np.load(f'{bench}/decisions{tag}_X.npy', mmap_mode = 'r')
+    M = np.load(f'{bench}/decisions{tag}_M.npy')
     picked, offered, y, floor = M[:, 0].astype(int), M[:, 1:6].astype(int), M[:, 6].astype(int), M[:, 7].astype(int)
     N = len(M)
     has = picked >= 0
@@ -606,9 +607,7 @@ if __name__ == '__main__':
         rare.to_csv(f'{out_dir}/rare_cells.csv', index = False)
         summary['rare_cells'] = summarise_rare(rare)
 
-    if 'picks' in sections and N_EXTRA:
-        print('Card picks skipped: the saved pick decisions have no HP / gold (extract_pick_decisions.py would need to write them)')
-    elif 'picks' in sections:
+    if 'picks' in sections:
         print('Card picks')
         agree, cal = run_picks(nets)
         if agree is not None:

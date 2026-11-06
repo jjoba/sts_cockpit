@@ -1,0 +1,4 @@
+model,pairs,mean_spread_across_states,median_spread_across_states,mean_rarest_vs_best_supported_gap
+fnn_v25_ft_mt_hp_gold_flip_inv_freq,190,0.03271145250550452,0.02402549860331204,0.01709064955892345
+fnn_v25_ft_mt_hp_gold_flip_synthetic,190,0.03180824969799704,0.02255328210443258,0.016369920547327263
+fnn_v24_ft_mt_hp_gold_noflip,190,0.03313342624529884,0.024968228610198928,0.018111145386510864

@@ -1,0 +1,431 @@
+/Users/johnjoba/local_git_repos/sts_cockpit/scripts/train_model.py:514: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  weight_norm = float(torch.sqrt(sum((p ** 2).sum() for p in model.parameters() if p.dim() > 1)))
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Using device: mps
+Cumulative upgrade encoding: 350 upgraded columns added onto their plain columns
+Model has 3,463,317 parameters
+Flip statistics: 26 of 350 upgraded columns have under 1000 training rows
+baseline constant_base_rate: log_loss 0.0914, auc 0.5000, avg_precision 0.0183
+baseline character_floor_lookup: log_loss 0.0718, auc 0.8265, avg_precision 0.1639
+baseline logistic_regression: log_loss 0.0577, auc 0.9026, avg_precision 0.4155
+Training on destination: pre_training_alpha
+pre_training_alpha epoch 1/4
+-------------------------------
+  batch 20000/497986, running loss 0.25764, heart 0.04152
+  batch 40000/497986, running loss 0.25007, heart 0.03874
+  batch 60000/497986, running loss 0.24646, heart 0.03754
+  batch 80000/497986, running loss 0.24418, heart 0.03693
+  batch 100000/497986, running loss 0.24252, heart 0.03642
+  batch 120000/497986, running loss 0.24114, heart 0.03594
+  batch 140000/497986, running loss 0.24002, heart 0.03564
+  batch 160000/497986, running loss 0.23906, heart 0.03535
+  batch 180000/497986, running loss 0.23818, heart 0.03517
+  batch 200000/497986, running loss 0.23748, heart 0.03503
+  batch 220000/497986, running loss 0.23680, heart 0.03488
+  batch 240000/497986, running loss 0.23625, heart 0.03477
+  batch 260000/497986, running loss 0.23575, heart 0.03466
+  batch 280000/497986, running loss 0.23531, heart 0.03457
+  batch 300000/497986, running loss 0.23486, heart 0.03448
+  batch 320000/497986, running loss 0.23447, heart 0.03438
+  batch 340000/497986, running loss 0.23412, heart 0.03432
+  batch 360000/497986, running loss 0.23383, heart 0.03424
+  batch 380000/497986, running loss 0.23355, heart 0.03414
+  batch 400000/497986, running loss 0.23325, heart 0.03405
+  batch 420000/497986, running loss 0.23299, heart 0.03397
+  batch 440000/497986, running loss 0.23272, heart 0.03388
+  batch 460000/497986, running loss 0.23246, heart 0.03384
+  batch 480000/497986, running loss 0.23219, heart 0.03378
+  train loss 0.03372 | finetuning test: log_loss 0.06376, auc 0.9018, avg_precision 0.3990, ece 0.00969 | 88.1 min
+pre_training_alpha epoch 2/4
+-------------------------------
+  batch 20000/497986, running loss 0.22658, heart 0.03285
+  batch 40000/497986, running loss 0.22665, heart 0.03254
+  batch 60000/497986, running loss 0.22658, heart 0.03262
+  batch 80000/497986, running loss 0.22645, heart 0.03267
+  batch 100000/497986, running loss 0.22612, heart 0.03259
+  batch 120000/497986, running loss 0.22585, heart 0.03248
+  batch 140000/497986, running loss 0.22586, heart 0.03250
+  batch 160000/497986, running loss 0.22564, heart 0.03235
+  batch 180000/497986, running loss 0.22547, heart 0.03233
+  batch 200000/497986, running loss 0.22543, heart 0.03233
+  batch 220000/497986, running loss 0.22532, heart 0.03230
+  batch 240000/497986, running loss 0.22527, heart 0.03231
+  batch 260000/497986, running loss 0.22520, heart 0.03233
+  batch 280000/497986, running loss 0.22518, heart 0.03233
+  batch 300000/497986, running loss 0.22513, heart 0.03233
+  batch 320000/497986, running loss 0.22505, heart 0.03231
+  batch 340000/497986, running loss 0.22498, heart 0.03229
+  batch 360000/497986, running loss 0.22494, heart 0.03225
+  batch 380000/497986, running loss 0.22487, heart 0.03225
+  batch 400000/497986, running loss 0.22480, heart 0.03221
+  batch 420000/497986, running loss 0.22472, heart 0.03220
+  batch 440000/497986, running loss 0.22466, heart 0.03218
+  batch 460000/497986, running loss 0.22462, heart 0.03214
+  batch 480000/497986, running loss 0.22455, heart 0.03212
+  train loss 0.03211 | finetuning test: log_loss 0.05983, auc 0.9058, avg_precision 0.4192, ece 0.00754 | 92.1 min
+pre_training_alpha epoch 3/4
+-------------------------------
+  batch 20000/497986, running loss 0.22283, heart 0.03124
+  batch 40000/497986, running loss 0.22273, heart 0.03141
+  batch 60000/497986, running loss 0.22286, heart 0.03151
+  batch 80000/497986, running loss 0.22275, heart 0.03148
+  batch 100000/497986, running loss 0.22278, heart 0.03151
+  batch 120000/497986, running loss 0.22285, heart 0.03160
+  batch 140000/497986, running loss 0.22283, heart 0.03165
+  batch 160000/497986, running loss 0.22270, heart 0.03161
+  batch 180000/497986, running loss 0.22262, heart 0.03159
+  batch 200000/497986, running loss 0.22257, heart 0.03158
+  batch 220000/497986, running loss 0.22247, heart 0.03158
+  batch 240000/497986, running loss 0.22242, heart 0.03160
+  batch 260000/497986, running loss 0.22237, heart 0.03160
+  batch 280000/497986, running loss 0.22235, heart 0.03163
+  batch 300000/497986, running loss 0.22231, heart 0.03162
+  batch 320000/497986, running loss 0.22226, heart 0.03163
+  batch 340000/497986, running loss 0.22219, heart 0.03161
+  batch 360000/497986, running loss 0.22216, heart 0.03162
+  batch 380000/497986, running loss 0.22213, heart 0.03163
+  batch 400000/497986, running loss 0.22206, heart 0.03163
+  batch 420000/497986, running loss 0.22205, heart 0.03162
+  batch 440000/497986, running loss 0.22201, heart 0.03157
+  batch 460000/497986, running loss 0.22194, heart 0.03155
+  batch 480000/497986, running loss 0.22192, heart 0.03157
+  train loss 0.03156 | finetuning test: log_loss 0.06131, auc 0.9095, avg_precision 0.4277, ece 0.00953 | 92.4 min
+pre_training_alpha epoch 4/4
+-------------------------------
+  batch 20000/497986, running loss 0.22082, heart 0.03137
+  batch 40000/497986, running loss 0.22053, heart 0.03138
+  batch 60000/497986, running loss 0.22051, heart 0.03117
+  batch 80000/497986, running loss 0.22060, heart 0.03122
+  batch 100000/497986, running loss 0.22059, heart 0.03125
+  batch 120000/497986, running loss 0.22064, heart 0.03133
+  batch 140000/497986, running loss 0.22059, heart 0.03125
+  batch 160000/497986, running loss 0.22063, heart 0.03124
+  batch 180000/497986, running loss 0.22049, heart 0.03125
+  batch 200000/497986, running loss 0.22052, heart 0.03127
+  batch 220000/497986, running loss 0.22055, heart 0.03129
+  batch 240000/497986, running loss 0.22055, heart 0.03131
+  batch 260000/497986, running loss 0.22053, heart 0.03131
+  batch 280000/497986, running loss 0.22050, heart 0.03130
+  batch 300000/497986, running loss 0.22052, heart 0.03129
+  batch 320000/497986, running loss 0.22049, heart 0.03128
+  batch 340000/497986, running loss 0.22051, heart 0.03125
+  batch 360000/497986, running loss 0.22053, heart 0.03123
+  batch 380000/497986, running loss 0.22049, heart 0.03122
+  batch 400000/497986, running loss 0.22046, heart 0.03123
+  batch 420000/497986, running loss 0.22046, heart 0.03122
+  batch 440000/497986, running loss 0.22043, heart 0.03125
+  batch 460000/497986, running loss 0.22042, heart 0.03123
+  batch 480000/497986, running loss 0.22042, heart 0.03122
+  train loss 0.03122 | finetuning test: log_loss 0.06065, auc 0.9098, avg_precision 0.4300, ece 0.00906 | 95.0 min
+Training on destination: pre_training_beta
+pre_training_beta epoch 1/10
+-------------------------------
+  batch 20000/159030, running loss 0.21879, heart 0.04757
+  batch 40000/159030, running loss 0.21824, heart 0.04749
+  batch 60000/159030, running loss 0.21788, heart 0.04734
+  batch 80000/159030, running loss 0.21767, heart 0.04741
+  batch 100000/159030, running loss 0.21738, heart 0.04733
+  batch 120000/159030, running loss 0.21718, heart 0.04722
+  batch 140000/159030, running loss 0.21700, heart 0.04721
+  train loss 0.04714 | finetuning test: log_loss 0.05922, auc 0.9133, avg_precision 0.4386, ece 0.00852 | 20.3 min
+pre_training_beta epoch 2/10
+-------------------------------
+  batch 20000/159030, running loss 0.21580, heart 0.04652
+  batch 40000/159030, running loss 0.21558, heart 0.04683
+  batch 60000/159030, running loss 0.21570, heart 0.04686
+  batch 80000/159030, running loss 0.21549, heart 0.04677
+  batch 100000/159030, running loss 0.21546, heart 0.04670
+  batch 120000/159030, running loss 0.21542, heart 0.04666
+  batch 140000/159030, running loss 0.21537, heart 0.04664
+  train loss 0.04660 | finetuning test: log_loss 0.05651, auc 0.9158, avg_precision 0.4424, ece 0.00539 | 20.7 min
+pre_training_beta epoch 3/10
+-------------------------------
+  batch 20000/159030, running loss 0.21471, heart 0.04658
+  batch 40000/159030, running loss 0.21492, heart 0.04636/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+
+  batch 60000/159030, running loss 0.21476, heart 0.04634
+  batch 80000/159030, running loss 0.21474, heart 0.04627
+  batch 100000/159030, running loss 0.21464, heart 0.04628
+  batch 120000/159030, running loss 0.21458, heart 0.04634
+  batch 140000/159030, running loss 0.21457, heart 0.04633
+  train loss 0.04632 | finetuning test: log_loss 0.05662, auc 0.9158, avg_precision 0.4478, ece 0.00600 | 21.0 min
+pre_training_beta epoch 4/10
+-------------------------------
+  batch 20000/159030, running loss 0.21415, heart 0.04584
+  batch 40000/159030, running loss 0.21407, heart 0.04600
+  batch 60000/159030, running loss 0.21416, heart 0.04613
+  batch 80000/159030, running loss 0.21402, heart 0.04611
+  batch 100000/159030, running loss 0.21407, heart 0.04616
+  batch 120000/159030, running loss 0.21402, heart 0.04620
+  batch 140000/159030, running loss 0.21397, heart 0.04620
+  train loss 0.04611 | finetuning test: log_loss 0.05696, auc 0.9176, avg_precision 0.4538, ece 0.00729 | 21.0 min
+pre_training_beta epoch 5/10
+-------------------------------
+  batch 20000/159030, running loss 0.21342, heart 0.04578
+  batch 40000/159030, running loss 0.21356, heart 0.04609
+  batch 60000/159030, running loss 0.21344, heart 0.04595
+  batch 80000/159030, running loss 0.21336, heart 0.04582
+  batch 100000/159030, running loss 0.21326, heart 0.04582
+  batch 120000/159030, running loss 0.21329, heart 0.04589
+  batch 140000/159030, running loss 0.21334, heart 0.04589
+  train loss 0.04591 | finetuning test: log_loss 0.05554, auc 0.9159, avg_precision 0.4511, ece 0.00442 | 21.2 min
+pre_training_beta epoch 6/10
+-------------------------------
+  batch 20000/159030, running loss 0.21281, heart 0.04538
+  batch 40000/159030, running loss 0.21290, heart 0.04565
+  batch 60000/159030, running loss 0.21295, heart 0.04561
+  batch 80000/159030, running loss 0.21288, heart 0.04567
+  batch 100000/159030, running loss 0.21301, heart 0.04578
+  batch 120000/159030, running loss 0.21295, heart 0.04570
+  batch 140000/159030, running loss 0.21289, heart 0.04572
+  train loss 0.04572 | finetuning test: log_loss 0.05629, auc 0.9177, avg_precision 0.4564, ece 0.00654 | 21.6 min
+pre_training_beta epoch 7/10
+-------------------------------
+  batch 20000/159030, running loss 0.21238, heart 0.04524
+  batch 40000/159030, running loss 0.21249, heart 0.04551
+  batch 60000/159030, running loss 0.21245, heart 0.04552
+  batch 80000/159030, running loss 0.21240, heart 0.04555
+  batch 100000/159030, running loss 0.21236, heart 0.04551
+  batch 120000/159030, running loss 0.21232, heart 0.04550
+  batch 140000/159030, running loss 0.21236, heart 0.04554
+  train loss 0.04556 | finetuning test: log_loss 0.05597, auc 0.9184, avg_precision 0.4581, ece 0.00635 | 21.7 min
+pre_training_beta epoch 8/10
+-------------------------------
+  batch 20000/159030, running loss 0.21192, heart 0.04536
+  batch 40000/159030, running loss 0.21201, heart 0.04540
+  batch 60000/159030, running loss 0.21202, heart 0.04548
+  batch 80000/159030, running loss 0.21198, heart 0.04547
+  batch 100000/159030, running loss 0.21194, heart 0.04546
+  batch 120000/159030, running loss 0.21192, heart 0.04547
+  batch 140000/159030, running loss 0.21189, heart 0.04547
+  train loss 0.04543 | finetuning test: log_loss 0.05570, auc 0.9184, avg_precision 0.4568, ece 0.00578 | 21.3 min
+pre_training_beta epoch 9/10
+-------------------------------
+  batch 20000/159030, running loss 0.21122, heart 0.04500
+  batch 40000/159030, running loss 0.21149, heart 0.04507
+  batch 60000/159030, running loss 0.21142, heart 0.04513
+  batch 80000/159030, running loss 0.21147, heart 0.04520
+  batch 100000/159030, running loss 0.21152, heart 0.04528
+  batch 120000/159030, running loss 0.21155, heart 0.04525
+  batch 140000/159030, running loss 0.21160, heart 0.04530
+  train loss 0.04534 | finetuning test: log_loss 0.05562, auc 0.9184, avg_precision 0.4599, ece 0.00593 | 21.4 min
+pre_training_beta epoch 10/10
+-------------------------------
+  batch 20000/159030, running loss 0.21137, heart 0.04523
+  batch 40000/159030, running loss 0.21146, heart 0.04536
+  batch 60000/159030, running loss 0.21144, heart 0.04519
+  batch 80000/159030, running loss 0.21152, heart 0.04523
+  batch 100000/159030, running loss 0.21153, heart 0.04517
+  batch 120000/159030, running loss 0.21153, heart 0.04519
+  batch 140000/159030, running loss 0.21153, heart 0.04526
+  train loss 0.04529 | finetuning test: log_loss 0.05563, auc 0.9185, avg_precision 0.4596, ece 0.00592 | 21.8 min
+Training on destination: finetuning
+finetuning epoch 1/20
+-------------------------------
+  batch 20000/79070, running loss 0.19416, heart 0.05540
+  batch 40000/79070, running loss 0.19404, heart 0.05512
+  batch 60000/79070, running loss 0.19395, heart 0.05494
+  train loss 0.05471 | finetuning test: log_loss 0.05404, auc 0.9230, avg_precision 0.4669, ece 0.00493 | 6.7 min
+finetuning epoch 2/20
+-------------------------------
+  batch 20000/79070, running loss 0.19272, heart 0.05407
+  batch 40000/79070, running loss 0.19282, heart 0.05408
+  batch 60000/79070, running loss 0.19268, heart 0.05402
+  train loss 0.05410 | finetuning test: log_loss 0.05300, auc 0.9236, avg_precision 0.4740, ece 0.00202 | 6.5 min
+finetuning epoch 3/20
+-------------------------------
+  batch 20000/79070, running loss 0.19184, heart 0.05327
+  batch 40000/79070, running loss 0.19219, heart 0.05349
+  batch 60000/79070, running loss 0.19229, heart 0.05370
+  train loss 0.05369 | finetuning test: log_loss 0.05318, auc 0.9255, avg_precision 0.4807, ece 0.00413 | 6.6 min
+finetuning epoch 4/20
+-------------------------------
+  batch 20000/79070, running loss 0.19199, heart 0.05340
+  batch 40000/79070, running loss 0.19217, heart 0.05357
+  batch 60000/79070, running loss 0.19200, heart 0.05351
+  train loss 0.05345 | finetuning test: log_loss 0.05295, auc 0.9251, avg_precision 0.4742, ece 0.00104 | 6.6 min
+finetuning epoch 5/20
+-------------------------------
+  batch 20000/79070, running loss 0.19135, heart 0.05328
+  batch 40000/79070, running loss 0.19134, heart 0.05321
+  batch 60000/79070, running loss 0.19150, heart 0.05323
+  train loss 0.05315 | finetuning test: log_loss 0.05266, auc 0.9251, avg_precision 0.4813, ece 0.00167 | 6.6 min
+finetuning epoch 6/20
+-------------------------------
+  batch 20000/79070, running loss 0.19099, heart 0.05269
+  batch 40000/79070, running loss 0.19093, heart 0.05275
+  batch 60000/79070, running loss 0.19098, heart 0.05286
+  train loss 0.05292 | finetuning test: log_loss 0.05230, auc 0.9268, avg_precision 0.4824, ece 0.00172 | 6.6 min
+finetuning epoch 7/20
+-------------------------------
+  batch 20000/79070, running loss 0.19114, heart 0.05296
+  batch 40000/79070, running loss 0.19098, heart 0.05255
+  batch 60000/79070, running loss 0.19098, heart 0.05277
+  train loss 0.05270 | finetuning test: log_loss 0.05324, auc 0.9253, avg_precision 0.4826, ece 0.00445 | 6.6 min
+finetuning epoch 8/20
+-------------------------------
+  batch 20000/79070, running loss 0.19027, heart 0.05238
+  batch 40000/79070, running loss 0.19048, heart 0.05241
+  batch 60000/79070, running loss 0.19038, heart 0.05243
+  train loss 0.05250 | finetuning test: log_loss 0.05244, auc 0.9271, avg_precision 0.4850, ece 0.00296 | 6.6 min
+finetuning epoch 9/20
+-------------------------------
+  batch 20000/79070, running loss 0.19035, heart 0.05256
+  batch 40000/79070, running loss 0.19021, heart 0.05231
+  batch 60000/79070, running loss 0.19015, heart 0.05229
+  train loss 0.05231 | finetuning test: log_loss 0.05218, auc 0.9281, avg_precision 0.4890, ece 0.00306 | 6.5 min
+finetuning epoch 10/20
+-------------------------------
+  batch 20000/79070, running loss 0.18961, heart 0.05218
+  batch 40000/79070, running loss 0.18949, heart 0.05193
+  batch 60000/79070, running loss 0.18972, heart 0.05218
+  train loss 0.05207 | finetuning test: log_loss 0.05234, auc 0.9269, avg_precision 0.4872, ece 0.00280 | 6.6 min
+finetuning epoch 11/20
+-------------------------------
+  batch 20000/79070, running loss 0.18940, heart 0.05203
+  batch 40000/79070, running loss 0.18939, heart 0.05201
+  batch 60000/79070, running loss 0.18947, heart 0.05191
+  train loss 0.05192 | finetuning test: log_loss 0.05180, auc 0.9281, avg_precision 0.4897, ece 0.00131 | 6.6 min/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+
+finetuning epoch 12/20
+-------------------------------
+  batch 20000/79070, running loss 0.18866, heart 0.05136
+  batch 40000/79070, running loss 0.18897, heart 0.05168
+  batch 60000/79070, running loss 0.18911, heart 0.05175
+  train loss 0.05168 | finetuning test: log_loss 0.05188, auc 0.9282, avg_precision 0.4884, ece 0.00150 | 6.6 min
+finetuning epoch 13/20
+-------------------------------
+  batch 20000/79070, running loss 0.18866, heart 0.05117
+  batch 40000/79070, running loss 0.18883, heart 0.05149
+  batch 60000/79070, running loss 0.18884, heart 0.05162
+  train loss 0.05147 | finetuning test: log_loss 0.05174, auc 0.9279, avg_precision 0.4923, ece 0.00081 | 6.6 min
+finetuning epoch 14/20
+-------------------------------
+  batch 20000/79070, running loss 0.18828, heart 0.05123
+  batch 40000/79070, running loss 0.18841, heart 0.05140
+  batch 60000/79070, running loss 0.18842, heart 0.05139
+  train loss 0.05127 | finetuning test: log_loss 0.05204, auc 0.9280, avg_precision 0.4915, ece 0.00281 | 6.7 min
+finetuning epoch 15/20
+-------------------------------
+  batch 20000/79070, running loss 0.18788, heart 0.05087
+  batch 40000/79070, running loss 0.18823, heart 0.05119
+  batch 60000/79070, running loss 0.18814, heart 0.05111
+  train loss 0.05115 | finetuning test: log_loss 0.05166, auc 0.9283, avg_precision 0.4930, ece 0.00142 | 6.6 min
+finetuning epoch 16/20
+-------------------------------
+  batch 20000/79070, running loss 0.18786, heart 0.05087
+  batch 40000/79070, running loss 0.18769, heart 0.05097
+  batch 60000/79070, running loss 0.18769, heart 0.05082
+  train loss 0.05099 | finetuning test: log_loss 0.05145, auc 0.9290, avg_precision 0.4941, ece 0.00045 | 6.6 min
+finetuning epoch 17/20
+-------------------------------
+  batch 20000/79070, running loss 0.18771, heart 0.05103
+  batch 40000/79070, running loss 0.18756, heart 0.05078
+  batch 60000/79070, running loss 0.18770, heart 0.05093
+  train loss 0.05085 | finetuning test: log_loss 0.05141, auc 0.9293, avg_precision 0.4954, ece 0.00091 | 6.6 min
+finetuning epoch 18/20
+-------------------------------
+  batch 20000/79070, running loss 0.18774, heart 0.05122
+  batch 40000/79070, running loss 0.18761, heart 0.05095
+  batch 60000/79070, running loss 0.18754, heart 0.05085
+  train loss 0.05076 | finetuning test: log_loss 0.05142, auc 0.9291, avg_precision 0.4947, ece 0.00026 | 6.6 min
+finetuning epoch 19/20
+-------------------------------
+  batch 20000/79070, running loss 0.18765, heart 0.05073
+  batch 40000/79070, running loss 0.18755, heart 0.05078
+  batch 60000/79070, running loss 0.18732, heart 0.05073
+  train loss 0.05069 | finetuning test: log_loss 0.05140, auc 0.9292, avg_precision 0.4951, ece 0.00051 | 6.6 min
+finetuning epoch 20/20
+-------------------------------
+  batch 20000/79070, running loss 0.18711, heart 0.05024
+  batch 40000/79070, running loss 0.18728, heart 0.05063
+  batch 60000/79070, running loss 0.18735, heart 0.05072
+  train loss 0.05066 | finetuning test: log_loss 0.05137, auc 0.9292, avg_precision 0.4957, ece 0.00025 | 6.6 min
+Best finetuning epoch was 19 by log_loss
+ epoch  ft_log_loss   ft_auc  ft_avg_precision  ft_lift_top_decile   ft_ece
+     0     0.054040 0.923008          0.466883            7.878017 0.004928
+     1     0.052997 0.923643          0.473992            7.890948 0.002021
+     2     0.053179 0.925510          0.480675            7.933621 0.004131
+     3     0.052949 0.925055          0.474166            7.909483 0.001043
+     4     0.052655 0.925092          0.481311            7.905172 0.001672
+     5     0.052299 0.926783          0.482402            7.960345 0.001724
+     6     0.053243 0.925316          0.482631            7.929741 0.004449
+     7     0.052444 0.927063          0.485001            7.953448 0.002960
+     8     0.052184 0.928079          0.489028            7.974569 0.003060
+     9     0.052340 0.926876          0.487222            7.955603 0.002803
+    10     0.051801 0.928107          0.489720            7.968534 0.001305
+    11     0.051877 0.928179          0.488438            7.983621 0.001497
+    12     0.051744 0.927897          0.492274            7.975431 0.000806
+    13     0.052045 0.928030          0.491494            7.957759 0.002806
+    14     0.051655 0.928303          0.492991            7.978879 0.001422
+    15     0.051448 0.929015          0.494081            7.981897 0.000451
+    16     0.051409 0.929273          0.495363            7.984483 0.000906
+    17     0.051419 0.929136          0.494717            7.981466 0.000260
+    18     0.051397 0.929157          0.495100            7.981466 0.000508
+    19     0.051367 0.929242          0.495667            7.984052 0.000251

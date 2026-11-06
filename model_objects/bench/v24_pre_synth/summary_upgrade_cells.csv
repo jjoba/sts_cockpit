@@ -1,0 +1,3 @@
+model,pairs,mean_spread_across_states,median_spread_across_states,mean_rarest_vs_best_supported_gap
+fnn_v25_alpha_beta_mt_hp_gold_flip_synthetic,190,0.041260126803677376,0.028888441484684696,0.02097486740621067
+fnn_v24_alpha_beta_mt_hp_gold,190,0.039987197586767546,0.026871206098682453,0.020325598952435697
