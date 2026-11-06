@@ -14,7 +14,9 @@ Only the standard library plus the packages the cockpit already needs.
 import json
 import mimetypes
 import os
+import re
 import sys
+import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -34,7 +36,44 @@ def load(name):
 CARDS, RELICS = load('cards'), load('relics')
 METRICS_FILE = json.load(open(f'{HERE}/data/metrics.json')) if os.path.exists(f'{HERE}/data/metrics.json') else {'test_set': None, 'models': {}}
 METRICS = METRICS_FILE.get('models', METRICS_FILE if 'test_set' not in METRICS_FILE else {}) # an older metrics.json is a plain {model: metrics}
+EVENTS = json.load(open(f'{HERE}/data/events.json')) if os.path.exists(f'{HERE}/data/events.json') else []
 START_RUN = json.load(open(f'{HERE}/data/start_run_state.json')) if os.path.exists(f'{HERE}/data/start_run_state.json') else {}
+
+# Saved run states, one JSON file each, so a run can be picked up again later (gitignored)
+SAVES = f'{HERE}/data/saves'
+SAVE_ID = re.compile(r'^[a-z0-9_-]{1,64}$')
+
+def saves_list():
+    out = []
+    if os.path.isdir(SAVES):
+        for f in os.listdir(SAVES):
+            if f.endswith('.json'):
+                try:
+                    out.append(json.load(open(f'{SAVES}/{f}')))
+                except (OSError, ValueError):
+                    pass
+    return sorted(out, key=lambda x: x.get('saved_at', 0), reverse=True)
+
+def save_write(req):
+    name, state = req.get('name'), req.get('state')
+    if not isinstance(name, str) or not name.strip() or len(name) > 80 or not isinstance(state, dict):
+        raise ValueError('A save needs a name (up to 80 characters) and a state')
+    sid = req.get('id') or str(int(time.time() * 1000))
+    if not SAVE_ID.match(sid):
+        raise ValueError('Bad save id')
+    os.makedirs(SAVES, exist_ok=True)
+    rec = {'id': sid, 'name': name.strip(), 'saved_at': time.time(), 'meta': req.get('meta') or {}, 'state': state}
+    tmp = f'{SAVES}/{sid}.json.tmp'
+    json.dump(rec, open(tmp, 'w'))
+    os.replace(tmp, f'{SAVES}/{sid}.json')
+    return rec
+
+def save_delete(sid):
+    if not isinstance(sid, str) or not SAVE_ID.match(sid):
+        raise ValueError('Bad save id')
+    path = f'{SAVES}/{sid}.json'
+    if os.path.exists(path):
+        os.remove(path)
 
 # The recipes that are results in their own right (the tables in outstanding_experiments.md). Every other model is an experiment variant (batch size, learning rate, flip
 # sampling, ...) and the model directory hides those until asked.
@@ -67,7 +106,7 @@ def catalog():
     for name, info in sorted(ENGINE.registry.items(), key = lambda kv: (-kv[1]['version'], kv[0])):
         models.append({**info, 'metrics': METRICS.get(name), 'featured': name in FEATURED or info['version'] < 21})
     return {'cards': CARDS, 'relics': RELICS, 'start': starting_states(), 'characters': engine.CHARACTERS, 'models': models,
-            'defaultModel': default_model(models), 'device': engine.DEVICE, 'heads': engine.HEADS, 'startRun': START_RUN, 'testSet': METRICS_FILE.get('test_set')}
+            'defaultModel': default_model(models), 'device': engine.DEVICE, 'heads': engine.HEADS, 'startRun': START_RUN, 'testSet': METRICS_FILE.get('test_set'), 'events': EVENTS}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -85,6 +124,8 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split('?')[0]
         if path == '/api/catalog':
             return self.send_json(catalog())
+        if path == '/api/saves':
+            return self.send_json({'saves': saves_list()})
         rel = 'index.html' if path in ('/', '') else path.lstrip('/')
         full = os.path.realpath(os.path.join(WEB, rel))
         if not full.startswith(os.path.realpath(WEB)) or not os.path.isfile(full):
@@ -98,6 +139,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
+        if self.path in ('/api/saves', '/api/saves/delete'):
+            try:
+                req = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
+                if self.path == '/api/saves':
+                    return self.send_json(save_write(req))
+                save_delete(req.get('id'))
+                return self.send_json({'ok': True})
+            except (ValueError, OSError) as e:
+                return self.send_json({'error': str(e)}, 400)
         if self.path != '/api/predict':
             return self.send_json({'error': 'not found'}, 404)
         try:

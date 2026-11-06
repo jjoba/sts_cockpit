@@ -6,7 +6,7 @@ Test bench for how well the models capture card and relic interactions and upgra
 Models are TorchScript files in model_objects/production, the Heart head (last output) is the one tested. Options (key=value):
     models    comma separated model names (required)
     name      output folder under model_objects/bench (default: first model name)
-    sections  combos, upgrades, picks (default all three)
+    sections  combos, upgrades, picks (default these three), agreement (opt in; needs two or more models; also uses data/bench/decisions_v24_relic_*.npy from extract_relic_decisions.py)
     data      data folder under data/ (default training_data). Folders written by process_data.py since v24 carry HP / max HP / gold columns after the
               929 features (layout.json); models are fed the extras their config.json lists, models without extras ignore them. The counterfactual
               contexts keep each held-out deck's own HP and gold. The picks section then reads decisions_v24_X.npy / _M.npy (HP and gold of the reward's floor)
@@ -549,6 +549,84 @@ def run_picks(nets):
                            'picks_a_card': (v >= 0).mean()} for k, v in cands.items()])
     return rules.merge(pd.DataFrame(agree_rows), on = 'model', how = 'left'), pd.DataFrame(cal_rows)
 
+def rank_options(m, X, opts):
+    # Heart logit of the deck as it stands (column 0: the skip option) and with each offered item added (columns 1-5, -inf where the offer has fewer than 5)
+    S = np.full((len(X), 6), -np.inf)
+    S[:, 0] = m.logit(X)
+    for k in range(5):
+        v = opts[:, k]
+        mk = v >= 0
+        if not mk.any():
+            continue
+        x = X[mk].copy()
+        x[np.arange(mk.sum()), v[mk]] += 1
+        S[mk, k + 1] = m.logit(x)
+    return S
+
+def rank_agreement(Sa, Sb, minimum_margin = 0.1):
+    # Per decision: same best option, Kendall tau between the two orderings of the available options, identical full ordering, and top-1 agreement where both models see a clear best
+    ok = np.isfinite(Sa)
+    n_opts = ok.sum(1)
+    conc = disc = pairs = np.zeros(len(Sa))
+    for a in range(6):
+        for b in range(a + 1, 6):
+            v = ok[:, a] & ok[:, b]
+            sg = np.sign(Sa[:, a] - Sa[:, b]) * np.sign(Sb[:, a] - Sb[:, b])
+            conc = conc + (v & (sg > 0)); disc = disc + (v & (sg < 0)); pairs = pairs + v
+    tau = (conc - disc) / np.maximum(pairs, 1)
+    top_a, top_b = Sa.argmax(1), Sb.argmax(1)
+
+    def margin(S):
+        t = np.sort(np.where(np.isfinite(S), S, -1e9), axis = 1)
+        return t[:, -1] - t[:, -2]
+    clear = (margin(Sa) >= minimum_margin) & (margin(Sb) >= minimum_margin)
+    return {'decisions': len(Sa), 'same_top_choice': float((top_a == top_b).mean()), 'mean_kendall_tau': float(tau.mean()), 'identical_order': float((disc == 0).mean()),
+            'share_clear_top_both': float(clear.mean()), 'same_top_choice_when_clear': float((top_a == top_b)[clear].mean()) if clear.any() else float('nan'),
+            'skip_chosen_a': float((top_a == 0).mean()), 'skip_chosen_b': float((top_b == 0).mean())}
+
+def run_agreement(nets):
+    # How far models agree on which card (all rewards) or boss relic (relic offers) is best, as an ordering of the offered items and the option to skip, and on each item's average effect
+    from scipy.stats import spearmanr
+    bench = f'{ROOT}/data/bench'
+    rows, per_item = [], []
+    for kind, tag, n_max, min_picks in [('card', '', 350000, 1000), ('relic', '_relic', None, 100)]:
+        if not os.path.exists(f'{bench}/decisions_v24{tag}_X.npy'):
+            print(f'  no {kind} decisions found, skipping')
+            continue
+        X = np.load(f'{bench}/decisions_v24{tag}_X.npy', mmap_mode = 'r')
+        M = np.load(f'{bench}/decisions_v24{tag}_M.npy')
+        sel = np.arange(len(M)) if n_max is None or len(M) <= n_max else np.sort(np.random.default_rng(1).choice(len(M), n_max, replace = False))
+        Xs, opts, picked = np.asarray(X[sel]), M[sel, 1:6].astype(int), M[sel, 0].astype(int)
+        S = {m.name: rank_options(m, Xs, opts) for m in nets}
+        base = {k: v[:, :1].copy() for k, v in S.items()}
+        if kind == 'relic':
+            for v in S.values():
+                v[:, 0] = -np.inf # a boss relic is almost never skipped (0.8%), and the model's value of 'no relic' is not a choice worth ranking
+        # Agreement with the player: share of decisions where the model's best option is the pick (0 is skip, option k is the k-th offered item)
+        pick_slot = np.where(picked < 0, 0, 1 + (opts == picked[:, None]).argmax(1))
+        for m in nets:
+            rows.append({'kind': kind, 'a': m.name, 'b': 'player', 'decisions': len(sel), 'same_top_choice': float((S[m.name].argmax(1) == pick_slot).mean())})
+        for i in range(len(nets)):
+            for j in range(i + 1, len(nets)):
+                r = rank_agreement(S[nets[i].name], S[nets[j].name])
+                rows.append({'kind': kind, 'a': nets[i].name, 'b': nets[j].name, **r})
+                # Per item effect (logit change from adding it) averaged over every time it was offered, then rank correlation across items
+                eff = {}
+                for m in (nets[i], nets[j]):
+                    d = S[m.name][:, 1:] - base[m.name]
+                    e = {}
+                    for it in np.unique(opts[opts >= 0]):
+                        mk = opts == it
+                        if mk.sum() >= min_picks:
+                            e[it] = float(d[mk].mean())
+                    eff[m.name] = e
+                items = sorted(set(eff[nets[i].name]) & set(eff[nets[j].name]))
+                ea, eb = [eff[nets[i].name][it] for it in items], [eff[nets[j].name][it] for it in items]
+                rho = spearmanr(ea, eb)[0] if len(items) > 2 else float('nan')
+                rows.append({'kind': kind + '_item_effect', 'a': nets[i].name, 'b': nets[j].name, 'decisions': len(items), 'spearman': float(rho), 'pearson': float(np.corrcoef(ea, eb)[0, 1]) if len(items) > 2 else float('nan')})
+                per_item += [{'kind': kind, 'item': NAMES[it], 'times_offered': int((opts == it).sum()), f'effect_{nets[i].name}': ea[k], f'effect_{nets[j].name}': eb[k]} for k, it in enumerate(items)]
+    return pd.DataFrame(rows), pd.DataFrame(per_item)
+
 ############### RUN ##############
 
 def parse(argv):
@@ -614,6 +692,13 @@ if __name__ == '__main__':
             agree.to_csv(f'{out_dir}/picks_summary.csv', index = False)
             cal.to_csv(f'{out_dir}/picks_calibration.csv', index = False)
             summary['picks'] = agree
+
+    if 'agreement' in sections:
+        print('Agreement between models on card and boss relic picks')
+        agree, items = run_agreement(nets)
+        agree.to_csv(f'{out_dir}/agreement_summary.csv', index = False)
+        items.to_csv(f'{out_dir}/agreement_items.csv', index = False)
+        summary['agreement'] = agree
 
     for k, v in summary.items():
         v.to_csv(f'{out_dir}/summary_{k}.csv', index = False)

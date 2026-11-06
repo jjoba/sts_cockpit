@@ -1,0 +1,9 @@
+kind,a,b,decisions,same_top_choice,mean_kendall_tau,identical_order,share_clear_top_both,same_top_choice_when_clear,skip_chosen_a,skip_chosen_b,spearman,pearson
+card,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,player,350000,0.4123142857142857,,,,,,,,
+card,fnn_v25_ft_mt_flip_synthetic_b256_ep40,player,350000,0.4075485714285714,,,,,,,,
+card,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,fnn_v25_ft_mt_flip_synthetic_b256_ep40,350000,0.8334657142857143,0.8099717142857142,0.5710628571428571,0.5945714285714285,0.973056222969726,0.2495342857142857,0.27517142857142857,,
+card_item_effect,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,fnn_v25_ft_mt_flip_synthetic_b256_ep40,234,,,,,,,,0.9939759628555176,0.9945183697498327
+relic,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,player,4725,0.3382010582010582,,,,,,,,
+relic,fnn_v25_ft_mt_flip_synthetic_b256_ep40,player,4725,0.3441269841269841,,,,,,,,
+relic,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,fnn_v25_ft_mt_flip_synthetic_b256_ep40,4725,0.9007407407407407,0.860458553791887,0.8095238095238095,0.8192592592592592,0.9659002841642986,0.0,0.0,,
+relic_item_effect,fnn_v25_ft_mt_hp_gold_flip_every4_b256_ep40,fnn_v25_ft_mt_flip_synthetic_b256_ep40,29,,,,,,,,0.9852216748768471,0.985395641187639

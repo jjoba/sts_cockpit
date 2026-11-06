@@ -1,0 +1,1064 @@
+[
+ {
+  "name": "Big Fish",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Banana",
+    "desc": "Heal a third of max HP",
+    "effects": {
+     "heal_pct_max": 0.33
+    },
+    "id": "bigfish_0"
+   },
+   {
+    "name": "Donut",
+    "desc": "+5 max HP",
+    "effects": {
+     "max_hp": 5
+    },
+    "id": "bigfish_1"
+   },
+   {
+    "name": "Box",
+    "desc": "A random relic and the Regret curse",
+    "effects": {
+     "random_relics": 1,
+     "curse": [
+      "Regret"
+     ]
+    },
+    "id": "bigfish_2"
+   }
+  ]
+ },
+ {
+  "name": "The Cleric",
+  "acts": [
+   1,
+   2
+  ],
+  "options": [
+   {
+    "name": "Heal",
+    "desc": "Pay 35 gold, heal a quarter of max HP",
+    "effects": {
+     "gold": -35,
+     "heal_pct_max": 0.25
+    },
+    "id": "thecleric_0"
+   },
+   {
+    "name": "Purify",
+    "desc": "Pay 75 gold (50 below Ascension 15), remove a card",
+    "effects": {
+     "gold": -75,
+     "remove": 1
+    },
+    "id": "thecleric_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Dead Adventurer",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Search",
+    "desc": "Each search can start an elite fight; rewards are gold, a relic or nothing",
+    "gaps": [
+     "An elite fight can start and the rewards are random with odds that change each search, none of that is modelled"
+    ],
+    "id": "deadadventurer_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Golden Idol",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Take, then outrun",
+    "desc": "Golden Idol, then the Injury curse",
+    "effects": {
+     "relic": [
+      "Golden Idol"
+     ],
+     "curse": [
+      "Injury"
+     ]
+    },
+    "id": "goldenidol_0"
+   },
+   {
+    "name": "Take, then smash",
+    "desc": "Golden Idol, then lose 35% of max HP (25% below Ascension 15)",
+    "effects": {
+     "relic": [
+      "Golden Idol"
+     ],
+     "hp_pct_max": -0.35
+    },
+    "id": "goldenidol_1"
+   },
+   {
+    "name": "Take, then hide",
+    "desc": "Golden Idol, then lose 10% of max HP permanently",
+    "effects": {
+     "relic": [
+      "Golden Idol"
+     ],
+     "max_hp_pct": -0.1
+    },
+    "id": "goldenidol_2"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Wing Statue",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "Lose 7 HP, remove a card",
+    "effects": {
+     "hp": -7,
+     "remove": 1
+    },
+    "id": "wingstatue_0"
+   },
+   {
+    "name": "Destroy",
+    "desc": "Needs an Attack that deals 10 or more damage, 50 to 80 gold",
+    "effects": {
+     "gold": 65
+    },
+    "gaps": [
+     "Only available if you have an Attack with 10 or more damage, which the tool cannot check"
+    ],
+    "id": "wingstatue_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "World of Goop",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Gather gold",
+    "desc": "+75 gold, lose 11 HP",
+    "effects": {
+     "gold": 75,
+     "hp": -11
+    },
+    "id": "worldofgoop_0"
+   },
+   {
+    "name": "Leave it",
+    "desc": "Lose about 35 gold",
+    "effects": {
+     "gold": -35
+    },
+    "id": "worldofgoop_1"
+   }
+  ]
+ },
+ {
+  "name": "Living Wall",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Forget",
+    "desc": "Remove a card",
+    "effects": {
+     "remove": 1
+    },
+    "id": "livingwall_0"
+   },
+   {
+    "name": "Change",
+    "desc": "Transform a card",
+    "effects": {
+     "transform": 1
+    },
+    "id": "livingwall_1"
+   },
+   {
+    "name": "Grow",
+    "desc": "Upgrade a card",
+    "effects": {
+     "upgrade": 1
+    },
+    "id": "livingwall_2"
+   }
+  ]
+ },
+ {
+  "name": "Hypnotizing Colored Mushrooms",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Stomp",
+    "desc": "Fight 3 Fungi Beasts, Odd Mushroom as the reward",
+    "gaps": [
+     "A fight: the model does not predict how much HP it costs or whether you win"
+    ],
+    "fight": true,
+    "id": "hypnotizingcoloredmushrooms_0"
+   },
+   {
+    "name": "Eat",
+    "desc": "Heal a quarter of max HP, the Parasite curse",
+    "effects": {
+     "heal_pct_max": 0.25,
+     "curse": [
+      "Parasite"
+     ]
+    },
+    "id": "hypnotizingcoloredmushrooms_1"
+   }
+  ]
+ },
+ {
+  "name": "Scrap Ooze",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Reach inside (first try)",
+    "desc": "Lose 5 HP, a 25% chance of a relic",
+    "outcomes": [
+     {
+      "p": 0.25,
+      "label": "Found a relic",
+      "effects": {
+       "hp": -5,
+       "random_relics": 1
+      }
+     },
+     {
+      "p": 0.75,
+      "label": "Nothing",
+      "effects": {
+       "hp": -5
+      }
+     }
+    ],
+    "gaps": [
+     "You can keep trying and each try costs more HP with better odds, only the first try is scored"
+    ],
+    "id": "scrapooze_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Shining Light",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Enter",
+    "desc": "Lose 30% of max HP (20% below Ascension 15), upgrade 2 random cards",
+    "effects": {
+     "hp_pct_max": -0.3,
+     "upgrade_random": 2
+    },
+    "id": "shininglight_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "The Ssssserpent",
+  "acts": [
+   1
+  ],
+  "options": [
+   {
+    "name": "Agree",
+    "desc": "+150 gold (175 below Ascension 15), the Doubt curse",
+    "effects": {
+     "gold": 150,
+     "curse": [
+      "Doubt"
+     ]
+    },
+    "id": "thessssserpent_0"
+   },
+   {
+    "name": "Disagree",
+    "desc": "Leave",
+    "leave": true,
+    "id": "thessssserpent_1"
+   }
+  ]
+ },
+ {
+  "name": "Bonfire Spirits",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Offer a card",
+    "desc": "The card is removed, the reward depends on its rarity",
+    "effects": {
+     "remove": 1
+    },
+    "gaps": [
+     "The healing depends on the rarity of the card you offer (common 5 HP, uncommon full heal, rare full heal and +10 max HP, curse a relic), which the tool does not know"
+    ],
+    "id": "bonfirespirits_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Duplicator",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "Duplicate a card",
+    "effects": {
+     "duplicate": 1
+    },
+    "id": "duplicator_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Golden Shrine",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "+50 gold (100 below Ascension 15)",
+    "effects": {
+     "gold": 50
+    },
+    "id": "goldenshrine_0"
+   },
+   {
+    "name": "Desecrate",
+    "desc": "+275 gold, the Regret curse",
+    "effects": {
+     "gold": 275,
+     "curse": [
+      "Regret"
+     ]
+    },
+    "id": "goldenshrine_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Lab",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Take the potions",
+    "desc": "Three random potions",
+    "gaps": [
+     "Potions are not a model input, so their value cannot be scored"
+    ],
+    "id": "lab_0"
+   }
+  ]
+ },
+ {
+  "name": "Match and Keep",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [],
+  "unmodeled": "A memory mini game: the result depends on your play and the cards revealed, nothing here for the model to predict"
+ },
+ {
+  "name": "Note For Yourself",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [],
+  "unmodeled": "You swap a card for one saved from an earlier run, and that card is not known to the tool"
+ },
+ {
+  "name": "Purifier",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "Remove a card",
+    "effects": {
+     "remove": 1
+    },
+    "id": "purifier_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Transmogrifier",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "Transform a card",
+    "effects": {
+     "transform": 1
+    },
+    "id": "transmogrifier_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Upgrade Shrine",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Pray",
+    "desc": "Upgrade a card",
+    "effects": {
+     "upgrade": 1
+    },
+    "id": "upgradeshrine_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Wheel of Change",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Spin",
+    "desc": "One of six results, each equally likely",
+    "outcomes": [
+     {
+      "p": 0.16666666666666666,
+      "label": "Gold (100 per act)",
+      "effects": {
+       "gold_per_act": 100
+      }
+     },
+     {
+      "p": 0.16666666666666666,
+      "label": "A random relic",
+      "effects": {
+       "random_relics": 1
+      }
+     },
+     {
+      "p": 0.16666666666666666,
+      "label": "Full heal",
+      "effects": {
+       "heal_full": true
+      }
+     },
+     {
+      "p": 0.16666666666666666,
+      "label": "The Decay curse",
+      "effects": {
+       "curse": [
+        "Decay"
+       ]
+      }
+     },
+     {
+      "p": 0.16666666666666666,
+      "label": "Remove a card",
+      "effects": {
+       "remove": 1
+      }
+     },
+     {
+      "p": 0.16666666666666666,
+      "label": "Lose 15% of max HP",
+      "effects": {
+       "hp_pct_max": -0.15
+      }
+     }
+    ],
+    "id": "wheelofchange_0"
+   }
+  ]
+ },
+ {
+  "name": "The Woman in Blue",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Buy one potion",
+    "desc": "20 gold",
+    "effects": {
+     "gold": -20
+    },
+    "gaps": [
+     "The potion is not scored, only the gold"
+    ],
+    "id": "thewomaninblue_0"
+   },
+   {
+    "name": "Buy two potions",
+    "desc": "30 gold",
+    "effects": {
+     "gold": -30
+    },
+    "gaps": [
+     "The potions are not scored, only the gold"
+    ],
+    "id": "thewomaninblue_1"
+   },
+   {
+    "name": "Buy three potions",
+    "desc": "40 gold",
+    "effects": {
+     "gold": -40
+    },
+    "gaps": [
+     "The potions are not scored, only the gold"
+    ],
+    "id": "thewomaninblue_2"
+   },
+   {
+    "name": "Leave",
+    "desc": "Lose 5% of max HP at Ascension 15 and above",
+    "effects": {
+     "hp_pct_max": -0.05
+    },
+    "id": "thewomaninblue_3"
+   }
+  ]
+ },
+ {
+  "name": "Fountain of Cleansing",
+  "acts": [
+   1,
+   2,
+   3
+  ],
+  "options": [
+   {
+    "name": "Drink",
+    "desc": "Remove every curse",
+    "effects": {
+     "remove_curses": true
+    },
+    "id": "fountainofcleansing_0"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Forgotten Altar",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Offer the Golden Idol",
+    "desc": "Lose the Golden Idol, gain Bloody Idol",
+    "effects": {
+     "lose_relic": [
+      "Golden Idol"
+     ],
+     "relic": [
+      "Bloody Idol"
+     ]
+    },
+    "needs_relic": "Golden Idol",
+    "id": "forgottenaltar_0"
+   },
+   {
+    "name": "Sacrifice",
+    "desc": "+5 max HP, lose 35% of max HP (25% below Ascension 15)",
+    "effects": {
+     "max_hp": 5,
+     "hp_pct_max": -0.35
+    },
+    "id": "forgottenaltar_1"
+   },
+   {
+    "name": "Desecrate",
+    "desc": "The Decay curse",
+    "effects": {
+     "curse": [
+      "Decay"
+     ]
+    },
+    "id": "forgottenaltar_2"
+   }
+  ]
+ },
+ {
+  "name": "Cursed Tome",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Read it all",
+    "desc": "Lose 15 HP in total (16 below Ascension 15), a random book relic",
+    "effects": {
+     "hp": -15,
+     "random_relic_from": [
+      "Necronomicon",
+      "Enchiridion",
+      "Nilry's Codex"
+     ]
+    },
+    "id": "cursedtome_0"
+   },
+   {
+    "name": "Stop early",
+    "desc": "Lose about 3 HP, nothing gained",
+    "effects": {
+     "hp": -3
+    },
+    "id": "cursedtome_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Knowing Skull",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Ask for a potion",
+    "desc": "Lose 6 HP",
+    "effects": {
+     "hp": -6
+    },
+    "gaps": [
+     "The potion is not scored"
+    ],
+    "id": "knowingskull_0"
+   },
+   {
+    "name": "Ask for gold",
+    "desc": "+90 gold, lose 6 HP",
+    "effects": {
+     "gold": 90,
+     "hp": -6
+    },
+    "id": "knowingskull_1"
+   },
+   {
+    "name": "Ask for a card",
+    "desc": "A random colorless card, lose 6 HP",
+    "effects": {
+     "hp": -6,
+     "random_cards": {
+      "n": 1,
+      "pool": "colorless"
+     }
+    },
+    "id": "knowingskull_2"
+   },
+   {
+    "name": "Leave",
+    "desc": "Lose 6 HP",
+    "effects": {
+     "hp": -6
+    },
+    "id": "knowingskull_3"
+   }
+  ],
+  "note": "Each ask costs HP and you can ask again; only one ask is scored."
+ },
+ {
+  "name": "Masked Bandits",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Pay everything",
+    "desc": "Lose all your gold",
+    "effects": {
+     "gold_all": true
+    },
+    "id": "maskedbandits_0"
+   },
+   {
+    "name": "Fight",
+    "desc": "Fight the bandits, Red Mask as the reward",
+    "gaps": [
+     "A fight: HP cost and outcome are not predicted"
+    ],
+    "fight": true,
+    "id": "maskedbandits_1"
+   }
+  ]
+ },
+ {
+  "name": "Colosseum",
+  "acts": [
+   2
+  ],
+  "options": [],
+  "unmodeled": "A fight sequence: the model does not predict fights or their rewards"
+ },
+ {
+  "name": "The Library",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Read",
+    "desc": "Choose one of 20 random cards",
+    "effects": {
+     "card_reward": {
+      "k": 20,
+      "must": true
+     }
+    },
+    "id": "thelibrary_0"
+   },
+   {
+    "name": "Sleep",
+    "desc": "Heal a third of max HP (20% at Ascension 15 and above)",
+    "effects": {
+     "heal_pct_max": 0.2
+    },
+    "id": "thelibrary_1"
+   }
+  ]
+ },
+ {
+  "name": "The Nest",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Smash and grab",
+    "desc": "+50 gold (99 below Ascension 15)",
+    "effects": {
+     "gold": 50
+    },
+    "id": "thenest_0"
+   },
+   {
+    "name": "Stay in line",
+    "desc": "Ritual Dagger, lose 6 HP",
+    "effects": {
+     "add": [
+      "Ritual Dagger"
+     ],
+     "hp": -6
+    },
+    "id": "thenest_1"
+   }
+  ]
+ },
+ {
+  "name": "Council of Ghosts",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Accept",
+    "desc": "3 Apparitions (5 below Ascension 15), lose half of max HP",
+    "effects": {
+     "add": [
+      "Apparition",
+      "Apparition",
+      "Apparition"
+     ],
+     "max_hp_pct": -0.5
+    },
+    "id": "councilofghosts_0"
+   },
+   {
+    "name": "Refuse",
+    "desc": "Leave",
+    "leave": true,
+    "id": "councilofghosts_1"
+   }
+  ]
+ },
+ {
+  "name": "Drug Dealer",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "J.A.X.",
+    "desc": "Add J.A.X.",
+    "effects": {
+     "add": [
+      "J.A.X."
+     ]
+    },
+    "id": "drugdealer_0"
+   },
+   {
+    "name": "Test subject",
+    "desc": "Transform 2 cards",
+    "effects": {
+     "transform": 2
+    },
+    "id": "drugdealer_1"
+   },
+   {
+    "name": "Mutagens",
+    "desc": "Mutagenic Strength relic",
+    "effects": {
+     "relic": [
+      "Mutagenic Strength"
+     ]
+    },
+    "id": "drugdealer_2"
+   }
+  ]
+ },
+ {
+  "name": "Back to Basics",
+  "acts": [
+   2
+  ],
+  "options": [
+   {
+    "name": "Simplicity",
+    "desc": "Remove a card",
+    "effects": {
+     "remove": 1
+    },
+    "id": "backtobasics_0"
+   },
+   {
+    "name": "Elegance",
+    "desc": "Upgrade every Strike and Defend",
+    "effects": {
+     "upgrade_all_basics": true
+    },
+    "id": "backtobasics_1"
+   }
+  ]
+ },
+ {
+  "name": "Moai Head",
+  "acts": [
+   3
+  ],
+  "options": [
+   {
+    "name": "Jump inside",
+    "desc": "Full heal, lose 12.5% of max HP",
+    "effects": {
+     "heal_full": true,
+     "max_hp_pct": -0.125
+    },
+    "id": "moaihead_0"
+   },
+   {
+    "name": "Offer the Golden Idol",
+    "desc": "+333 gold, lose the Golden Idol",
+    "effects": {
+     "gold": 333,
+     "lose_relic": [
+      "Golden Idol"
+     ]
+    },
+    "needs_relic": "Golden Idol",
+    "id": "moaihead_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Tomb of Lord Red Mask",
+  "acts": [
+   3
+  ],
+  "options": [
+   {
+    "name": "Offer all your gold",
+    "desc": "Lose all gold, gain Red Mask",
+    "effects": {
+     "gold_all": true,
+     "relic": [
+      "Red Mask"
+     ]
+    },
+    "lacks_relic": "Red Mask",
+    "id": "tomboflordredmask_0"
+   },
+   {
+    "name": "Don the mask",
+    "desc": "+222 gold",
+    "effects": {
+     "gold": 222
+    },
+    "needs_relic": "Red Mask",
+    "id": "tomboflordredmask_1"
+   },
+   {
+    "name": "Leave",
+    "desc": "Walk away",
+    "leave": true,
+    "id": "tomboflordredmask_2"
+   }
+  ]
+ },
+ {
+  "name": "Mysterious Sphere",
+  "acts": [
+   3
+  ],
+  "options": [],
+  "unmodeled": "A fight for a rare relic: the model does not predict fights"
+ },
+ {
+  "name": "Secret Portal",
+  "acts": [
+   3
+  ],
+  "options": [],
+  "unmodeled": "Skips straight to the boss: floors and rewards skipped are not something the model scores"
+ }
+]

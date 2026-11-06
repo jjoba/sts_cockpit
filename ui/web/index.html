@@ -42,7 +42,7 @@ h1{margin:0 0 4px;font-size:22px}
 .relic i{width:26px;height:26px;border-radius:50%;background:var(--gold);opacity:.8;display:block}.relic button{background:none;border:0;color:var(--mute);cursor:pointer}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}.tabs button{background:var(--panel2);border:1px solid var(--line);color:var(--mute);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px}.tabs button.on{color:var(--text);border-color:var(--gold)}
 .res{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:center}
-.res:first-of-type{border-top:0}.res .best{font-size:10px;background:var(--good);color:#06210d;border-radius:4px;padding:1px 5px;margin-left:6px;font-weight:700}
+.evdrop{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:260px;overflow:auto;background:var(--panel2);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.45);z-index:40}.evopt{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;cursor:pointer}.evopt.on,.evopt:hover{background:rgba(224,176,76,.18)}.tradeoff{position:relative;cursor:help;background:var(--gold)!important;color:#1b1200!important}.tradeoff::after{content:attr(data-tip);display:none;position:absolute;right:0;top:calc(100% + 6px);width:270px;max-width:80vw;white-space:normal;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:400;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.45);z-index:60;text-align:left}.tradeoff:hover::after,.tradeoff:focus::after{display:block}.res:first-of-type{border-top:0}.res .best{font-size:10px;background:var(--good);color:#06210d;border-radius:4px;padding:1px 5px;margin-left:6px;font-weight:700}
 .mono{font-variant-numeric:tabular-nums}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;display:flex;gap:6px}.chip b{cursor:pointer;color:var(--mute)}
 table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
@@ -126,15 +126,15 @@ tr.sel{background:var(--panel2)}tr.m{cursor:pointer}tr.m:hover{background:var(--
        <div><h1><span id="chName">Watcher</span> · Floor <span id="floorV">1</span></h1><span class="lbl">Model: <b id="runModelLbl"></b> · <a href="#" onclick="go('models');return false" style="color:var(--gold)">change</a></span></div>
        <span class="sp"></span>
        <div style="min-width:240px"><span class="lbl">Current floor (1–57)</span><div id="floorNote" class="note" style="display:none;color:var(--gold)"></div><br><div class="bar" style="gap:6px;flex-wrap:nowrap"><button class="b" id="floorPrev" title="Previous floor">−</button><input type="range" id="floor" min="1" max="57" value="1" style="flex:1"><button class="b pri" id="floorNext" title="Advance one floor">Next floor ▶</button></div></div>
-       <button class="b" id="resetRun" title="Back to floor 1 with the starting deck for this character">⟲ Reset run</button><button class="b" id="undo">↶ Undo</button>
+       <button class="b" id="resetRun" title="Back to floor 1 with the starting deck for this character">⟲ Reset run</button><button class="b" id="undo">↶ Undo</button><button class="b" id="saveBtn" title="Save this run state, or load one you saved earlier">💾 Saves</button>
      </div>
      <div class="bar" style="margin-top:12px;gap:14px"><span class="lbl">Run state</span><label class="lbl">HP <input id="hpIn" type="number" min="0" style="width:70px"></label><label class="lbl">Max HP <input id="maxIn" type="number" min="1" max="127" style="width:70px"></label><label class="lbl">Gold <input id="goldRun" type="number" min="0" style="width:90px"></label><span class="note" id="stateNote"></span></div>
    </div>
    <div class="panel">
      <div class="bar"><h2 style="margin:0">Deck · <span id="deckN"></span> cards</h2><span class="sp"></span>
-       <button class="b pri" onclick="openPicker()">＋ Add card</button><input id="quickAdd" list="cardList2" placeholder="Add card to deck…" style="width:200px"><button class="b" id="quickBtn">Add</button><span class="lbl dn" id="quickErr"></span><span class="lbl">Each card shows its win-rate impact if removed</span>
+       <span class="lbl">Each card shows its win-rate impact if removed</span>
        <select id="sort"><option>Sort: type</option><option>Sort: impact</option><option>Sort: name</option></select></div>
-     <datalist id="cardList2"></datalist><div class="cards" id="deck" style="margin-top:14px"></div>
+     <div class="cards" id="deck" style="margin-top:14px"></div>
    </div>
    <div class="panel"><h2>Relics</h2>
      <div class="relics" id="relics"></div>
@@ -185,6 +185,7 @@ tr.sel{background:var(--panel2)}tr.m{cursor:pointer}tr.m:hover{background:var(--
 
 <div class="toast" id="think"></div>
 <div class="ov" id="pickOv"><div class="shopw" id="pickBox" style="max-width:1000px"></div></div>
+<div class="ov" id="saveOv"><div class="shopw" id="saveBox" style="max-width:760px"></div></div>
 <div class="ov" id="shopOv"><div class="shopw" id="shopBox"></div></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -223,7 +224,10 @@ function checkRelic(txt){const r=RELICS[nk(txt)];if(!r)return{err:`"${txt}" is n
 const lookup=txt=>CARDS[nk(txt)];
 const poolList=()=>Object.values(CARDS).filter(c=>c.own!='starter'&&allowed(c));
 const poolLabel=()=>shard()?'All characters (Prismatic Shard)':ch+' + colorless + curses';
-function checkCard(txt){const c=lookup(txt);if(!c)return{err:`"${txt}" is not a known card`};if(['legacy','status'].includes(c.own))return{err:`${c.n} is an old or unobtainable card name`};if(!allowed(c))return{err:`${c.n} belongs to ${c.own} (needs Prismatic Shard)`};return{c}}
+// "Armaments+" is the upgraded card, "Searing Blow+3" a Searing Blow upgraded three times (nk drops the plus sign, so the suffix is split off first)
+function splitUp(txt){const m=String(txt).trim().match(/^(.*?)\s*\+(\d*)$/);return m&&m[1]&&!m[1].includes('+')?{name:m[1],u:m[2]?+m[2]:1}:{name:String(txt).trim(),u:0}}
+function checkCard(txt){const {name,u}=splitUp(txt),c=name.includes('+')?null:lookup(name);if(!c)return{err:`"${txt}" is not a known card`};
+ if(u){if(!c.up)return{err:`${c.n} cannot be upgraded`};if(c.col=='searingblow'){if(u>10)return{err:'Searing Blow can be upgraded at most 10 times'}}else if(u!=1)return{err:`${c.n} has only one upgrade, type "${c.n}+"`}}if(['legacy','status'].includes(c.own))return{err:`${c.n} is an old or unobtainable card name`};if(!allowed(c))return{err:`${c.n} belongs to ${c.own} (needs Prismatic Shard)`};return{c,u}}
 // run state
 function startState(name){const st=CAT.start[CHKEY[name]];return{deck:Object.entries(st.cards).map(([col,c])=>{const r=COLCARD[col];return{n:r.n,t:r.t,c}}),relics:st.relics.map(col=>COLRELIC[col].n)}}
 let deck=startState(ch).deck,relics=startState(ch).relics;
@@ -235,13 +239,29 @@ function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%997;return h/
 // ---- scoring against the real model. score() reads a cache; a miss is queued and the render is repeated once the server has answered (see settle)
 const SBC=['searingblow','searingblow_u','searingblow_u2plus','searingblow_u3plus','searingblow_u4plus','searingblow_u5plus','searingblow_u6plus','searingblow_u7plus','searingblow_u8plus','searingblow_u9plus','searingblow_u10plus'];
 function entryCols(e){const r=CARDS[nk(e.n)];if(!r)throw new Error('unknown card '+e.n);if(r.col=='searingblow'){const lv=+e.u||0;return lv==0?[SBC[0]]:SBC.slice(1,Math.min(lv,10)+1)}return e.u&&r.up?[r.col+'_u']:[r.col]}
-function stateOf(d,r,fl,g){const cards={};for(const e of d)for(const c of entryCols(e))cards[c]=(cards[c]||0)+e.c;const rel=r.map(n=>{const o=RELICS[nk(n)];if(!o)throw new Error('unknown relic '+n);return o.col});return{floor:fl==null?floor:fl,cards,relics:rel,hp:runHp,max_hp:runMax,gold:g==null?gold:g}}
+function stateOf(d,r,fl,g,hp,mx){const cards={};for(const e of d)for(const c of entryCols(e))cards[c]=(cards[c]||0)+e.c;const rel=r.map(n=>{const o=RELICS[nk(n)];if(!o)throw new Error('unknown relic '+n);return o.col});return{floor:fl==null?floor:fl,cards,relics:rel,hp:hp==null?runHp:hp,max_hp:mx==null?runMax:mx,gold:g==null?gold:g}}
 const curModel=()=>MODELS.find(m=>m.id==model);
 // HP and gold are part of the cache key only for models that take them (v24 and later)
 const sKey=s=>s.floor+'|'+Object.keys(s.cards).sort().map(k=>k+':'+s.cards[k]).join(',')+'|'+[...s.relics].sort().join(',')+(curModel().usesHp?'|hp'+s.hp+'/'+s.max_hp:'')+(curModel().usesGold?'|g'+s.gold:'');
 const scoreCache=new Map(),needed=new Map();
-function heads(d,r,g){const s=stateOf(d,r,null,g),k=model+'|'+CHKEY[ch]+'|'+sKey(s),v=scoreCache.get(k);if(v)return v;needed.set(k,{m:model,c:ch,s});return null}
+function heads(d,r,g,hp,mx){const s=stateOf(d,r,null,g,hp,mx),k=model+'|'+CHKEY[ch]+'|'+sKey(s),v=scoreCache.get(k);if(v)return v;needed.set(k,{m:model,c:ch,s});return null}
 function score(d,r,g){const v=heads(d,r,g);return v?v[v.length-1]:0}
+// Card-reward ranking: 0.75 x log P(nearest boss) + 0.25 x log P(Heart), see the roadmap. Models without a usable nearest boss head keep the plain Heart ranking.
+const BLEND=0.75,FLAG_PTS=0.005,NEAR=[['act1_boss',16],['act2_boss',33],['act3_boss',50]];
+function nearHead(){const m=curModel();if(!m||m.heads.length<2)return null;const o=NEAR.find(([h,b])=>floor<=b&&m.heads.includes(h));return o?{k:CAT.heads.indexOf(o[0]),n:o[0]}:null}
+const lg=p=>Math.log(Math.max(p,1e-9));
+// compares a changed deck with the current one: d = Heart change, rk = ranking value, fl = text when the near-term boss and the Heart move in opposite directions
+function addEval(nd,nr,bd,br,ng,bg,nhp,bhp){return dlt(heads(nd,nr,ng,nhp),heads(bd,br,bg,bhp))}
+const hasBl=()=>nearHead()?1:0;
+function dlt(a,b){if(!a||!b)return{d:0,rk:0};const L=a.length-1,d=a[L]-b[L],nh=nearHead();if(!nh)return{d,rk:d};
+ const db=a[nh.k]-b[nh.k];const rk=BLEND*(lg(a[nh.k])-lg(b[nh.k]))+(1-BLEND)*(lg(a[L])-lg(b[L]));return{d,rk,bl:1,fl:db*d<0&&Math.abs(db)>=FLAG_PTS&&Math.abs(d)>=FLAG_PTS?`${db>0?'+':''}${(db*100).toFixed(1)} pts ${NEARNAME[nh.n]} boss, ${d>0?'+':''}${(d*100).toFixed(1)} pts ${curModel().target=='win'?'win':'Heart'}`:''}}
+const blPct=x=>(x.rk>=0?'+':'')+((Math.exp(x.rk)-1)*100).toFixed(1)+'%'; // the blend as a relative change of the geometric mix, the number the list is sorted by
+const NEARNAME={act1_boss:'act 1',act2_boss:'act 2',act3_boss:'act 3'};
+const addOf=(n,bd=deck,br=relics)=>{const {name,u}=splitUp(n),c=lookup(name);if(!c)return{d:0,rk:0};const nd=bd.map(x=>({...x})),e=nd.find(x=>x.n==c.n&&(x.u|0)==u);e?e.c++:nd.push(u?{n:c.n,t:c.t,c:1,u}:{n:c.n,t:c.t,c:1});return addEval(nd,br,bd,br)};
+// explanation shown for a trade-off flag; fl looks like "-16.7 pts act 1 boss, +0.6 pts Heart"
+function tipText(fl){const m=/^([+-][\d.]+) pts (.+?) boss, ([+-][\d.]+) pts (.+)$/.exec(fl||'');if(!m)return fl||'';const [,a,boss,b,tg]=m,down=a[0]=='-';
+ return `Trade-off: this card moves your ${boss} boss odds (${a} pts) and your ${tg} odds (${b} pts) in opposite directions. ${down?`It costs survival now but should help later in the run.`:`It helps now but costs you later in the run.`} The list is sorted by the blend (75% next boss, 25% ${tg}), so it can still rank high. Treat it as a choice to weigh, not a don't-take.`}
+const flagTag=x=>x.fl?` <span class="best tradeoff" data-tip="${tipText(x.fl)}">trade-off</span>`:'';
 async function predictStates(states,m=model,c=ch){const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:m,character:CHKEY[c],states})});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);$('#apiErr').style.display='none';return j.probs}
 let passDepth=0,chain=Promise.resolve(),fetching=0,lastThink={};
 async function fillNeeded(){const ent=[...needed.entries()];needed.clear();if(!ent.length)return;fetching++;updThink();try{const groups=new Map();for(const e of ent){const g=e[1].m+'|'+e[1].c;(groups.get(g)||groups.set(g,[]).get(g)).push(e)}
@@ -256,9 +276,9 @@ const impact=c=>{const d=deck.map(x=>x===c?{...x,c:x.c-1}:x).filter(x=>x.c>0);re
 // what-if deltas, all from the model
 const cloneDeck=()=>deck.map(x=>({...x}));
 function addDelta(n){const c=lookup(n);if(!c)return 0;return score([...cloneDeck(),{n:c.n,t:c.t,c:1}],relics)-score(deck,relics)}
-function removeDelta(k){const d=cloneDeck(),e=d.find(x=>keyOf(x)==k);if(!e)return 0;e.c--;return score(d.filter(x=>x.c>0),relics)-score(deck,relics)}
-function upgradeDelta(n){const d=cloneDeck(),e=d.find(x=>x.n==n&&canUp(x));if(!e)return 0;const lv=isSB(e)?(e.u|0)+1:1;e.c--;d.push({...e,c:1,u:lv});return score(d.filter(x=>x.c>0),relics)-score(deck,relics)}
-function relicDelta(n){const r=RELICS[nk(n)];return score(deck,[...relics,r.n])-score(deck,relics)}
+function removeDelta(k){const d=cloneDeck(),e=d.find(x=>keyOf(x)==k);if(!e)return{d:0,rk:0};e.c--;return addEval(d.filter(x=>x.c>0),relics,deck,relics)}
+function upgradeDelta(n){const d=cloneDeck(),e=d.find(x=>x.n==n&&canUp(x));if(!e)return{d:0,rk:0};const lv=isSB(e)?(e.u|0)+1:1;e.c--;d.push({...e,c:1,u:lv});return addEval(d.filter(x=>x.c>0),relics,deck,relics)}
+function relicDelta(n){const r=RELICS[nk(n)];return addEval(deck,[...relics,r.n],deck,relics)}
 const isSB=c=>(CARDS[nk(c.n)]||{}).col=='searingblow';
 const canUp=c=>{const r=CARDS[nk(c.n)];return !!(r&&r.up&&(isSB(c)||!c.u))};
 const upTag=e=>e.u?(typeof e.u=='number'&&e.u>1?'+'+e.u:'+'):'';
@@ -274,17 +294,16 @@ const removable=c=>!UNREMOVABLE.has(c.n);
 function removeCard(i){if(!deck[i]||!removable(deck[i]))return;snap();deck[i].c--;if(deck[i].c<=0)deck.splice(i,1);renderRun()}
 function upgradeCard(i){const c=deck[i];if(!c||!canUp(c))return;snap();const lv=isSB(c)?(c.u|0)+1:1;c.c--;const e=deck.find((x,j)=>j!=i&&x.n==c.n&&(x.u|0)==lv);if(e)e.c++;else deck.push({...c,c:1,u:lv});if(c.c<=0)deck.splice(deck.indexOf(c),1);renderRun()}
 function downgradeCard(i){const c=deck[i];if(!c||!c.u)return;snap();const lv=isSB(c)?(c.u|0)-1:0;c.c--;const e=deck.find((x,j)=>j!=i&&x.n==c.n&&(x.u|0)==lv);if(e)e.c++;else deck.push({...c,c:1,u:lv});if(c.c<=0)deck.splice(deck.indexOf(c),1);renderRun()}
-function addCardByName(name){const r=checkCard(name);if(r.err)return r;snap();const e=deck.find(x=>x.n==r.c.n&&!x.u);e?e.c++:deck.push({n:r.c.n,t:r.c.t,c:1});renderRun();return{c:r.c}}
+function addCardByName(name){const r=checkCard(name);if(r.err)return r;snap();const e=deck.find(x=>x.n==r.c.n&&(x.u|0)==r.u);e?e.c++:deck.push(r.u?{n:r.c.n,t:r.c.t,c:1,u:r.u}:{n:r.c.n,t:r.c.t,c:1});renderRun();return{c:r.c}}
 function addFromSim(name){const r=addCardByName(name);if(r.err){candErr=r.err;renderSim();return}cardCands=null;candErr='';renderSim()}
 function removeByKey(k){const i=deck.findIndex(x=>keyOf(x)==k);if(i>=0)removeCard(i)}
 function upgradeByName(n){const i=deck.findIndex(x=>x.n==n&&canUp(x));if(i>=0)upgradeCard(i)}
 function takeRelic(n){snap();relics.push(n);relicCands=[];cardCands=null;renderRun()}
-function quickAdd(){const i=$('#quickAdd');if(!i.value.trim())return;const r=addCardByName(i.value.trim());if(r.err){$('#quickErr').textContent=r.err;return}$('#quickErr').textContent='';i.value='';$('#quickAdd').focus()}
 // card picker popup: picks are staged here and only land in the deck (one undo step) when the popup is closed with Done
 let pickFilter='all',pickQ='',pickSort='impact',pend={};
 const pendList=()=>Object.entries(pend).filter(([,n])=>n>0);
 function pendDeck(){const d=deck.map(x=>({...x}));for(const [n,k] of pendList()){const c=lookup(n),e=d.find(x=>x.n==c.n&&!x.u);if(e)e.c+=k;else d.push({n:c.n,t:c.t,c:k})}return d}
-function openPicker(){pend={};pickQ='';pickFilter='all';$('#pickOv').classList.add('on');$('#pickBox').innerHTML=`<div class="bar"><h1 style="margin:0">Add cards</h1><span class="sp"></span><button class="b" onclick="cancelPicker()">Cancel</button><button class="b pri" onclick="closePicker()">Done</button></div><p class="note">Pool: ${poolLabel()}. Click a card to stage a copy (click again for more, ✕ on a card to take one back). Your deck updates when you press Done. The number on each card is the win-rate change in points from adding one more.</p><div class="bar" style="margin-bottom:10px"><input id="pickQ" placeholder="Search cards…" style="flex:1;min-width:160px"><select id="pickSortSel"><option value="impact">Sort: impact</option><option value="name">Sort: name</option></select></div><div class="tabs" id="pickF">${[['all','All'],['attack','Attack'],['skill','Skill'],['power','Power'],['colorless','Colorless'],['curse','Curse']].map(([k,l])=>`<button data-f="${k}" class="${pickFilter==k?'on':''}">${l}</button>`).join('')}</div><div class="panel" id="pickSum" style="margin:0 0 10px;background:var(--panel2)"></div><div class="cards" id="pickGrid"></div>`;
+function openPicker(){pend={};pickQ='';pickFilter='all';$('#pickOv').classList.add('on');$('#pickBox').innerHTML=`<div class="bar"><h1 style="margin:0">Add cards</h1><span class="sp"></span><button class="b" onclick="cancelPicker()">Cancel</button><button class="b pri" onclick="closePicker()">Done</button></div><p class="note">Pool: ${poolLabel()}. Click a card to stage a copy (click again for more, ✕ on a card to take one back). Your deck updates when you press Done. ⚠ marks a trade-off (the next boss and the Heart move in opposite directions). The number on each card is its blend score, which is what the cards are ordered by (75% next boss, 25% Heart, as a relative change); hover for the Heart change in points.</p><div class="bar" style="margin-bottom:10px"><input id="pickQ" placeholder="Search cards…" style="flex:1;min-width:160px"><select id="pickSortSel"><option value="impact">Sort: impact</option><option value="name">Sort: name</option></select></div><div class="tabs" id="pickF">${[['all','All'],['attack','Attack'],['skill','Skill'],['power','Power'],['colorless','Colorless'],['curse','Curse']].map(([k,l])=>`<button data-f="${k}" class="${pickFilter==k?'on':''}">${l}</button>`).join('')}</div><div class="panel" id="pickSum" style="margin:0 0 10px;background:var(--panel2)"></div><div class="cards" id="pickGrid"></div>`;
  $('#pickQ').oninput=e=>{pickQ=e.target.value;renderPickGrid()};$('#pickSortSel').onchange=e=>{pickSort=e.target.value;renderPickGrid()};
  $('#pickF').onclick=e=>{const f=e.target.dataset.f;if(!f)return;pickFilter=f;document.querySelectorAll('#pickF button').forEach(b=>b.classList.toggle('on',b.dataset.f==f));renderPickGrid()};
  $('#pickGrid').onclick=e=>{const el=e.target.closest('.card');if(!el)return;const n=el.dataset.n;if(e.target.closest('.unstage')){pend[n]=Math.max(0,(pend[n]||0)-1)}else pend[n]=(pend[n]||0)+1;renderPickGrid()};
@@ -292,15 +311,15 @@ function openPicker(){pend={};pickQ='';pickFilter='all';$('#pickOv').classList.a
 function closePicker(){if(!$('#pickOv').classList.contains('on'))return;const list=pendList();$('#pickOv').classList.remove('on');if(list.length){snap();for(const [n,k] of list){const c=lookup(n),e=deck.find(x=>x.n==c.n&&!x.u);if(e)e.c+=k;else deck.push({n:c.n,t:c.t,c:k})}renderRun()}pend={}}
 function cancelPicker(){pend={};$('#pickOv').classList.remove('on')}
 function renderPickGrid(){const pd=pendDeck(),base=score(pd,relics),ov=$('#pickOv'),top=ov.scrollTop,q=nk(pickQ),orig=score(deck,relics);
- let list=poolList().filter(c=>(pickFilter=='all'||(pickFilter=='colorless'?c.own=='colorless':pickFilter=='curse'?c.t=='curse':c.t==pickFilter&&c.own!='colorless'&&c.t!='curse'))&&(!q||nk(c.n).includes(q))).map(c=>({c,d:score([...pd.map(x=>({...x})),{n:c.n,t:c.t,c:1}],relics)-base}));
- list.sort(pickSort=='name'?(a,b)=>a.c.n.localeCompare(b.c.n):(a,b)=>b.d-a.d);
+ let list=poolList().filter(c=>(pickFilter=='all'||(pickFilter=='colorless'?c.own=='colorless':pickFilter=='curse'?c.t=='curse':c.t==pickFilter&&c.own!='colorless'&&c.t!='curse'))&&(!q||nk(c.n).includes(q))).map(c=>({c,...addOf(c.n,pd)}));
+ list.sort(pickSort=='name'?(a,b)=>a.c.n.localeCompare(b.c.n):(a,b)=>b.rk-a.rk);
  const pl=pendList(),tot=pl.reduce((s,[,k])=>s+k,0),dd=base-orig;
  $('#pickSum').innerHTML=pl.length?`<b>Staged (${tot}):</b> ${pl.map(([n,k])=>`<span class="chip">${n}${k>1?' ×'+k:''}</span>`).join(' ')}<div class="note" style="margin-top:6px">Win rate if you press Done: <b class="mono">${pct(base)}</b> <span class="mono ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)} pts</span> · deck ${deck.reduce((s,c)=>s+c.c,0)} → ${deck.reduce((s,c)=>s+c.c,0)+tot} cards</div>`:`<span class="note">${list.length} cards. Nothing staged yet.</span>`;
- $('#pickGrid').innerHTML=list.map(({c,d})=>{const have=deck.filter(x=>x.n==c.n).reduce((s,x)=>s+x.c,0),p=pend[c.n]||0;return `<div class="card ${c.t}" data-n="${c.n}" style="cursor:pointer;${p?'box-shadow:0 0 0 3px var(--good)':''}"><span class="imp ${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(1)}</span>${have?`<span class="cnt">×${have}</span>`:''}${p?`<span class="cnt" style="top:auto;bottom:-8px;background:var(--good);color:#06210d">+${p}</span><button class="unstage b" style="position:absolute;top:30px;right:6px;padding:0 6px;font-size:11px" title="Take one back">✕</button>`:''}<div class="art"></div><div class="nm">${c.n}</div><div class="ty">${c.t}${c.own=='colorless'?' · colorless':c.own!=ch&&c.own!='curse'?' · '+c.own:''}</div></div>`}).join('')||'<div class="note">No cards match.</div>';
+ $('#pickGrid').innerHTML=list.map(({c,d,fl,bl,rk})=>{const have=deck.filter(x=>x.n==c.n).reduce((s,x)=>s+x.c,0),p=pend[c.n]||0;return `<div class="card ${c.t}" data-n="${c.n}" style="cursor:pointer;${p?'box-shadow:0 0 0 3px var(--good)':''}"><span class="imp ${(bl?rk:d)>=0?'up':'dn'}" title="${[bl?'Heart '+(d>=0?'+':'')+(d*100).toFixed(2)+' pts':'',tipText(fl)].filter(Boolean).join('. ')}">${fl?'⚠ ':''}${bl?blPct({rk}):(d>=0?'+':'')+(d*100).toFixed(1)}</span>${have?`<span class="cnt">×${have}</span>`:''}${p?`<span class="cnt" style="top:auto;bottom:-8px;background:var(--good);color:#06210d">+${p}</span><button class="unstage b" style="position:absolute;top:30px;right:6px;padding:0 6px;font-size:11px" title="Take one back">✕</button>`:''}<div class="art"></div><div class="nm">${c.n}</div><div class="ty">${c.t}${c.own=='colorless'?' · colorless':c.own!=ch&&c.own!='curse'?' · '+c.own:''}</div></div>`}).join('')||'<div class="note">No cards match.</div>';
  ov.scrollTop=top}
 function renderRun(){
   const mcur=MODELS.find(m=>m.id==model);syncRunInputs();$('#stateNote').textContent=mcur.usesHp||mcur.usesGold?`This model uses your ${[mcur.usesHp?'HP':'',mcur.usesGold?'gold':''].filter(Boolean).join(' and ')}: set the real values (the defaults it falls back on cost it a little accuracy).`:'This model does not use HP or gold.';$('#tgtH').textContent=mcur.target=='win'?'Win probability (any victory)':'Heart-kill probability';$('#floorNote').style.display=mcur.floorInput?'none':'block';$('#floorNote').textContent='This model has no floor input, so the floor does not change its numbers.';
-  $('#chName').textContent=ch;$('#undo').textContent='↶ Undo'+(hist.length?' ('+hist.length+')':'');$('#undo').disabled=!hist.length;$('#relicList2').innerHTML=relicPool().map(r=>`<option value="${r.n}">`).join('');$('#cardList2').innerHTML=poolList().map(c=>`<option value="${c.n}">`).join('');
+  $('#chName').textContent=ch;$('#undo').textContent='↶ Undo'+(hist.length?' ('+hist.length+')':'');$('#undo').disabled=!hist.length;$('#relicList2').innerHTML=relicPool().map(r=>`<option value="${r.n}">`).join('');
   const H=heads(deck,relics),w=H?H[H.length-1]:0,sst=startState(ch),b0=score(sst.deck,sst.relics);
   $('#wr').textContent=pct(w);const d=w-b0;$('#wrd').className='delta '+(d>=0?'up':'dn');$('#wrd').textContent=(d>=0?'▲ ':'▼ ')+Math.abs(d*100).toFixed(1)+' pts vs. the starting deck at this floor';
   $('#wrNote').textContent='Baseline for every what-if below is this number.';
@@ -315,17 +334,20 @@ function renderRun(){
   renderSim();
 }
 // what-if
-const TABS=['Add card','Remove','Upgrade','Shop','Next best','Relic'];let tab=0;let cands=['Wallop','Sanctity','Conclude'];
+const TABS=['Add card','Remove','Upgrade','Transform','Campfire','Event','Shop','Next best','Relic'];let tab=0;let cands=['Wallop','Sanctity','Conclude'];
 $('#simTabs').innerHTML=TABS.map((t,i)=>`<button class="${i==tab?'on':''}" data-i="${i}">${t}</button>`).join('');
-$('#simTabs').onclick=e=>{if(e.target.dataset.i==null)return;tab=+e.target.dataset.i;document.querySelectorAll('#simTabs button').forEach((b,i)=>b.classList.toggle('on',i==tab));renderSim();if(tab==3)openShop()};
-function rows(items,dfn,ov,act){const w=score(deck,relics);const r=items.map(n=>{const o=ov?ov(n):null;return o==='pending'?{n,pend:1,d:-1e9}:o?{n,d:o.d,se:o.se,ms:o.ms,n2:o.n}:{n,d:dfn(n)}}).sort((a,b)=>b.d-a.d);
- return `<div class="res"><span>Skip / do nothing</span><span class="mono">${pct(w)}</span><span class="mono note">baseline</span></div>`+r.map((x,i)=>x.pend?`<div class="res"><span>${x.n}</span><span class="note" style="grid-column:2/4;text-align:right">${THINK}</span></div>`:`<div class="res"><span>${x.n}${i==0&&x.d>0?'<span class="best">BEST</span>':''}${act?` <button class="b" style="padding:1px 8px;font-size:11px" onclick='${act.fn}(${JSON.stringify(x.n).replace(/'/g,"&#39;")})'>${act.label}</button>`:''}</span><span class="mono">${pct(w+x.d)}</span><span class="mono delta ${x.d>=0?'up':'dn'}">${x.d>=0?'+':''}${(x.d*100).toFixed(2)}${x.se?`<span class="note"> ±${(x.se*100).toFixed(2)}</span>`:''}</span></div>`).join('')}
+$('#simTabs').onclick=e=>{if(e.target.dataset.i==null)return;tab=+e.target.dataset.i;document.querySelectorAll('#simTabs button').forEach((b,i)=>b.classList.toggle('on',i==tab));renderSim();if(tab==6)openShop()};
+function rows(items,dfn,ov,act){const w=score(deck,relics);const r=items.map(n=>{const o=ov?ov(n):null;return o==='pending'?{n,pend:1,d:-1e9}:o?{...o,n}:(()=>{const v=dfn(n);return typeof v=='object'?{n,...v}:{n,d:v}})()}).sort((a,b)=>(b.rk??b.d)-(a.rk??a.d));
+ return `<div class="res"><span>Skip / do nothing</span><span class="mono">${pct(w)}</span><span class="mono note">baseline</span></div>`+r.map((x,i)=>x.pend?`<div class="res"><span>${x.n}</span><span class="note" style="grid-column:2/4;text-align:right">${THINK}</span></div>`:`<div class="res"><span>${x.n}${i==0&&(x.rk??x.d)>0?'<span class="best">BEST</span>':''}${flagTag(x)}${act?` <button class="b" style="padding:1px 8px;font-size:11px" onclick='${act.fn}(${JSON.stringify(x.n).replace(/'/g,"&#39;")})'>${act.label}</button>`:''}</span><span class="mono">${pct(w+x.d)}</span><span class="mono delta ${(x.bl?x.rk:x.d)>=0?'up':'dn'}" ${x.bl?'title="Blend score, the number the list is sorted by: 0.75 x change in log P(nearest boss) + 0.25 x change in log P(Heart), as a relative change"':''}>${x.bl?`<b>${blPct(x)}</b><br><span class="note">Heart ${x.d>=0?'+':''}${(x.d*100).toFixed(2)} pts</span>`:`${x.d>=0?'+':''}${(x.d*100).toFixed(2)}`}${x.se?`<span class="note"> ±${(x.se*100).toFixed(2)}</span>`:''}</span></div>`).join('')}
 function renderSim(){const b=$('#simBody');
- if(tab==0||tab==5)renderCandTab(b,tab==5);
- else if(tab==1)b.innerHTML=`<div class="lbl">Every card in the deck, ranked by what removing one copy does</div>`+rows([...new Set(deck.filter(removable).map(keyOf))],removeDelta,null,{label:'Remove',fn:'removeByKey'});
+ if(tab==0||tab==8)renderCandTab(b,tab==8);
+ else if(tab==1)renderRemove(b);
  else if(tab==2)b.innerHTML=`<div class="lbl">Every upgradable card, ranked</div>`+rows([...new Set(deck.filter(canUp).map(c=>c.n))],upgradeDelta,null,{label:'Upgrade',fn:'upgradeByName'});
- else if(tab==3)renderShopSummary(b);
- else b.innerHTML=`<div class="lbl">Best single card to add from the full card pool</div>`+rows(topPicks(),addDelta,null,{label:'Add',fn:'addFromSim'})+`<div class="note" style="margin-top:6px">Searched: ${poolLabel()}</div>`}
+ else if(tab==3)renderTransform(b);
+ else if(tab==4)renderCampfire(b);
+ else if(tab==5)renderEvent(b);
+ else if(tab==6)renderShopSummary(b);
+ else b.innerHTML=`<div class="lbl">Best single card to add from the full card pool</div>`+rows(topPicks(),addOf,null,{label:'Add',fn:'addFromSim'})+`<div class="note" style="margin-top:6px">Searched: ${poolLabel()}</div>`}
 
 // relics that remove or transform cards
 const FX={'Empty Cage':{kind:'remove',n:2,note:'Remove 2 cards (one time)'},'Astrolabe':{kind:'transform',n:3,up:1,note:'Transform 3 cards into random upgraded ones (one time)'},'Peace Pipe':{kind:'remove',n:1,note:'Remove 1 card at each rest site (repeatable)',rep:1},"Pandora's Box":{kind:'all',note:'Transforms every Strike and Defend into a random card (on pickup, no choice)'}};
@@ -333,21 +355,199 @@ const keyOf=e=>e.n+upTag(e);
 const xPool=()=>poolList().filter(c=>!['colorless','curse','starter','special'].includes(c.own));
 const xSample=()=>{const P=xPool();return P.length<=60?P:[...P].sort((a,b)=>hash(a.n)-hash(b.n)).slice(0,60)}; // a fixed sample of what a transform could give (every card when the pool is small)
 const delPool=(d,e)=>d.map(x=>x===e?{...x,c:x.c-1}:x).filter(x=>x.c>0);
-function xDelta(d,e,fx){const b=score(d,relics),w=delPool(d,e);if(fx.kind=='remove')return score(w,relics)-b;let t=0,n=0;for(const c of xSample()){if(c.n==e.n)continue;t+=score([...w,{n:c.n,t:c.t,c:1,u:fx.up?1:0}],relics);n++}return t/n-b}
+function xDelta(d,e,fx){const w=delPool(d,e);if(fx.kind=='remove')return addEval(w,relics,d,relics);let t=0,k=0,n=0;for(const c of xSample()){if(c.n==e.n)continue;const v=addEval([...w,{n:c.n,t:c.t,c:1,u:fx.up?1:0}],relics,d,relics);t+=v.d;k+=v.rk;n++}return{d:t/n,rk:k/n,bl:hasBl()}}
 function recFor(name){const fx=FX[name],d=deck.map(x=>({...x})),cand=d.filter(removable);
  if(fx.kind=='all'){const basic=d.filter(x=>x.n=='Strike'||x.n=='Defend');return{fx,n:basic.reduce((s,x)=>s+x.c,0),basic}}
- const ranked=cand.map(e=>({name:keyOf(e),c:e.c,e,dl:xDelta(d,e,fx)})).sort((a,b)=>b.dl-a.dl);
- let picks=[],total=0;
+ const ranked=cand.map(e=>{const v=xDelta(d,e,fx);return{name:keyOf(e),c:e.c,e,dl:v.d,rk:v.rk}}).sort((a,b)=>b.rk-a.rk);
+ let picks=[],total={d:0,rk:0};
  if(fx.kind=='remove'){ // every way of removing n cards is scored, so the pick is exact (it may take both copies of one card)
-  const b=score(d,relics);let bestSet=null;
+  let bestSet=null;
   const sets=fx.n==1?cand.map(e=>[e]):cand.flatMap((e,i)=>cand.slice(i).map(f=>[e,f])).filter(([e,f])=>e!==f||e.c>=2);
-  for(const st of sets){const w=d.map(x=>({...x,c:x.c-st.filter(y=>y===x).length})).filter(x=>x.c>0);const dl=score(w,relics)-b;if(!bestSet||dl>bestSet.dl)bestSet={st,dl}}
-  if(bestSet){total=bestSet.dl;picks=bestSet.st.map(e=>{const r=ranked.find(x=>x.e===e);return{name:keyOf(e),dl:r?r.dl:0,e}})}
- }else{picks=ranked.slice(0,fx.n).map(r=>({name:r.name,dl:r.dl,e:r.e}));total=picks.reduce((s,p)=>s+p.dl,0)}
+  for(const st of sets){const w=d.map(x=>({...x,c:x.c-st.filter(y=>y===x).length})).filter(x=>x.c>0);const v=addEval(w,relics,d,relics);if(!bestSet||v.rk>bestSet.v.rk)bestSet={st,v}}
+  if(bestSet){total=bestSet.v;picks=bestSet.st.map(e=>{const r=ranked.find(x=>x.e===e);return{name:keyOf(e),dl:r?r.dl:0,rk:r?r.rk:0,e}})}
+ }else{picks=ranked.slice(0,fx.n).map(r=>({name:r.name,dl:r.dl,rk:r.rk,e:r.e}));total={d:picks.reduce((s,p)=>s+p.dl,0),rk:picks.reduce((s,p)=>s+p.rk,0)}}
+ total={...total,bl:hasBl()};
  return{fx,picks,ranked,total}}
+const withoutKeys=(d,keys)=>{const w=d.map(x=>({...x}));for(const k of keys){const e=w.find(x=>keyOf(x)==k&&x.c>0);if(e)e.c--}return w.filter(x=>x.c>0)};
+const rmEnts=()=>deck.filter(removable),rmTotal=()=>rmEnts().reduce((s,e)=>s+e.c,0);
+const chipsOf=(keys,extra)=>keys.map(k=>`<span class="chip" style="border-color:var(--good)">${k}</span>`).join('');
+const jsArg=a=>JSON.stringify(a).replace(/'/g,"&#39;");
+const countBox=(label,id,val,max)=>`<label class="note" style="display:block;margin:6px 0">${label} <input type="number" min="1" max="${Math.max(1,max)}" value="${val}" style="width:60px" onchange="${id}=Math.max(1,Math.min(${Math.max(1,max)},+this.value||1));renderSim()"></label>`;
+// every way of removing n cards (cards of one kind can be taken more than once); null when there are too many to try
+function removeSets(n,cap=1500){const ents=rmEnts().map(e=>({k:keyOf(e),c:e.c})),out=[];let over=false;
+ (function rec(i,left,cur){if(over)return;if(left==0){if(out.push(cur)>cap)over=true;return}if(i>=ents.length)return;for(let t=Math.min(ents[i].c,left);t>=0;t--)rec(i+1,left-t,t?cur.concat(Array(t).fill(ents[i].k)):cur)})(0,n,[]);return over?null:out}
+function bestRemove(n){n=Math.min(n,rmTotal());if(n<1)return null;const sets=removeSets(n);let best=null;
+ if(sets){for(const st of sets){const v=addEval(withoutKeys(deck,st),relics,deck,relics);if(!best||v.rk>best.v.rk)best={keys:st,v}}}
+ else{const pk=[];for(let i=0;i<n;i++){let b=null;for(const e of rmEnts()){const k=keyOf(e);if(pk.filter(x=>x==k).length>=e.c)continue;const v=addEval(withoutKeys(deck,[...pk,k]),relics,deck,relics);if(!b||v.rk>b.v.rk)b={k,v}}pk.push(b.k)}best={keys:pk,v:addEval(withoutKeys(deck,pk),relics,deck,relics),greedy:true}}
+ return best}
+let nRm=1,nXf=1;
+function renderRemove(b){const tot=rmTotal();nRm=Math.max(1,Math.min(nRm,tot||1));let h=`<div class="lbl">Remove cards</div>`+countBox('Cards to remove','nRm',nRm,Math.min(5,tot));
+ if(nRm>1){const r=bestRemove(nRm);if(r)h+=`<div class="panel" style="background:var(--panel2);margin:8px 0"><b>Best ${r.keys.length} to remove</b><div style="margin:8px 0">${chipsOf(r.keys)}</div><div class="note">Together: ${fmtSim({mean:r.v.d,mk:r.v.rk,bl:r.v.bl,se:0,n:0})}. ${r.greedy?'Greedy pick (the deck has too many combinations to try them all).':'Every combination was scored, so this is the best set.'}</div><button class="b pri" style="margin-top:8px" onclick='removeKeys(${jsArg(r.keys)})'>Remove these ${r.keys.length}</button></div>`}
+ h+=`<div class="lbl" style="margin-top:10px">${nRm>1?'Each card on its own (one copy)':'Every card in the deck, ranked by what removing one copy does'}</div>`+rows([...new Set(rmEnts().map(keyOf))],removeDelta,null,{label:'Remove',fn:'removeByKey'});b.innerHTML=h}
+function removeKeys(keys){snap();for(const k of keys){const i=deck.findIndex(x=>keyOf(x)==k);if(i>=0&&removable(deck[i])){deck[i].c--;if(deck[i].c<=0)deck.splice(i,1)}}renderRun()}
+// transforming cards: one at a time is averaged over a fixed sample of the cards you could get; several are picked greedily (each pick assumes the earlier ones are gone) and the chosen set is then scored by Monte Carlo draws
+let xfUp=false;
+const xfDelta=k=>{const d=deck.map(x=>({...x})),e=d.find(x=>keyOf(x)==k);return e?xDelta(d,e,{kind:'transform',up:xfUp}):{d:0,rk:0}};
+function xfPlan(n){n=Math.min(n,rmTotal());const keys=[];for(let i=0;i<n;i++){const w=withoutKeys(deck,keys);let b=null;for(const e of w.filter(removable)){const v=xDelta(w,e,{kind:'transform',up:xfUp});if(!b||v.rk>b.rk)b={k:keyOf(e),rk:v.rk}}if(!b)break;keys.push(b.k)}return keys}
+const xfKey=keys=>['xf',ch,model,relics.join(','),deckKey(),keys.join('|'),xfUp?1:0,floor,runHp,runMax,gold].join('#');
+function xfGet(keys){const k=xfKey(keys);if(simCache.has(k))return simCache.get(k);if(!simRun.has(k)){simRun.add(k);runXf(keys,k)}return null}
+async function runXf(keys,k){const t0=performance.now(),m0=model,c0=ch,fl=floor,up=xfUp?1:0,rel=[...relics],w=withoutKeys(deck,keys),slots=keys.map(x=>x.replace(/\+.*$/,'')),P=xPool(),R=rng(k);
+ simBusy++;lastThink={name:'transform',n:0,se:1};updThink();
+ try{const baseH=(await predictStates([stateOf(deck,rel,fl)],m0,c0))[0];let n=0,mean=0,M2=0,mk=0,se=1,capped=false;
+  while(true){const states=[];for(let i=0;i<BATCH;i++){const draw=slots.map(ex=>{let c;do{c=P[Math.floor(R()*P.length)]}while(c.n==ex);return{n:c.n,t:c.t,c:1,u:up}});states.push(stateOf([...w,...draw],rel,fl))}
+   const probs=await predictStates(states,m0,c0);for(const row of probs){const v=dlt(row,baseH);n++;const dd=v.d-mean;mean+=dd/n;M2+=dd*(v.d-mean);mk+=(v.rk-mk)/n}
+   se=Math.sqrt(M2/(n-1)/n);const el=performance.now()-t0;lastThink={name:'transform',n,se};updThink();
+   if(n>=BATCH*2&&se<SE_TARGET)break;if(n>=MAX_DRAWS)break;if(el>=MAX_MS){capped=se>=SE_TARGET;break}}
+  simCache.set(k,{mean,mk,bl:hasBl(),se,n,ms:performance.now()-t0,capped});
+ }catch(e){showErr(e);simCache.set(k,{mean:0,mk:0,se:0,n:0,ms:0,capped:false,failed:true})}
+ finally{simBusy--;updThink();if(tab==3)renderSim()}}
+function renderTransform(b){const tot=rmTotal();nXf=Math.max(1,Math.min(nXf,tot||1));
+ let h=`<div class="lbl">Transform cards</div>`+countBox('Cards to transform','nXf',nXf,Math.min(5,tot))+`<label class="note" style="display:block;margin:6px 0"><input type="checkbox" ${xfUp?'checked':''} onchange="xfUp=this.checked;renderSim()"> The new cards are upgraded (Astrolabe, some events)</label>`;
+ if(nXf>1){const keys=xfPlan(nXf),v=keys.length?xfGet(keys):null;h+=`<div class="panel" style="background:var(--panel2);margin:8px 0"><b>Best ${keys.length} to transform</b><div style="margin:8px 0">${chipsOf(keys)}</div><div class="note">Together, after the random results: ${v?fmtSim(v):THINK}. Greedy pick, each card chosen assuming the earlier ones are gone.</div><button class="b pri" style="margin-top:8px" onclick='transformKeys(${jsArg(keys)})'>Transform these ${keys.length} (enter results)</button></div>`}
+ h+=`<div class="lbl" style="margin-top:10px">${nXf>1?'Each card on its own (one copy)':'Every card that can be transformed, ranked by the average result'}</div>`+rows([...new Set(rmEnts().map(keyOf))],xfDelta,null,{label:'Transform',fn:'transformByKey'})+`<div class="note" style="margin-top:6px">Average over ${xSample().length} cards you could get (${poolLabel()}, no colorless or curses; never the same card). A transform is random, so the real result varies around these numbers. Press Transform and enter what you received to update the deck.</div>`;b.innerHTML=h}
+const transformByKey=k=>transformKeys([k]);
+function transformKeys(keys){const n=keys.length;if(!n||keys.some(k=>{const e=deck.find(x=>keyOf(x)==k);return !e||!removable(e)}))return;const txt=prompt(n==1?`Enter the card you got from transforming ${keys[0]} (add + if it is upgraded)`:`Enter the ${n} cards you got from transforming ${keys.join(', ')}, comma separated (add + if upgraded)`);if(txt==null||!txt.trim())return;const names=txt.split(',').map(x=>x.trim()).filter(Boolean);if(names.length!=n){alert(`Need exactly ${n} card${n>1?'s':''}`);return}
+ const got=[];for(const nm of names){const r=checkCard(nm);if(r.err){alert(r.err);return}got.push({r,u:r.u||(xfUp&&r.c.up?1:0)})}
+ snap();for(const k of keys){const i=deck.findIndex(x=>keyOf(x)==k);if(i>=0){deck[i].c--;if(deck[i].c<=0)deck.splice(i,1)}}
+ for(const {r,u} of got){const e=deck.find(x=>x.n==r.c.n&&(x.u|0)==u);e?e.c++:deck.push(u?{n:r.c.n,t:r.c.t,c:1,u}:{n:r.c.n,t:r.c.t,c:1})}renderRun()}
+// campfire: only the options the relics in the inventory allow are offered
+const heldR=n=>relics.some(r=>nk(r)==nk(n));
+const BOSS_RELICS=new Set(['Astrolabe','Black Blood','Black Star','Busted Crown','Calling Bell','Coffee Dripper','Cursed Key','Ectoplasm','Empty Cage','Fusion Hammer','Hovering Kite','Mark of Pain',"Pandora's Box","Philosopher's Stone",'Ring of the Serpent','Runic Cube','Runic Dome','Runic Pyramid','Sacred Bark',"Slaver's Collar",'Snecko Eye','Sozu','Velvet Choker','Wrist Blade','Tiny House','Violet Lotus','Holy Water','Pure Water','Burning Blood','Ring of the Snake','Cracked Core','Tiny Chest']);
+function digPool(){const P=Object.values(RELICS).filter(r=>(r.own=='shared'||r.own==ch)&&!holds(r.n)&&!BOSS_RELICS.has(r.n));return P.length<=60?P:[...P].sort((a,b)=>hash(a.n)-hash(b.n)).slice(0,60)}
+// Dream Catcher: the expected value of the card reward you get for resting. Every card of the pool is scored after the heal (same HP for all); the choice among the offered random cards (or a skip) is the best of them, so the value is the sum over cards of P(it is the best of K) x its value
+// cards shown in a card reward: 3, two fewer with Busted Crown (so 1), one more with Question Card
+const rewardSize=()=>Math.max(1,3-(heldR('Busted Crown')?2:0)+(heldR('Question Card')?1:0));
+function dreamValue(hp2){const P=xPool(),K=rewardSize(),sk=addEval(deck,relics,deck,relics,undefined,undefined,hp2,runHp),n=P.length;if(!n)return sk;
+ const vs=P.map(c=>addEval([...deck.map(x=>({...x})),{n:c.n,t:c.t,c:1}],relics,deck,relics,undefined,undefined,hp2,runHp)).sort((a,b)=>a.rk-b.rk);let rk=0,d=0;
+ vs.forEach((v,i)=>{const p=Math.pow((i+1)/n,K)-Math.pow(i/n,K),take=v.rk>=sk.rk;rk+=p*(take?v.rk:sk.rk);d+=p*(take?v.d:sk.d)});return{d,rk,bl:hasBl()}}
+function campOptions(){const o=[],m=curModel();
+ if(heldR('Coffee Dripper'))o.push({id:'rest',name:'Rest',block:'Coffee Dripper: you cannot rest'});
+ else{const heal=Math.floor(runMax*0.3)+(heldR('Regal Pillow')?15:0),hp2=Math.min(runMax,runHp+heal),got=hp2-runHp;
+  const dc=heldR('Dream Catcher'),hpEv=m.usesHp?addEval(deck,relics,deck,relics,undefined,undefined,hp2,runHp):null,dv=dc?dreamValue(hp2):null;
+  o.push({id:'rest',name:`Rest (+${got} HP${heldR('Regal Pillow')?', Regal Pillow':''}${dc?', Dream Catcher card':''})`,ev:dc?dv:hpEv,note:dc?`includes the expected ${rewardSize()>1?'best of '+rewardSize()+' random cards':'1 random card'} from the reward${heldR('Busted Crown')?' (Busted Crown shows two fewer)':''}${heldR('Question Card')?' (Question Card shows one more)':''}, or a skip (rarity ignored)${m.usesHp?'':'; this model does not read HP, so the heal is not scored'}. After resting, enter the cards offered in the Add card tab`:(m.usesHp?(got<=0?'already at full HP':''):'this model does not read HP, so it cannot judge resting'),hp2})}
+ if(heldR('Fusion Hammer'))o.push({id:'smith',name:'Smith',block:'Fusion Hammer: you cannot smith'});
+ else{const names=[...new Set(deck.filter(canUp).map(c=>c.n))].map(n=>({n,v:upgradeDelta(n)})).sort((a,b)=>b.v.rk-a.v.rk);
+  o.push(names.length?{id:'smith',name:`Smith: ${names[0].n}`,ev:names[0].v,pick:names[0].n,note:'best upgrade (see the Upgrade tab for all)'}:{id:'smith',name:'Smith',block:'nothing left to upgrade'})}
+ if(heldR('Peace Pipe')){const r=bestRemove(1);o.push(r?{id:'toke',name:`Toke: ${r.keys[0]}`,ev:r.v,pick:r.keys[0],note:'Peace Pipe, remove a card'}:{id:'toke',name:'Toke',block:'no card can be removed'})}
+ if(heldR('Shovel')){let t=0,k=0,n=0;const P=digPool();for(const r of P){const v=addEval(deck,[...relics,r.n],deck,relics);t+=v.d;k+=v.rk;n++}o.push({id:'dig',name:'Dig (Shovel)',ev:n?{d:t/n,rk:k/n,bl:hasBl()}:{d:0,rk:0},note:`random relic, averaged over ${n} you could get (rarity ignored, boss relics left out); relic effects are the least reliable numbers`})}
+ if(heldR('Girya'))o.push({id:'lift',name:'Lift (Girya)',ev:null,note:'+1 Strength, up to 3 times; Strength is not a model input, so it cannot be scored'});
+ return o}
+function renderCampfire(b){const opts=campOptions(),w=score(deck,relics),sc=opts.filter(x=>x.ev),best=sc.reduce((a,x)=>!a||x.ev.rk>a.ev.rk?x:a,null);
+ b.innerHTML=`<div class="lbl">Campfire options, from the relics you hold</div><div class="note" style="margin:6px 0">HP ${runHp}/${runMax}. Smith needs no relic, Toke needs Peace Pipe, Dig needs Shovel, Lift needs Girya, and Coffee Dripper or Fusion Hammer block resting or smithing.</div>
+ <div class="res"><span>Leave without doing anything</span><span class="mono">${pct(w)}</span><span class="mono note">baseline</span></div>`+opts.map(x=>{
+  if(x.block)return `<div class="res" style="opacity:.55"><span>${x.name} <span class="note">${x.block}</span></span><span></span><span></span></div>`;
+  if(!x.ev)return `<div class="res"><span>${x.name}${x.id=='rest'?` <button class="b" style="padding:1px 8px;font-size:11px" onclick="campApply('rest')">Do it</button>`:''}<div class="note">${x.note}</div></span><span></span><span class="mono note">not scored</span></div>`;
+  const isB=best===x&&x.ev.rk>0;
+  return `<div class="res"><span>${x.name}${isB?'<span class="best">BEST</span>':''}${flagTag(x.ev)} <button class="b" style="padding:1px 8px;font-size:11px" onclick='campApply(${jsArg(x.id)})'>Do it</button>${x.note?`<div class="note">${x.note}</div>`:''}</span><span class="mono">${pct(w+x.ev.d)}</span><span class="mono delta ${(x.ev.bl?x.ev.rk:x.ev.d)>=0?'up':'dn'}"><b>${x.ev.bl?blPct(x.ev):hs(x.ev)}</b>${x.ev.bl?`<br><span class="note">Heart ${hs(x.ev)} pts</span>`:''}</span></div>`}).join('')}
+function campApply(id){const o=campOptions().find(x=>x.id==id);if(!o||o.block)return;
+ if(id=='rest'){snap();runHp=o.hp2;renderRun()}
+ else if(id=='smith')upgradeByName(o.pick)
+ else if(id=='toke')removeKeys([o.pick])
+ else if(id=='dig'){const t=prompt('Enter the relic you dug up');if(t==null||!t.trim())return;const r=checkRelic(t);if(r.err){alert(r.err);return}takeRelic(r.r.n)}}
+// ---- event simulator. An event is entered by name, its options are scored with the model where they can be, and the rest is called out.
+// The effect of an option is a bundle (see ui/server/build_events.py): the fixed parts are applied first, then the model picks the cards for the choices
+// (remove, upgrade, duplicate, transform), then random results (random cards, relics, curses, transform results) are averaged over seeded draws.
+let evName='',evRes={};
+const evFind=n=>(CAT.events||[]).find(e=>nk(e.name)==nk(n)),evAct=()=>floor<=16?1:floor<=33?2:3;
+const CURSE_POOL=['Regret','Decay','Doubt','Shame','Writhe','Pain','Parasite','Injury','Normality','Clumsy'];
+const hsS=S=>heads(S.deck,S.relics,S.gold,S.hp,S.mx);
+const baseS=()=>({deck:cloneDeck(),relics:[...relics],hp:runHp,mx:runMax,gold});
+const cloneS=S=>({deck:S.deck.map(x=>({...x})),relics:[...S.relics],hp:S.hp,mx:S.mx,gold:S.gold});
+function sAdd(S,name){const {name:n,u}=splitUp(name),c=lookup(n);if(!c)return;const e=S.deck.find(x=>x.n==c.n&&(x.u|0)==u);e?e.c++:S.deck.push(u?{n:c.n,t:c.t,c:1,u}:{n:c.n,t:c.t,c:1})}
+function sDrop(S,k){const e=S.deck.find(x=>keyOf(x)==k&&x.c>0);if(!e||!removable(e))return false;e.c--;S.deck=S.deck.filter(x=>x.c>0);return true}
+function sUp(S,k){const e=S.deck.find(x=>keyOf(x)==k&&x.c>0);if(!e||!canUp(e))return false;const lv=isSB(e)?(e.u|0)+1:1;e.c--;const t=S.deck.find(x=>x!==e&&x.n==e.n&&(x.u|0)==lv);if(t)t.c++;else S.deck.push({...e,c:1,u:lv});S.deck=S.deck.filter(x=>x.c>0);return true}
+function sDup(S,k){const e=S.deck.find(x=>keyOf(x)==k&&x.c>0);if(!e)return false;e.c++;return true}
+function evDet(E,S){
+ if(E.gold_all)S.gold=0;if(E.gold)S.gold=Math.max(0,S.gold+E.gold);if(E.gold_per_act)S.gold+=E.gold_per_act*evAct();
+ if(E.max_hp){S.mx=Math.max(1,S.mx+E.max_hp);S.hp=E.max_hp>0?Math.min(S.mx,S.hp+E.max_hp):Math.min(S.hp,S.mx)}
+ if(E.max_hp_pct){S.mx=Math.max(1,S.mx+Math.round(S.mx*E.max_hp_pct));S.hp=Math.min(S.hp,S.mx)}
+ if(E.hp)S.hp=Math.max(1,Math.min(S.mx,S.hp+E.hp));
+ if(E.hp_pct_max)S.hp=Math.max(1,S.hp+Math.round(S.mx*E.hp_pct_max));
+ if(E.heal_pct_max)S.hp=Math.min(S.mx,S.hp+Math.floor(S.mx*E.heal_pct_max));
+ if(E.heal_full)S.hp=S.mx;
+ for(const n of E.add||[])sAdd(S,n);for(const n of E.curse||[])sAdd(S,n);
+ for(const n of E.relic||[])if(!S.relics.some(r=>nk(r)==nk(n)))S.relics.push(n);
+ for(const n of E.lose_relic||[])S.relics=S.relics.filter(r=>nk(r)!=nk(n));
+ if(E.remove_curses)S.deck=S.deck.filter(x=>x.t!='curse');
+ if(E.upgrade_all_basics)for(const k of ['Strike','Defend'])while(S.deck.find(x=>x.n==k&&!x.u&&x.c>0))sUp(S,k);
+ return S}
+// the model's pick for each "choose a card" effect, one card at a time, each judged on the deck left by the earlier picks
+function bestKey(S,keys,mod){let b=null;const base=hsS(S);for(const k of keys){const T=cloneS(S);if(!mod(T,k))continue;const v=dlt(hsS(T),base);if(!b||v.rk>b.v.rk)b={k,v}}return b}
+function xAvgS(S,k){const T0=cloneS(S);if(!sDrop(T0,k))return null;const base=hsS(S),e=S.deck.find(x=>keyOf(x)==k);let t=0,n=0;for(const c of xSample()){if(c.n==e.n)continue;const T=cloneS(T0);sAdd(T,c.n);t+=dlt(hsS(T),base).rk;n++}return n?t/n:0}
+function evChoose(E,S){const picks=[],keys=()=>[...new Set(S.deck.map(keyOf))];
+ for(let i=0;i<(E.remove||0);i++){const b=bestKey(S,keys(),sDrop);if(b){sDrop(S,b.k);picks.push({t:'remove',k:b.k})}}
+ for(let i=0;i<(E.duplicate||0);i++){const b=bestKey(S,keys(),sDup);if(b){sDup(S,b.k);picks.push({t:'dup',k:b.k})}}
+ for(let i=0;i<(E.upgrade||0);i++){const b=bestKey(S,keys(),sUp);if(b){sUp(S,b.k);picks.push({t:'up',k:b.k})}}
+ for(let i=0;i<(E.transform||0);i++){let b=null;for(const k of keys()){const e=S.deck.find(x=>keyOf(x)==k);if(!e||!removable(e))continue;const v=xAvgS(S,k);if(v!=null&&(!b||v>b.v))b={k,v}}if(b){sDrop(S,b.k);picks.push({t:'xf',k:b.k})}}
+ return picks}
+function evRand(E,S,seed){const nXf=(E.transform||0),rc=E.random_cards,rr=(E.random_relics||0)+((E.random_relic_from||[]).length?1:0),cu=E.random_curse||0,ur=E.upgrade_random||0;
+ if(!nXf&&!rc&&!rr&&!cu&&!ur)return [S];
+ const R=rng(seed),P=xPool(),CL=poolList().filter(c=>c.own=='colorless'),RP=digPool(),out=[],pick=a=>a[Math.floor(R()*a.length)];
+ for(let i=0;i<60;i++){const T=cloneS(S);
+  for(let j=0;j<nXf;j++)sAdd(T,pick(P).n+(E.transform_up?'+':''));
+  if(rc)for(let j=0;j<rc.n;j++)sAdd(T,pick(rc.pool=='colorless'?CL:P).n+(rc.up?'+':''));
+  if(E.random_relics)for(let j=0;j<E.random_relics;j++){const r=pick(RP);if(r&&!T.relics.includes(r.n))T.relics.push(r.n)}
+  if((E.random_relic_from||[]).length){const L=E.random_relic_from.filter(n=>!T.relics.some(r=>nk(r)==nk(n)));if(L.length)T.relics.push(pick(L))}
+  for(let j=0;j<cu;j++)sAdd(T,pick(CURSE_POOL));
+  for(let j=0;j<ur;j++){const L=T.deck.filter(canUp).map(keyOf);if(L.length)sUp(T,pick(L))}
+  out.push(T)}
+ return out}
+function evalE(E,seed){const S=evDet(E,baseS()),picks=evChoose(E,S),B=hsS(baseS());
+ if(E.card_reward){const K=E.card_reward.k,must=E.card_reward.must,P=xPool(),n=P.length,sk=dlt(hsS(S),B),vs=P.map(c=>{const T=cloneS(S);sAdd(T,c.n);return dlt(hsS(T),B)}).sort((a,b)=>a.rk-b.rk);let rk=0,d=0;
+  vs.forEach((v,i)=>{const p=Math.pow((i+1)/n,K)-Math.pow(i/n,K),take=must||v.rk>=sk.rk;rk+=p*(take?v.rk:sk.rk);d+=p*(take?v.d:sk.d)});return{d,rk,bl:hasBl(),picks:[...picks,{t:'reward'}]}}
+ const T=evRand(E,S,seed);let d=0,rk=0;for(const t of T){const v=dlt(hsS(t),B);d+=v.d;rk+=v.rk}return{d:d/T.length,rk:rk/T.length,bl:hasBl(),picks}}
+function evGaps(E,m){const g=[];if(!E)return g;if((E.hp||E.hp_pct_max||E.heal_pct_max||E.heal_full||E.max_hp||E.max_hp_pct)&&!m.usesHp)g.push('this model does not read HP, so the HP change is not scored');if((E.gold||E.gold_all||E.gold_per_act)&&!m.usesGold)g.push('this model does not read gold, so the gold change is not scored');if(((E.hp||E.hp_pct_max||E.heal_pct_max||E.heal_full||E.max_hp||E.max_hp_pct)&&m.usesHp)||((E.gold||E.gold_all||E.gold_per_act)&&m.usesGold))g.push('the model reacts to HP and gold changes unevenly (more HP is not always scored as better), so treat this number with care');return g}
+function evAvail(o){if(o.needs_relic&&!heldR(o.needs_relic))return `needs ${o.needs_relic}`;if(o.lacks_relic&&heldR(o.lacks_relic))return `you already have ${o.lacks_relic}`;
+ const E=o.effects||{};if(E.gold<0&&gold+E.gold<0)return `needs ${-E.gold} gold`;if((E.remove||E.transform)&&!rmTotal())return 'no card can be changed';return ''}
+function evalOption(o,ei){const why=evAvail(o);if(why)return{block:why};const m=curModel(),seed=ei+'/'+o.id;
+ if(o.fight)return{none:'fight'};
+ if(o.outcomes){let d=0,rk=0;const outs=o.outcomes.map((oc,i)=>{const v=evalE(oc.effects,seed+i);d+=oc.p*v.d;rk+=oc.p*v.rk;return{...v,p:oc.p,label:oc.label}});return{ev:{d,rk,bl:hasBl(),outs},auto:[...new Set(o.outcomes.flatMap(oc=>evGaps(oc.effects,m)))]}}
+ if(o.effects&&Object.keys(o.effects).length)return{ev:evalE(o.effects,seed),auto:evGaps(o.effects,m)};
+ if(o.leave)return{ev:{d:0,rk:0,bl:hasBl(),picks:[]}};
+ return{none:'unscored'}}
+const evDesc=(o,r)=>{const p=r.ev&&r.ev.picks||[],txt=p.filter(x=>x.k).map(x=>({remove:'Remove',dup:'Duplicate',up:'Upgrade',xf:'Transform'}[x.t])+' '+x.k).join(', ');return txt};
+function renderEvent(b){const evs=CAT.events||[],e=evFind(evName);
+ let h=`<div class="lbl">Event simulator</div><div style="position:relative;margin:6px 0"><input id="evIn" autocomplete="off" placeholder="Search events: type part of a name" value="${(e?e.name:evName).replace(/"/g,'&quot;')}" style="width:100%"><div id="evDrop" class="evdrop"></div></div>`;
+ if(!e){const act=evAct();h+=`<div class="note">${evName?`"${evName}" is not an event the tool knows. `:''}Events for act ${act} (type any event name above):</div><div class="chips" style="margin-top:6px">${evs.filter(x=>x.acts.includes(act)).map(x=>`<span class="chip" style="cursor:pointer" onclick="evName='${x.name.replace(/'/g,"\\'")}';renderSim()">${x.name}</span>`).join('')}</div>`;b.innerHTML=h;wireEv();return}
+ evRes={};const m=curModel(),w=score(deck,relics);
+ h+=`<div class="bar" style="margin:8px 0"><b style="font-size:16px">${e.name}</b><span class="tag">act ${e.acts.join(', ')}</span></div>${e.note?`<div class="note">${e.note}</div>`:''}`;
+ if(e.unmodeled){h+=`<div class="panel" style="background:var(--panel2);border-color:var(--gold)"><b>The model cannot help here.</b><div class="note" style="margin-top:4px">${e.unmodeled}</div></div>`;b.innerHTML=h;wireEv();return}
+ const res=e.options.map((o,i)=>{const r=evalOption(o,e.name);evRes[o.id]=r;return{o,i,r}}),sc=res.filter(x=>x.r.ev),best=sc.reduce((a,x)=>!a||x.r.ev.rk>a.r.ev.rk?x:a,null);
+ h+=`<div class="note" style="margin:6px 0">HP ${runHp}/${runMax}, ${gold} gold, model <span class="mono">${model}</span>. Effects are applied to your deck, relics, HP and gold and scored together; where you choose cards the model picks the best ones, and random results are averaged. Values are from the game (Ascension 15+ numbers), entered by hand: check them against what you see.</div>
+ ${best?`<div class="note" style="margin-bottom:6px">Recommended: <b>${best.o.name}</b>${best.r.ev.rk>0?'':' (nothing improves on leaving things as they are)'}</div>`:''}
+ <div class="res"><span>Skip / do nothing</span><span class="mono">${pct(w)}</span><span class="mono note">baseline</span></div>`+res.map(({o,i,r})=>{
+  if(r.block)return `<div class="res" style="opacity:.55"><span>${o.name} <span class="note">${r.block}</span><div class="note">${o.desc}</div></span><span></span><span></span></div>`;
+  const gaps=o.gaps||[],warn=(gaps.length?`<div class="note" style="color:var(--gold)">⚠ ${r.none?'The model cannot predict this: ':'Not counted: '}${gaps.join('; ')}</div>`:'')+((r.auto||[]).length?`<div class="note" style="color:var(--gold)">⚠ Note: ${r.auto.join('; ')}</div>`:'');
+  if(r.none)return `<div class="res"><span>${o.name}<div class="note">${o.desc}</div>${r.none=='fight'?'<div class="note" style="color:var(--gold)">⚠ A fight: the model cannot predict its outcome or its cost.</div>':''}${warn}</span><span></span><span class="mono note">not scored</span></div>`;
+  const ev=r.ev,isB=best&&best.o===o&&ev.rk>0,pk=evDesc(o,r),outs=ev.outs?ev.outs.map(x=>`${Math.round(x.p*100)}% ${x.label}: ${x.bl?blPct(x):hs(x)}`).join(' · '):'';
+  return `<div class="res"><span>${o.name}${isB?'<span class="best">BEST</span>':''}${flagTag(ev)} ${o.leave&&!o.effects?'':`<button class="b" style="padding:1px 8px;font-size:11px" onclick="evApply(${i})">Do it</button>`}<div class="note">${o.desc}</div>${pk?`<div class="note">Model's picks: ${pk}</div>`:''}${outs?`<div class="note">${outs}</div>`:''}${warn}</span><span class="mono">${pct(w+ev.d)}</span><span class="mono delta ${(ev.bl?ev.rk:ev.d)>=0?'up':'dn'}"><b>${ev.bl?blPct(ev):hs(ev)}</b>${ev.bl?`<br><span class="note">Heart ${hs(ev)} pts</span>`:''}</span></div>`}).join('');
+ b.innerHTML=h;wireEv()}
+function wireEv(){const i=$('#evIn'),dd=$('#evDrop');if(!i)return;let sel=-1,items=[];
+ const match=q=>{const k=nk(q),act=evAct();return (CAT.events||[]).filter(x=>!k||nk(x.name).includes(k)).sort((a,b)=>(nk(b.name).startsWith(k)-nk(a.name).startsWith(k))||(b.acts.includes(act)-a.acts.includes(act))||a.name.localeCompare(b.name))};
+ const draw=()=>{items=match(evFind(i.value)&&document.activeElement===i&&i.dataset.fresh?'':i.value);sel=items.length?Math.min(Math.max(sel,0),items.length-1):-1;dd.innerHTML=items.length?items.map((x,j)=>`<div class="evopt ${j==sel?'on':''}" data-n="${x.name.replace(/"/g,'&quot;')}"><span>${x.name}</span><span class="note">act ${x.acts.join(', ')}</span></div>`).join(''):'<div class="evopt note">No event matches. Press Enter to try the name as typed.</div>';dd.style.display='block'};
+ const pick=n=>{evName=n;dd.style.display='none';renderSim()};
+ i.onfocus=()=>{i.select();i.dataset.fresh='1';sel=-1;draw()};
+ i.oninput=()=>{delete i.dataset.fresh;sel=0;draw()};
+ i.onblur=()=>setTimeout(()=>{dd.style.display='none'},150);
+ i.onkeydown=ev=>{if(ev.key=='ArrowDown'){sel=Math.min(items.length-1,sel+1);draw();ev.preventDefault()}else if(ev.key=='ArrowUp'){sel=Math.max(0,sel-1);draw();ev.preventDefault()}else if(ev.key=='Enter'){const x=items[sel]||items[0];if(x)pick(x.name);else{evName=i.value.trim();dd.style.display='none';renderSim()}}else if(ev.key=='Escape')dd.style.display='none'};
+ dd.onmousedown=ev=>{const o=ev.target.closest('.evopt');if(o&&o.dataset.n){ev.preventDefault();pick(o.dataset.n)}}}
+function evAsk(msg,n,kind){const t=prompt(msg);if(t==null)return null;const names=t.split(',').map(x=>x.trim()).filter(Boolean);if(names.length!=n){alert(`Need exactly ${n}`);return null}
+ for(const nm of names){const r=kind=='relic'?checkRelic(nm):checkCard(nm);if(r.err){alert(r.err);return null}}return names}
+function evApply(oi){const e=evFind(evName),o=e&&e.options[oi];if(!o)return;const rr=evRes[o.id];if(!rr||!rr.ev)return;let E=o.effects,pk=rr.ev.picks||[];
+ if(o.outcomes){const t=prompt('Which result did you get?\n'+o.outcomes.map((x,i)=>`${i+1}: ${x.label}`).join('\n'));const i=(+t||0)-1;if(!o.outcomes[i])return;E=o.outcomes[i].effects;pk=rr.ev.outs[i].picks||[]}
+ if(!E)return;const S=evDet(E,baseS());
+ for(const p of pk){if(p.t=='remove'||p.t=='xf')sDrop(S,p.k);else if(p.t=='dup')sDup(S,p.k);else if(p.t=='up')sUp(S,p.k)}
+ const addNames=(names,mark)=>names.forEach(n=>sAdd(S,n));
+ if(E.transform){const n=pk.filter(p=>p.t=='xf').length;if(n){const names=evAsk(`Enter the ${n} card${n>1?'s':''} you got from the transform (comma separated, add + if upgraded)`,n,'card');if(!names)return;addNames(names)}}
+ if(E.random_cards){const names=evAsk(`Enter the ${E.random_cards.n} card${E.random_cards.n>1?'s':''} you got`,E.random_cards.n,'card');if(!names)return;addNames(names)}
+ if(E.random_curse){const names=evAsk(`Enter the curse${E.random_curse>1?'s':''} you got`,E.random_curse,'card');if(!names)return;addNames(names)}
+ if(E.upgrade_random){const names=evAsk(`Enter the ${E.upgrade_random} card${E.upgrade_random>1?'s':''} that were upgraded (plain names)`,E.upgrade_random,'card');if(!names)return;for(const nm of names){const r=checkCard(nm);sUp(S,r.c.n)}}
+ const nr=(E.random_relics||0)+((E.random_relic_from||[]).length?1:0);if(nr){const names=evAsk(`Enter the relic${nr>1?'s':''} you got`,nr,'relic');if(!names)return;for(const nm of names)S.relics.push(checkRelic(nm).r.n)}
+ if(E.card_reward){const t=prompt('Enter the card you took (leave empty for none)');if(t==null)return;if(t.trim()){const r=checkCard(t);if(r.err){alert(r.err);return}sAdd(S,t.trim())}}
+ snap();deck=S.deck;relics=S.relics;runHp=S.hp;runMax=S.mx;gold=S.gold;cardCands=null;renderRun()}
 const sg=x=>(x>=0?'+':'')+(x*100).toFixed(2);
-function previewCombined(name){ // remove relics only (exact, instant); safe whether or not the relic is already in `relics`
- const without=relics.filter(r=>r!=name),b0=score(deck,without),had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name);return score(deck,[...without,name])+r.total-b0}finally{if(!had)relics.pop()}}
+function previewCombined(name){ // remove relics only (exact, instant): the relic and the deck without the picked cards are scored together as one state; safe whether or not the relic is already in `relics`
+ const without=relics.filter(r=>r!=name),had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name),w=deck.map(x=>({...x}));for(const p of r.picks){const t=w.find(x=>keyOf(x)==p.name);if(t)t.c--}return addEval(w.filter(x=>x.c>0),[...without,name],deck,without)}finally{if(!had)relics.pop()}}
 // Adaptive Monte Carlo for relics whose result is random (transform). Stops at SE < 0.1 pts, 2000 draws, or 2 s, whichever comes first.
 const SE_TARGET=0.001,MAX_DRAWS=2000,MAX_MS=2000,BATCH=128;
 const simCache=new Map(),simRun=new Set(),simProg={};let simBusy=0;
@@ -360,28 +560,28 @@ async function runSim(name,pv,k){const t0=performance.now(),fx=FX[name];
  const without=relics.filter(r=>r!=name),withRel=[...without,name],m0=model,c0=ch,fl=floor;
  simBusy++;lastThink={name,n:0,se:1};updThink();
  try{
-  let plan,base;
-  await enqueue(()=>settle(()=>{const had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name);plan=fx.kind=='all'?{w:deck.filter(x=>!(x.n=='Strike'||x.n=='Defend')).map(x=>({...x})),slots:Array(r.n).fill(''),up:0}:(()=>{const w=deck.map(x=>({...x}));for(const p of r.picks){const t=w.find(x=>keyOf(x)==p.name);if(t)t.c--}return{w:w.filter(x=>x.c>0),slots:r.picks.map(p=>p.name.replace(/\+.*$/,'')),up:fx.up?1:0}})()}finally{if(!had)relics.pop()}base=score(deck,pv?without:withRel)}));
-  const P=xPool(),R=rng(k);let n=0,mean=0,M2=0,se=1,capped=false;
+  let plan,baseH;
+  await enqueue(()=>settle(()=>{const had=relics.includes(name);if(!had)relics.push(name);try{const r=recFor(name);plan=fx.kind=='all'?{w:deck.filter(x=>!(x.n=='Strike'||x.n=='Defend')).map(x=>({...x})),slots:Array(r.n).fill(''),up:0}:(()=>{const w=deck.map(x=>({...x}));for(const p of r.picks){const t=w.find(x=>keyOf(x)==p.name);if(t)t.c--}return{w:w.filter(x=>x.c>0),slots:r.picks.map(p=>p.name.replace(/\+.*$/,'')),up:fx.up?1:0}})()}finally{if(!had)relics.pop()}baseH=heads(deck,pv?without:withRel)}));
+  const P=xPool(),R=rng(k);let n=0,mean=0,M2=0,mk=0,se=1,capped=false;
   while(true){const states=[];for(let i=0;i<BATCH;i++){const draw=plan.slots.map(ex=>{let c;do{c=P[Math.floor(R()*P.length)]}while(c.n==ex);return{n:c.n,t:c.t,c:1,u:plan.up}});states.push(stateOf([...plan.w,...draw],withRel,fl))}
-   const probs=await predictStates(states,m0,c0);for(const row of probs){const v=row[row.length-1]-base;n++;const dd=v-mean;mean+=dd/n;M2+=dd*(v-mean)}
+   const probs=await predictStates(states,m0,c0);for(const row of probs){const v=dlt(row,baseH);n++;const dd=v.d-mean;mean+=dd/n;M2+=dd*(v.d-mean);mk+=(v.rk-mk)/n}
    se=Math.sqrt(M2/(n-1)/n);const el=performance.now()-t0;lastThink={name,n,se};updThink();
    if(n>=BATCH*2&&se<SE_TARGET)break;if(n>=MAX_DRAWS)break;if(el>=MAX_MS){capped=se>=SE_TARGET;break}}
-  simCache.set(k,{mean,se,n,ms:performance.now()-t0,capped});
- }catch(e){showErr(e);simCache.set(k,{mean:0,se:0,n:0,ms:0,capped:false,failed:true})}
+  simCache.set(k,{mean,mk,bl:hasBl(),se,n,ms:performance.now()-t0,capped});
+ }catch(e){showErr(e);simCache.set(k,{mean:0,mk:0,se:0,n:0,ms:0,capped:false,failed:true})}
  finally{simBusy--;updThink();refreshRelicUI()}}
 function updThink(){const e=$('#think');if(!e)return;if(simBusy+fetching<=0){e.style.display='none';return}e.style.display='flex';const t=lastThink;e.innerHTML=`<i class="spin"></i><span>Thinking… ${simBusy?`simulating ${t.name||'relic'}${t.n?` · ${t.n} draws · ±${(t.se*100).toFixed(2)} pts`:''} <span class="note">(max 2 s)</span>`:'scoring decks with '+model}</span>`}
-function refreshRelicUI(){$('#relicAct').innerHTML=relics.filter(r=>FX[r]).map(r=>recPanel(r,true)).join('');if(tab==5)renderSim()}
+function refreshRelicUI(){$('#relicAct').innerHTML=relics.filter(r=>FX[r]).map(r=>recPanel(r,true)).join('');if(tab==8)renderSim()}
 const THINK='<span class="think"><i class="spin"></i>Thinking…</span>';
-function simLine(name,pv){const fx=FX[name];if(fx.kind=='remove')return{mean:pv?previewCombined(name):recFor(name).total,se:0,n:0};return simGet(name,pv)}
-function fmtSim(v){if(v.failed)return '<span class="dn">failed (see the message at the top)</span>';return `<b class="${v.mean>=0?'up':'dn'}">${sg(v.mean)} pts</b>${v.n?` ± ${(v.se*100).toFixed(2)} (${v.n} draws · ${(v.ms/1000).toFixed(1)} s)`:''}${v.capped?' <span class="dn">Stopped at the 2 s limit, so the error is wider than the ±0.1 target.</span>':''}`}
+function simLine(name,pv){const fx=FX[name];if(fx.kind=='remove'){const o=pv?previewCombined(name):recFor(name).total;return{mean:o.d,mk:o.rk,bl:hasBl(),se:0,n:0}}return simGet(name,pv)}
+function fmtSim(v){if(v.failed)return '<span class="dn">failed (see the message at the top)</span>';return `<b class="${(v.bl?v.mk:v.mean)>=0?'up':'dn'}" title="${v.bl?'Blend score: 75% next boss, 25% Heart, as a relative change':''}">${v.bl?blPct({rk:v.mk}):sg(v.mean)+' pts'}</b>${v.bl?` · Heart ${sg(v.mean)} pts`:''}${v.n?` ± ${(v.se*100).toFixed(2)} (${v.n} draws · ${(v.ms/1000).toFixed(1)} s)`:''}${v.capped?' <span class="dn">Stopped at the 2 s limit, so the error is wider than the ±0.1 target.</span>':''}`}
 function recPanel(name,act){const pv=!act&&!relics.includes(name);if(pv){relics.push(name);try{return recPanel2(name,act,true)}finally{relics.pop()}}return recPanel2(name,act,false)}
-function recPanel2(name,act,pv){const r=recFor(name),fx=r.fx,done=used.has(name)&&!fx.rep,v=simLine(name,pv),lead=pv?'Take it and use it':'Change from using it',val=v?fmtSim(v):THINK,vd=v?(v.mean>0.002?'Worth taking':v.mean<-0.002?'Probably skip':'Roughly neutral'):'',how=pv?'The relic and the changed deck are scored together as one state, not added.':'The relic is already counted.';
+function recPanel2(name,act,pv){const r=recFor(name),fx=r.fx,done=used.has(name)&&!fx.rep,v=simLine(name,pv),lead=pv?'Take it and use it':'Change from using it',val=v?fmtSim(v):THINK,vv=v?(v.bl?v.mk:v.mean):0,th=v&&v.bl?0.005:0.002,vd=v?(vv>th?'Worth taking':vv<-th?'Probably skip':'Roughly neutral'):'',how=pv?'The relic and the changed deck are scored together as one state, not added.':'The relic is already counted.';
  let h=`<div class="panel" style="background:var(--panel2);margin:8px 0"><div class="bar"><b>${name}</b><span class="tag">${fx.kind=='remove'?'removes':fx.kind=='all'?'transforms all basics':'transforms'}</span><span class="sp"></span>${done?'<span class="tag">used</span>':''}</div><div class="note">${fx.note}</div>`;
  if(fx.kind=='all'){h+=`<div style="margin:8px 0">Affects <b>${r.n}</b> Strike/Defend cards. ${lead}: ${val}<div class="note">${how}</div></div><div class="note">${v?`Verdict: <b>${vd}</b>. `:''}You get no choice, so the recommendation is about taking the relic, not which cards.</div>`;
   if(act)h+=`<button class="b pri" style="margin-top:8px" ${done?'disabled':''} onclick="applyRelic('${name}')">Apply (enter what you got)</button>`}
- else{h+=`<div style="margin:8px 0">Recommended: ${r.picks.map(p=>`<span class="chip" style="border-color:var(--good)">${p.name} <span class="${p.dl>=0?'up':'dn'}">${sg(p.dl)}</span></span>`).join('')||'none'}</div><div class="note">${lead}: ${val}. ${how} Per-card numbers above are the card change alone.${fx.kind=='transform'?' Transform value is sampled over the cards you could get (a card can repeat, and never becomes itself). Greedy pick; later picks assume earlier ones are gone.':''}</div>
-  <details style="margin-top:6px"><summary class="note" style="cursor:pointer">All cards ranked</summary>${r.ranked.map(x=>`<div class="res"><span>${x.name}${x.c>1?' ×'+x.c:''}</span><span></span><span class="mono delta ${x.dl>=0?'up':'dn'}">${sg(x.dl)}</span></div>`).join('')}</details>`;
+ else{h+=`<div style="margin:8px 0">Recommended: ${r.picks.map(p=>`<span class="chip" style="border-color:var(--good)">${p.name} <span class="${(hasBl()?p.rk:p.dl)>=0?'up':'dn'}" title="Heart ${sg(p.dl)} pts">${hasBl()?blPct(p):sg(p.dl)}</span></span>`).join('')||'none'}</div><div class="note">${lead}: ${val}. ${how} Per-card numbers above are the card change alone.${fx.kind=='transform'?' Transform value is sampled over the cards you could get (a card can repeat, and never becomes itself). Greedy pick; later picks assume earlier ones are gone.':''}</div>
+  <details style="margin-top:6px"><summary class="note" style="cursor:pointer">All cards ranked</summary>${r.ranked.map(x=>`<div class="res"><span>${x.name}${x.c>1?' ×'+x.c:''}</span><span></span><span class="mono delta ${(hasBl()?x.rk:x.dl)>=0?'up':'dn'}">${hasBl()?blPct(x)+' · Heart '+sg(x.dl):sg(x.dl)}</span></div>`).join('')}</details>`;
   if(act)h+=`<button class="b pri" style="margin-top:8px" ${done||!r.picks.length?'disabled':''} onclick="applyRelic('${name}')">Apply recommended${fx.kind=='transform'?' (enter results)':''}</button>`}
  return h+'</div>'}
 function applyRelic(name){const r=recFor(name),fx=r.fx;let removeList=[],adds=[];
@@ -395,32 +595,66 @@ function applyRelic(name){const r=recFor(name),fx=r.fx;let removeList=[],adds=[]
  used.add(name);renderRun()}
 let cardCands=null,relicCands=['Runic Pyramid','Snecko Eye','Calipers'],candErr='';
 const defaultCands=()=>poolList().filter(c=>c.own==ch).slice(2,5).map(c=>c.n);
-const topPicks=()=>poolList().filter(c=>c.t!='curse'&&c.own!='special').map(c=>({n:c.n,d:score([...deck,{n:c.n,t:c.t,c:1}],relics)})).sort((a,b)=>b.d-a.d).slice(0,5).map(x=>x.n);
+const topPicks=()=>poolList().filter(c=>c.t!='curse'&&c.own!='special').map(c=>({n:c.n,d:addOf(c.n).rk})).sort((a,b)=>b.d-a.d).slice(0,5).map(x=>x.n);
 function renderCandTab(b,rel){if(!cardCands)cardCands=defaultCands();const list=rel?relicCands:cardCands;
- b.innerHTML=`<div class="lbl">${rel?'Relic':'Card'} reward options${rel?'':' · pool: '+poolLabel()}</div><div class="chips">${list.map((c,i)=>`<span class="chip">${c}<b onclick="${rel?'relicCands':'cardCands'}.splice(${i},1);renderSim()">✕</b></span>`).join('')}</div><div class="bar"><input id="simIn" list="${rel?'relicList':'cardList'}" placeholder="Type a ${rel?'relic':'card'} name, Enter to add" style="flex:1"></div>${rel?'<datalist id="relicList">'+relicPool().map(r=>`<option value="${r.n}">`).join('')+'</datalist>':'<datalist id="cardList">'+poolList().map(c=>`<option value="${c.n}">`).join('')+'</datalist>'}<div class="dn note" id="candErr">${candErr}</div><div style="margin-top:10px">${rows(list,(rel?relicDelta:addDelta),rel?n=>{if(!FX[n])return null;if(FX[n].kind=='remove')return{d:previewCombined(n)};const v=simGet(n,true);return v?{d:v.mean,se:v.se}:'pending'}:null,rel?{label:'Take',fn:'takeRelic'}:{label:'Add',fn:'addFromSim'})}</div>${rel?list.filter(r=>FX[r]).map(r=>recPanel(r,false)).join(''):''}`;
- $('#simIn').onkeydown=e=>{if(e.key!='Enter'||!e.target.value)return;if(rel){const r=checkRelic(e.target.value);if(r.err)candErr=r.err;else if(relicCands.includes(r.r.n))candErr=r.r.n+' is already in the list';else{relicCands.push(r.r.n);candErr=''}}else{const r=checkCard(e.target.value);if(r.err)candErr=r.err;else{cardCands.push(r.c.n);candErr=''}}renderSim()}}
-function resetRun(){const st=startState(ch);deck=st.deck;relics=st.relics;hist=[];used=new Set();applyStartRun();rmTarget=(deck.find(removable)||{}).n||'';cardCands=null;relicCands=['Runic Pyramid','Snecko Eye','Calipers'];candErr='';picks=new Set();RM.p=75;genShop();$('#shopOv').classList.remove('on');setFloor(1)}
+ b.innerHTML=`<div class="lbl">${rel?'Relic':'Card'} reward options${rel?'':' · pool: '+poolLabel()}</div><div class="chips">${list.map((c,i)=>`<span class="chip">${c}<b onclick="${rel?'relicCands':'cardCands'}.splice(${i},1);renderSim()">✕</b></span>`).join('')}</div><div class="bar"><input id="simIn" list="${rel?'relicList':'cardList'}" placeholder="Type a ${rel?'relic':'card name (add + for the upgraded card, e.g. Armaments+)'}, Enter to add" style="flex:1"></div>${rel?'<datalist id="relicList">'+relicPool().map(r=>`<option value="${r.n}">`).join('')+'</datalist>':'<datalist id="cardList">'+poolList().map(c=>`<option value="${c.n}">`).join('')+'</datalist>'}<div class="dn note" id="candErr">${candErr}</div><div style="margin-top:10px">${rows(list,(rel?relicDelta:addOf),rel?n=>{if(!FX[n])return null;if(FX[n].kind=='remove')return previewCombined(n);const v=simGet(n,true);return v?{d:v.mean,rk:v.mk,bl:v.bl,se:v.se}:'pending'}:null,rel?{label:'Take',fn:'takeRelic'}:{label:'Add',fn:'addFromSim'})}</div>${rel?list.filter(r=>FX[r]).map(r=>recPanel(r,false)).join(''):''}${rel?'':`<div class="note" style="margin-top:8px">The green or red number is the blend score the list is sorted by (75% next boss, 25% Heart, as a relative change); the Heart change in points is under it. Model estimates from observed runs: skill and selection are not controlled. Three-card combos are undervalued by every head, so a combo shown as lukewarm may be better than it looks. Late-act heads are noisy, which is why the Heart keeps 25% of the ranking weight.</div>`}`;
+ $('#simIn').onkeydown=e=>{if(e.key!='Enter'||!e.target.value)return;if(rel){const r=checkRelic(e.target.value);if(r.err)candErr=r.err;else if(relicCands.includes(r.r.n))candErr=r.r.n+' is already in the list';else{relicCands.push(r.r.n);candErr=''}}else{const r=checkCard(e.target.value);if(r.err)candErr=r.err;else{const nm=r.c.n+upTag({u:r.u});if(cardCands.includes(nm))candErr=nm+' is already in the list';else{cardCands.push(nm);candErr=''}}}renderSim()}}
+
+// saved run states: kept on the server (ui/server/data/saves), so they survive closing the browser
+async function savesApi(path,body){const r=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined),j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
+const capture=()=>({v:1,ch,model,floor,deck:cloneDeck(),relics:[...relics],used:[...used],hp:runHp,max_hp:runMax,gold,shop:shop.map(x=>({...x})),rmP:RM.p});
+const saveMeta=()=>({character:ch,floor,cards:deck.reduce((s,c)=>s+c.c,0),relics:relics.length,hp:runHp,max_hp:runMax,gold,model});
+let saveMsg='';
+async function openSaves(){$('#saveOv').classList.add('on');await renderSaves()}
+function closeSaves(){$('#saveOv').classList.remove('on')}
+async function renderSaves(){let list=[];try{list=(await savesApi('/api/saves')).saves}catch(e){saveMsg='Could not read the saves: '+e.message}
+ const box=$('#saveBox'),keep=box.querySelector('#saveName')?box.querySelector('#saveName').value:'';
+ box.innerHTML=`<div class="bar"><h1 style="margin:0">Saved runs</h1><span class="sp"></span><button class="b" onclick="closeSaves()">Close ✕</button></div>
+ <p class="note">Saves the character, deck, relics, floor, HP, gold, the shop stock you entered and the model. They are stored in <span class="mono">ui/server/data/saves</span> on this computer.</p>
+ <div class="bar" style="margin:10px 0"><input id="saveName" placeholder="Name this save" value="${(keep||`${ch} floor ${floor}`).replace(/"/g,'&quot;')}" style="flex:1;min-width:200px"><button class="b pri" id="saveNew">Save current run</button></div>
+ ${saveMsg?`<div class="note ${saveMsg.startsWith('Could')||saveMsg.startsWith('Save failed')?'dn':''}" style="margin-bottom:8px">${saveMsg}</div>`:''}
+ ${list.length?list.map(x=>{const m=x.meta||{};return `<div class="panel" style="margin:8px 0;background:var(--panel2)"><div class="bar"><b>${x.name.replace(/</g,'&lt;')}</b><span class="sp"></span><span class="note">${new Date(x.saved_at*1000).toLocaleString()}</span></div><div class="note" style="margin:4px 0 8px">${m.character||''} · floor ${m.floor??'?'} · ${m.cards??'?'} cards · ${m.relics??'?'} relics${m.hp!=null?` · HP ${m.hp}/${m.max_hp}`:''}${m.gold!=null?` · ${m.gold} gold`:''}${m.model?` · <span class="mono">${m.model}</span>`:''}</div><div class="bar"><button class="b pri" data-load="${x.id}">Load</button><button class="b" data-over="${x.id}" title="Replace this save with the current run">Overwrite</button><button class="b" data-del="${x.id}">Delete</button></div></div>`}).join(''):'<div class="note">Nothing saved yet.</div>'}`;
+ saveMsg='';
+ $('#saveNew').onclick=()=>doSave(null,$('#saveName').value);
+ box.querySelectorAll('[data-load]').forEach(b=>b.onclick=()=>loadSave(list.find(x=>x.id==b.dataset.load)));
+ box.querySelectorAll('[data-over]').forEach(b=>b.onclick=()=>{const x=list.find(y=>y.id==b.dataset.over);if(confirm(`Replace "${x.name}" with the current run?`))doSave(x.id,x.name)});
+ box.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{const x=list.find(y=>y.id==b.dataset.del);if(!confirm(`Delete "${x.name}"?`))return;try{await savesApi('/api/saves/delete',{id:x.id});saveMsg=`Deleted "${x.name}".`}catch(e){saveMsg='Save failed: '+e.message}renderSaves()})}
+async function doSave(id,name){if(!name||!name.trim()){saveMsg='Save failed: give it a name';return renderSaves()}try{const r=await savesApi('/api/saves',{id,name,state:capture(),meta:saveMeta()});saveMsg=`Saved "${r.name}".`}catch(e){saveMsg='Save failed: '+e.message}renderSaves()}
+function loadSave(x){const st=x.state||{};
+ const bad=[...(st.deck||[]).map(c=>c.n).filter(n=>!CARDS[nk(n)]),...(st.relics||[]).filter(n=>!RELICS[nk(n)])];
+ if(!CH.includes(st.ch)||!Array.isArray(st.deck)||!Array.isArray(st.relics)||bad.length){saveMsg=`Save failed: "${x.name}" cannot be loaded${bad.length?' (unknown: '+bad.join(', ')+')':''}`;return renderSaves()}
+ if(hasProgress()&&!confirm(`Load "${x.name}"? This replaces your current run.`))return;
+ ch=st.ch;document.querySelectorAll('#chars button').forEach(b=>b.classList.toggle('on',b.textContent==ch));
+ deck=st.deck.map(c=>({...c}));relics=[...st.relics];used=new Set(st.used||[]);hist=[];picks=new Set();rmAuto=true;cardCands=null;relicCands=['Runic Pyramid','Snecko Eye','Calipers'];candErr='';
+ shop=(st.shop||[]).map(c=>({...c}));RM.p=st.rmP||75;runHp=st.hp;runMax=st.max_hp;gold=st.gold??99;
+ if(st.model&&st.model!=model&&MODELS.some(m=>m.id==st.model&&m.supported))setModel(st.model);
+ closeSaves();setFloor(st.floor||1)}
+$('#saveBtn').onclick=openSaves;
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeSaves()});
+function resetRun(){const st=startState(ch);deck=st.deck;relics=st.relics;hist=[];used=new Set();applyStartRun();rmTarget=keyOf(deck.find(removable)||{n:''});rmAuto=true;cardCands=null;relicCands=['Runic Pyramid','Snecko Eye','Calipers'];candErr='';picks=new Set();RM.p=75;genShop();$('#shopOv').classList.remove('on');setFloor(1)}
 function startRun(){resetRun();go('run')}
 const hasProgress=()=>floor>1||hist.length>0;
 $('#resetRun').onclick=()=>{if(!confirm(`Reset to floor 1 with the starting ${ch} deck and relic? Your current deck and relics will be lost.`))return;resetRun()};
 function genShop(){shop=[]} // the shop's stock is entered by the player (Edit stock), a new run starts with none
 // shop simulator
-let gold=99;let shopView='visual';let picks=new Set();let rmTarget='';
+let gold=99;let shopView='visual';let picks=new Set();let rmTarget='',rmAuto=true;
 let shop=[];
 const RM={n:'Card removal',k:'remove',p:75};
 const allItems=()=>[...shop,{...RM,t:rmTarget}];
-function basketState(items){const d=cloneDeck(),r=[...relics];for(const x of items){if(x.k=='card'){const c=lookup(x.n),e=d.find(y=>y.n==c.n&&!y.u);e?e.c++:d.push({n:c.n,t:c.t,c:1})}else if(x.k=='relic')r.push(x.n);else{const e=d.find(y=>y.n==x.t&&!y.u)||d.find(y=>y.n==x.t);if(e&&removable(e))e.c--}}return{d:d.filter(y=>y.c>0),r,g:gold-items.reduce((s,x)=>s+x.p,0)}}
-function shopDelta(items){const b=basketState(items);return score(b.d,b.r,b.g)-score(deck,relics)} // the whole basket is scored as one deck, so purchases interact
-function bestBasket(){const it0=allItems();let best={d:0,set:[],c:0};const n=it0.length;for(let m=1;m<(1<<n);m++){const it=it0.filter((_,i)=>m>>i&1);const c=it.reduce((s,x)=>s+x.p,0);if(c>gold)continue;const d=shopDelta(it);if(d>best.d)best={d,set:it,c}}return best}
-const key=x=>x.k+':'+x.n;
+function basketState(items){const d=cloneDeck(),r=[...relics];for(const x of items){if(x.k=='card'){const c=lookup(x.n),u=x.u|0,e=d.find(y=>y.n==c.n&&(y.u|0)==u);e?e.c++:d.push(u?{n:c.n,t:c.t,c:1,u}:{n:c.n,t:c.t,c:1})}else if(x.k=='relic')r.push(x.n);else{const e=d.find(y=>keyOf(y)==x.t);if(e&&removable(e))e.c--}}return{d:d.filter(y=>y.c>0),r,g:gold-items.reduce((s,x)=>s+x.p,0)}}
+const dShow=x=>x.bl?blPct(x):(x.d>=0?'+':'')+(x.d*100).toFixed(2),dCls=x=>(x.bl?x.rk:x.d)>=0?'up':'dn',hs=x=>(x.d>=0?'+':'')+(x.d*100).toFixed(2);
+function shopDelta(items){const b=basketState(items);return addEval(b.d,b.r,deck,relics,b.g)} // the whole basket is scored as one deck, so purchases interact
+function bestBasket(){const it0=allItems();let best={d:0,rk:0,set:[],c:0};const n=it0.length;for(let m=1;m<(1<<n);m++){const it=it0.filter((_,i)=>m>>i&1);const c=it.reduce((s,x)=>s+x.p,0);if(c>gold)continue;const v=shopDelta(it);if(v.rk>best.rk)best={...v,set:it,c}}return best}
+const iname=x=>x.n+(x.u?upTag(x):'');
+const key=x=>x.k+':'+iname(x);
 function chosen(){return allItems().filter(x=>picks.has(key(x)))}
 function renderShopSummary(b){const sel=chosen(),d=shopDelta(sel),cost=sel.reduce((s,x)=>s+x.p,0);
- b.innerHTML=`<div class="lbl">Shop simulator</div><div class="bar" style="margin:8px 0"><div class="gold"><i></i>${gold}</div><span class="sp"></span><button class="b pri" onclick="openShop()">Open shop</button></div><div class="note">${sel.length?`Basket: ${sel.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(', ')} · ${cost}g · <span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(2)} pts</span>`:'Nothing selected. Open the shop, enter what is for sale, and pick items.'}</div>`}
+ b.innerHTML=`<div class="lbl">Shop simulator</div><div class="bar" style="margin:8px 0"><div class="gold"><i></i>${gold}</div><span class="sp"></span><button class="b pri" onclick="openShop()">Open shop</button></div><div class="note">${sel.length?`Basket: ${sel.map(x=>x.k=='remove'?'Remove '+x.t:iname(x)).join(', ')} · ${cost}g · <span class="${dCls(d)}">${dShow(d)}${d.bl?'':' pts'}</span>${d.bl?` · Heart ${hs(d)} pts`:''}`:'Nothing selected. Open the shop, enter what is for sale, and pick items.'}</div>`}
 // stock editor: what the shop in front of you really sells (names are checked against the same lists as everywhere else)
 let draft={card:{n:'',p:'',sale:false},colorless:{n:'',p:'',sale:false},relic:{n:'',p:''}},shopErr='';
 function stockSection(title,kind,items){const dl=kind=='relic'?'stkRelics':kind=='colorless'?'stkColorless':'stkCards';const d=draft[kind];
- return `<div class="shl">${title}</div>${items.map(({x,i})=>`<div class="bar" style="margin-bottom:6px;gap:8px"><input data-f="n" data-i="${i}" list="${dl}" value="${x.n}" style="flex:1;min-width:140px"><span class="lbl">price</span><input data-f="p" data-i="${i}" type="number" min="0" value="${x.p}" style="width:80px">${kind=='relic'?'':`<label class="lbl"><input data-f="sale" data-i="${i}" type="checkbox" ${x.sale?'checked':''}> sale</label>`}<button class="b" data-del="${i}" title="Remove from stock">✕</button></div>`).join('')||'<div class="note" style="margin-bottom:6px">Nothing entered.</div>'}
- <div class="bar" style="gap:8px;margin:8px 0 14px"><input data-d="${kind}" data-f="n" list="${dl}" placeholder="Add ${kind=='relic'?'a relic':'a card'}…" value="${d.n}" style="flex:1;min-width:140px"><span class="lbl">price</span><input data-d="${kind}" data-f="p" type="number" min="0" value="${d.p}" style="width:80px">${kind=='relic'?'':`<label class="lbl"><input data-d="${kind}" data-f="sale" type="checkbox" ${d.sale?'checked':''}> sale</label>`}<button class="b pri" data-add="${kind}">Add</button></div>`}
+ return `<div class="shl">${title}</div>${items.map(({x,i})=>`<div class="bar" style="margin-bottom:6px;gap:8px"><input data-f="n" data-i="${i}" list="${dl}" value="${iname(x)}" style="flex:1;min-width:140px"><span class="lbl">price</span><input data-f="p" data-i="${i}" type="number" min="0" value="${x.p}" style="width:80px">${kind=='relic'?'':`<label class="lbl"><input data-f="sale" data-i="${i}" type="checkbox" ${x.sale?'checked':''}> sale</label><label class="lbl"><input data-f="up" data-i="${i}" type="checkbox" ${x.u?'checked':''}> upgraded</label>`}<button class="b" data-del="${i}" title="Remove from stock">✕</button></div>`).join('')||'<div class="note" style="margin-bottom:6px">Nothing entered.</div>'}
+ <div class="bar" style="gap:8px;margin:8px 0 14px"><input data-d="${kind}" data-f="n" list="${dl}" placeholder="Add ${kind=='relic'?'a relic':'a card (Name+ if upgraded)'}…" value="${d.n}" style="flex:1;min-width:140px"><span class="lbl">price</span><input data-d="${kind}" data-f="p" type="number" min="0" value="${d.p}" style="width:80px">${kind=='relic'?'':`<label class="lbl"><input data-d="${kind}" data-f="sale" type="checkbox" ${d.sale?'checked':''}> sale</label><label class="lbl"><input data-d="${kind}" data-f="up" type="checkbox" ${d.up?'checked':''}> upgraded</label>`}<button class="b pri" data-add="${kind}">Add</button></div>`}
 function editorView(){const items=shop.map((x,i)=>({x,i})),cards=items.filter(o=>o.x.k=='card'&&!o.x.cl),cl=items.filter(o=>o.x.cl),rl=items.filter(o=>o.x.k=='relic');
  const colored=poolList().filter(c=>c.own!='colorless'&&c.t!='curse'&&c.own!='special'),colorless=poolList().filter(c=>c.own=='colorless');
  return `<datalist id="stkCards">${colored.map(c=>`<option value="${c.n}">`).join('')}</datalist><datalist id="stkColorless">${colorless.map(c=>`<option value="${c.n}">`).join('')}</datalist><datalist id="stkRelics">${relicPool().map(r=>`<option value="${r.n}">`).join('')}</datalist>
@@ -430,42 +664,44 @@ function editorView(){const items=shop.map((x,i)=>({x,i})),cards=items.filter(o=
  <div class="bar" style="gap:8px"><span class="shl" style="margin:0">Card removal price</span><input id="rmPrice" type="number" min="0" value="${RM.p}" style="width:80px"><span class="note">starts at 75 and goes up by 25 each time you use it</span></div>
  <div class="bar" style="margin-top:12px"><button class="b" id="clearStock">Clear all stock</button><button class="b pri" id="doneStock">Done, show the shop</button></div>`}
 function wireEditor(){const box=$('#shopBox');
- const check=(kind,name)=>{if(kind=='relic'){const r=checkRelic(name);return r.err?{err:r.err}:{n:r.r.n,k:'relic'}}const r=checkCard(name);if(r.err)return{err:r.err};if(kind=='colorless'&&r.c.own!='colorless')return{err:`${r.c.n} is not a colorless card`};if(kind=='card'&&(r.c.own=='colorless'||r.c.t=='curse'||r.c.own=='special'))return{err:`${r.c.n} is not a class card`};return{n:r.c.n,k:'card',t:r.c.t,cl:kind=='colorless'?1:0}};
+ const check=(kind,name)=>{if(kind=='relic'){const r=checkRelic(name);return r.err?{err:r.err}:{n:r.r.n,k:'relic'}}const r=checkCard(name);if(r.err)return{err:r.err};if(kind=='colorless'&&r.c.own!='colorless')return{err:`${r.c.n} is not a colorless card`};if(kind=='card'&&(r.c.own=='colorless'||r.c.t=='curse'||r.c.own=='special'))return{err:`${r.c.n} is not a class card`};return{n:r.c.n,k:'card',t:r.c.t,u:r.u,cl:kind=='colorless'?1:0}};
  box.querySelectorAll('input[data-f]').forEach(el=>el.onchange=()=>{const f=el.dataset.f,v=el.type=='checkbox'?el.checked:el.value;
   if(el.dataset.d){const d=draft[el.dataset.d];d[f]=f=='p'?v:v;return}
   const x=shop[+el.dataset.i];shopErr='';
-  if(f=='p')x.p=Math.max(0,+v||0);else if(f=='sale')x.sale=!!v;else{const kind=x.k=='relic'?'relic':x.cl?'colorless':'card';const old=shop.splice(+el.dataset.i,1);const r=check(kind,v);shop.splice(+el.dataset.i,0,old[0]);if(r.err)shopErr=r.err;else Object.assign(x,r)}
+  if(f=='p')x.p=Math.max(0,+v||0);else if(f=='sale')x.sale=!!v;else if(f=='up'){const c=lookup(x.n);if(v&&!(c&&c.up))shopErr=`${x.n} cannot be upgraded`;else x.u=v?(x.u||1):0}else{const kind=x.k=='relic'?'relic':x.cl?'colorless':'card';const old=shop.splice(+el.dataset.i,1);const r=check(kind,v);shop.splice(+el.dataset.i,0,old[0]);if(r.err)shopErr=r.err;else Object.assign(x,r)}
   picks=new Set();renderShop()});
  box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{shop.splice(+b.dataset.del,1);picks=new Set();shopErr='';renderShop()});
- box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const kind=b.dataset.add,d=draft[kind];const r=check(kind,d.n);if(r.err){shopErr=r.err;renderShop();return}if(shop.some(y=>y.k==r.k&&y.n==r.n)){shopErr=`${r.n} is already in the stock`;renderShop();return}shop.push({...r,p:Math.max(0,+d.p||0),sale:kind=='relic'?false:!!d.sale});draft[kind]={n:'',p:'',sale:false};shopErr='';picks=new Set();renderShop()});
+ box.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const kind=b.dataset.add,d=draft[kind];const r=check(kind,d.n);if(r.err){shopErr=r.err;renderShop();return}if(shop.some(y=>y.k==r.k&&iname(y)==iname(r))){shopErr=`${r.n} is already in the stock`;renderShop();return}if(kind!='relic'&&!r.u&&d.up){if(!lookup(r.n).up){shopErr=`${r.n} cannot be upgraded`;renderShop();return}r.u=1}shop.push({...r,p:Math.max(0,+d.p||0),sale:kind=='relic'?false:!!d.sale});draft[kind]={n:'',p:'',sale:false,up:false};shopErr='';picks=new Set();renderShop()});
  $('#rmPrice').onchange=e=>{RM.p=Math.max(0,+e.target.value||0);picks=new Set();renderShop()};
  $('#clearStock').onclick=()=>{shop=[];picks=new Set();shopErr='';renderShop()};
  $('#doneStock').onclick=()=>{shopView='visual';renderShop()}}
 function openShop(){if(!shop.length)shopView='edit';$('#shopOv').classList.add('on');renderShop()}
 function closeShop(){$('#shopOv').classList.remove('on');renderSim()}
 function item(x,bestSet){const off=x.p>gold,on=picks.has(key(x)),dd=shopDelta([x]);const isBest=bestSet.some(y=>key(y)==key(x));
- const vis=x.k=='card'?`<div class="card ${x.t} ${x.cl?'':''}" style="--c:${x.cl?'var(--mute)':''}">${x.sale?'<span class="sale">SALE</span>':''}<div class="art"></div><div class="nm">${x.n}</div><div class="ty">${x.t}${x.cl?' · colorless':''}</div></div>`:`<div class="tok">${x.n}</div>`;
- return `<div class="si ${on?'on':''} ${off?'off':''} ${isBest?'best':''}" data-k="${key(x)}">${vis}<span class="price ${off?'no':''}"><i></i>${x.p}</span><span class="dl ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)}</span></div>`}
-function listView(bestSet){return `<div class="tblwrap"><table><tr><th></th><th>Item</th><th>Type</th><th>Price</th><th>Win-rate change</th></tr>`+[...shop].sort((a,b)=>({card:0,relic:1}[a.k]-{card:0,relic:1}[b.k])||(!!a.cl-!!b.cl)).map(x=>{const off=x.p>gold,dd=shopDelta([x]),b=bestSet.some(y=>key(y)==key(x));return `<tr class="m si-l ${picks.has(key(x))?'sel':''}" data-k="${key(x)}" style="${off?'opacity:.4;cursor:not-allowed':''}"><td><input type="checkbox" ${picks.has(key(x))?'checked':''} ${off?'disabled':''} tabindex="-1"></td><td><b>${x.n}</b>${b?' <span class="tag rec">BEST BASKET</span>':''}${x.sale?' <span class="tag">sale</span>':''}</td><td>${x.k=='card'?x.t+(x.cl?' · colorless':''):'relic'}</td><td class="mono ${off?'dn':''}">${x.p}g</td><td class="mono delta ${dd>=0?'up':'dn'}">${dd>=0?'+':''}${(dd*100).toFixed(2)}</td></tr>`}).join('')+`</table></div>`}
+ const vis=x.k=='card'?`<div class="card ${x.t} ${x.u?'up':''}" style="--c:${x.cl?'var(--mute)':''}">${x.sale?'<span class="sale">SALE</span>':''}<div class="art"></div><div class="nm">${iname(x)}</div><div class="ty">${x.t}${x.cl?' · colorless':''}</div></div>`:`<div class="tok">${x.n}</div>`;
+ return `<div class="si ${on?'on':''} ${off?'off':''} ${isBest?'best':''}" data-k="${key(x)}">${vis}<span class="price ${off?'no':''}"><i></i>${x.p}</span><span class="dl ${dCls(dd)}" title="Heart ${hs(dd)} pts">${dShow(dd)}</span></div>`}
+function listView(bestSet){return `<div class="tblwrap"><table><tr><th></th><th>Item</th><th>Type</th><th>Price</th><th>Blend score · Heart change</th></tr>`+[...shop].sort((a,b)=>({card:0,relic:1}[a.k]-{card:0,relic:1}[b.k])||(!!a.cl-!!b.cl)).map(x=>{const off=x.p>gold,dd=shopDelta([x]),b=bestSet.some(y=>key(y)==key(x));return `<tr class="m si-l ${picks.has(key(x))?'sel':''}" data-k="${key(x)}" style="${off?'opacity:.4;cursor:not-allowed':''}"><td><input type="checkbox" ${picks.has(key(x))?'checked':''} ${off?'disabled':''} tabindex="-1"></td><td><b>${iname(x)}</b>${b?' <span class="tag rec">BEST BASKET</span>':''}${x.sale?' <span class="tag">sale</span>':''}</td><td>${x.k=='card'?x.t+(x.cl?' · colorless':''):'relic'}</td><td class="mono ${off?'dn':''}">${x.p}g</td><td class="mono delta ${dCls(dd)}">${dShow(dd)}${dd.bl?` <span class="note">Heart ${hs(dd)} pts</span>`:''}</td></tr>`}).join('')+`</table></div>`}
 function renderShop(){syncRunInputs();const w=score(deck,relics),sel=chosen(),d=shopDelta(sel),cost=sel.reduce((s,x)=>s+x.p,0),bb=bestBasket();
- if(!deck.some(c=>c.n==rmTarget&&removable(c)))rmTarget=(deck.find(removable)||{}).n||'';
- const rm={...RM,t:rmTarget},rmOn=picks.has(key(rm)),rmOff=rm.p>gold||!rmTarget,rmd=rmTarget?shopDelta([rm]):0;
+ const rmList=[...new Set(deck.filter(removable).map(keyOf))].map(k=>({k,v:shopDelta([{...RM,t:k}])})),bestRm=rmList.reduce((b,x)=>!b||x.v.rk>b.v.rk?x:b,null);
+ if(rmAuto&&bestRm)rmTarget=bestRm.k;else if(!rmList.some(x=>x.k==rmTarget))rmTarget=bestRm?bestRm.k:'';
+ const rm={...RM,t:rmTarget},rmOn=picks.has(key(rm)),rmOff=rm.p>gold||!rmTarget,rmd=rmTarget?shopDelta([rm]):{d:0,rk:0};
  const cards=shop.filter(x=>x.k=='card'&&!x.cl),cl=shop.filter(x=>x.cl),rl=shop.filter(x=>x.k=='relic');
  $('#shopBox').innerHTML=`<div class="bar"><h1 style="margin:0">Merchant</h1><div class="tabs" style="margin:0 0 0 12px"><button class="${shopView=='visual'?'on':''}" data-v="visual">Visual</button><button class="${shopView=='list'?'on':''}" data-v="list">List</button><button class="${shopView=='edit'?'on':''}" data-v="edit">Edit stock</button></div><span class="sp"></span><div class="gold"><i></i><input type="number" id="goldIn" value="${gold}" style="width:90px;font-size:16px"></div><button class="b" id="closeShop">Close ✕</button></div>
- <p class="note">Click items to build a basket (set what the shop sells under Edit stock). Green number = change in the model's win probability (points). Dashed outline = part of the best basket within your gold. Card pool: ${poolLabel()}.</p>
+ <p class="note">Click items to build a basket (set what the shop sells under Edit stock). Green or red number = blend score (75% next boss, 25% Heart, as a relative change; hover for the Heart change in points). Dashed outline = part of the best basket within your gold. Card pool: ${poolLabel()}.</p>
  <div class="shopg"><div>
   ${shopView=='edit'?editorView():shopView=='visual'?`<div class="shl">Cards</div><div class="shelf">${cards.map(x=>item(x,bb.set)).join('')}</div>
   <div class="shl">Colorless</div><div class="shelf c2">${cl.map(x=>item(x,bb.set)).join('')}</div>
   <div class="shl">Relics</div><div class="relicrow">${rl.map(x=>item(x,bb.set)).join('')}</div>`:listView(bb.set)}
  </div><div>
   <div class="svc ${rmOn?'on':''} ${rmOff?'off':''}" id="rmSvc" style="cursor:${rmOff?'not-allowed':'pointer'}"><div class="shl" style="margin-top:0">Card removal</div><div class="bin"></div>
-   <select id="rmSel" onclick="event.stopPropagation()" style="width:100%">${deck.filter(removable).map(c=>`<option ${c.n==rmTarget?'selected':''}>${c.n}</option>`).join('')}</select>
-   <div class="row2" style="margin-top:8px"><span class="price ${rmOff?'no':''}"><i></i>${rm.p}</span><span class="dl ${rmd>=0?'up':'dn'}">${rmd>=0?'+':''}${(rmd*100).toFixed(2)}</span></div></div>
+   <select id="rmSel" onclick="event.stopPropagation()" style="width:100%">${rmList.map(x=>`<option value="${x.k}" ${x.k==rmTarget?'selected':''}>${x.k}  ${dShow(x.v)}${bestRm&&x.k==bestRm.k?'  ★ best':''}</option>`).join('')}</select>
+   <div class="note" style="margin-top:6px">${bestRm?`Best to remove: <b>${bestRm.k}</b> <span class="${dCls(bestRm.v)}">${dShow(bestRm.v)}</span>${rmAuto?'':` <button class="b" id="useBestRm" style="padding:1px 8px;font-size:11px" onclick="event.stopPropagation()">Use</button>`}`:''}</div>
+   <div class="row2" style="margin-top:8px"><span class="price ${rmOff?'no':''}"><i></i>${rm.p}</span><span class="dl ${dCls(rmd)}" title="Heart ${hs(rmd)} pts">${dShow(rmd)}</span></div></div>
   <div class="svc" style="text-align:left"><div class="shl" style="margin-top:0">Basket</div>
-   <div class="note">${sel.length?sel.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(', '):'Empty'}</div>
-   <div class="row2" style="margin:8px 0"><span>Cost ${cost}/${gold}</span><b class="mono">${pct(w+d)} <span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${(d*100).toFixed(2)}</span></b></div>
+   <div class="note">${sel.length?sel.map(x=>x.k=='remove'?'Remove '+x.t:iname(x)).join(', '):'Empty'}</div>
+   <div class="row2" style="margin:8px 0"><span>Cost ${cost}/${gold}</span><b class="mono">${pct(w+d.d)} <span class="${dCls(d)}">${dShow(d)}</span></b></div>
    ${cost>gold?'<div class="dn note">Over budget</div>':''}
-   <div class="note">Best: ${bb.set.map(x=>x.k=='remove'?'Remove '+x.t:x.n).join(' + ')||'buy nothing'} (${bb.c}g)</div>
+   <div class="note">Best: ${bb.set.map(x=>x.k=='remove'?'Remove '+x.t:iname(x)).join(' + ')||'buy nothing'} (${bb.c}g)</div>
    <div class="bar" style="margin-top:10px"><button class="b" id="bestB">Select best</button><button class="b" id="clrB">Clear</button><button class="b pri" id="buyB">Buy</button></div></div>
   <div class="note">The basket is scored as one deck, so purchases interact.</div>
  </div></div>`;
@@ -475,10 +711,10 @@ function renderShop(){syncRunInputs();const w=score(deck,relics),sel=chosen(),d=
  $('#shopBox').querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{shopView=b.dataset.v;renderShop()});
  $('#shopBox').querySelectorAll('.si,.si-l').forEach(el=>el.onclick=()=>{const k=el.dataset.k,x=allItems().find(y=>key(y)==k);if(x.p>gold)return;picks.has(k)?picks.delete(k):picks.add(k);renderShop()});
  $('#rmSvc').onclick=()=>{if(rmOff)return;const k=key(rm);picks.has(k)?picks.delete(k):picks.add(k);renderShop()};
- $('#rmSel').onchange=e=>{picks.delete(key(rm));rmTarget=e.target.value;renderShop()};
+ $('#rmSel').onchange=e=>{picks.delete(key(rm));rmTarget=e.target.value;rmAuto=false;renderShop()};if($('#useBestRm'))$('#useBestRm').onclick=e=>{e.stopPropagation();picks.delete(key(rm));rmAuto=true;renderShop()};
  $('#bestB').onclick=()=>{picks=new Set(bb.set.map(key));renderShop()};$('#clrB').onclick=()=>{picks=new Set();renderShop()};
  $('#buyB').onclick=()=>{applyShop();closeShop()}}
-function applyShop(){snap();const sel=chosen();for(const x of sel){if(x.k=='card'){const e=deck.find(c=>c.n==x.n&&!c.u);e?e.c++:deck.push({n:x.n,t:x.t,c:1})}else if(x.k=='relic')relics.push(x.n);else{const j=deck.findIndex(c=>c.n==x.t);if(j>=0){deck[j].c--;if(deck[j].c<=0)deck.splice(j,1)}}}gold-=sel.reduce((s,x)=>s+x.p,0);shop=shop.filter(x=>!picks.has(key(x)));picks=new Set();renderRun()}
+function applyShop(){snap();const sel=chosen();for(const x of sel){if(x.k=='card'){const u=x.u|0,e=deck.find(c=>c.n==x.n&&(c.u|0)==u);e?e.c++:deck.push(u?{n:x.n,t:x.t,c:1,u}:{n:x.n,t:x.t,c:1})}else if(x.k=='relic')relics.push(x.n);else{const j=deck.findIndex(c=>keyOf(c)==x.t);if(j>=0){deck[j].c--;if(deck[j].c<=0)deck.splice(j,1)}}}gold-=sel.reduce((s,x)=>s+x.p,0);shop=shop.filter(x=>!picks.has(key(x)));picks=new Set();renderRun()}
 document.addEventListener('keydown',e=>{if(e.key=='Escape'){closeShop();closePicker()}if((e.metaKey||e.ctrlKey)&&e.key=='z'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#undo').click()}});
 $('#sort').onchange=renderRun;
 
@@ -505,10 +741,10 @@ const ROAD=[
  {s:'planned',t:'Transform rules',d:'Transform results are sampled uniformly from the character pool, a card can repeat and never becomes itself. Check the game for rarity weighting and locked cards. Astrolabe picks the three best cards one at a time rather than searching every triple.'},
  {s:'done',t:'Older models (v14 to v16)',d:'Rebuilt from git history: they take 679 cards, 180 relics and the four characters with no floor, and predict whether the run wins at all. ui/server/build_legacy_layouts.py finds which card list each was trained on by held-out AUC on late floor rows (v14, v15 and its variants fit the Aug 2024 underscore list, v16 the Sep 2024 one word list). v17 to v19 run on the 920 column layout.'},
  {s:'done',t:'v23 to v25 models and run state',d:'HP, max HP and gold are inputs of the v24 and later models; the Run page has fields for them and the shop scores a basket with the gold you would have left. The act 1 head can be missing (no_act1), so the milestone bars follow the heads each model was trained on. Metrics for v21 and later are recomputed on one cleaned test set.'},
- {s:'planned',t:'Recommendation blend and disagreement flag',d:'From ui/TODO_recommendations.md: rank options by 0.75 x log P(nearest boss) + 0.25 x log P(Heart) instead of the Heart head alone, and mark cards where the two effects have opposite signs. Not built yet, rankings still use the Heart head.'},
+ {s:'done',t:'Recommendation blend and trade-off flag',d:'Card rewards (Add card tab, Next best, the Add cards popup) are ranked by 0.75 x log P(nearest boss) + 0.25 x log P(Heart), and marked as a trade-off when the next boss and the Heart move in opposite directions by at least 0.5 pts each. Models without a nearest boss head keep the Heart ranking. The numbers shown are still the Heart change.'},
  {s:'idea',t:'Train and Build Data pages',d:'Greyed out in the nav. The CLI never implemented them either.'}];
 $('#road').innerHTML=ROAD.map(r=>`<div class="panel"><div class="bar"><b>${r.t}</b><span class="tag ${r.s=='done'?'rec':''}">${r.s}</span></div><p class="note" style="margin:6px 0 0">${r.d}</p></div>`).join('');
-$('#quickBtn').onclick=quickAdd;$('#quickAdd').onkeydown=e=>{if(e.key=='Enter')quickAdd()};
+
 $('#relicAdd').onclick=()=>{const v=$('#relicIn').value.trim();if(!v)return;const r=checkRelic(v);if(r.err){$('#relicErr').textContent=r.err;return}$('#relicErr').textContent='';snap();relics.push(r.r.n);$('#relicIn').value='';cardCands=null;renderRun()};
 $('#relicIn').onkeydown=e=>{if(e.key=='Enter')$('#relicAdd').click()};
 genShop();applyStartRun();
